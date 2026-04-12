@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contoura Labs — We Build Digital Experiences That Matter</title>
+  <meta name="description" content="Contoura Labs helps businesses grow with modern web, mobile, and design solutions. WordPress development, mobile apps, UI/UX design, ERP, POS software.">
+  <meta property="og:title" content="Contoura Labs — Digital Agency">
+  <meta property="og:description" content="Modern web, mobile, and design solutions for businesses.">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="https://z-cdn-media.chatglm.cn/files/3240f0b0-369b-4b7e-8da9-c1aab3ed0f33.png?auth_key=1875984736-29552a43a53e4c5d855539340383789d-0-2809bee3c0d4badf1dda58a358f07e00" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: { orange: '#FF6B35', red: '#E8384F', teal: '#00B8A9' },
+            surface: { light: '#F8F9FA', dark: '#0A0A0A', card: '#1A1A1A', alt: '#111111' }
+          },
+          fontFamily: { sans: ['Inter', 'sans-serif'] }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { font-family: 'Inter', sans-serif; }
+
+    #loader {
+      position: fixed; inset: 0; z-index: 9999;
+      background: #fff;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+    #loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+    .loader-c path {
+      stroke-dasharray: 100; stroke-dashoffset: 100;
+      animation: drawC 1.2s ease forwards;
+    }
+    .loader-c path:nth-child(1) { animation-delay: 0s; }
+    .loader-c path:nth-child(2) { animation-delay: 0.3s; }
+    .loader-c path:nth-child(3) { animation-delay: 0.6s; }
+    @keyframes drawC { to { stroke-dashoffset: 0; } }
+    .loader-text {
+      margin-top: 24px; font-weight: 600; font-size: 14px; letter-spacing: 0.1em; text-transform: uppercase;
+      color: #555; opacity: 0; animation: fadeUp 0.5s ease 0.9s forwards;
+    }
+    @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } from { opacity: 0; transform: translateY(8px); } }
+
+    .gradient-text {
+      background: linear-gradient(135deg, #FF6B35 0%, #E8384F 40%, #00B8A9 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .btn-gradient {
+      background: linear-gradient(135deg, #FF6B35, #E8384F, #00B8A9);
+      background-size: 200% 200%;
+      animation: gradientShift 4s ease infinite;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .btn-gradient:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(255,107,53,0.3); }
+    @keyframes gradientShift { 0%,100%{background-position:0% 50%} 50%{background-position:100% 50%} }
+
+    .reveal { opacity: 0; transform: translateY(40px); transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1); }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.2s; }
+    .reveal-delay-3 { transition-delay: 0.3s; }
+    .reveal-delay-4 { transition-delay: 0.4s; }
+    .reveal-delay-5 { transition-delay: 0.5s; }
+    .reveal-delay-6 { transition-delay: 0.6s; }
+
+    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-16px)} }
+    .float { animation: float 6s ease-in-out infinite; }
+    .float-delay { animation: float 6s ease-in-out 2s infinite; }
+
+    .orb {
+      position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.15; pointer-events: none;
+    }
+    .dark .orb { opacity: 0.08; }
+
+    .service-card {
+      transition: transform 0.4s cubic-bezier(0.16,1,0.3,1), box-shadow 0.4s ease, border-color 0.4s ease;
+    }
+    .service-card:hover { transform: translateY(-8px); }
+
+    .portfolio-card .overlay {
+      opacity: 0; transition: opacity 0.4s ease;
+    }
+    .portfolio-card:hover .overlay { opacity: 1; }
+    .portfolio-card:hover img { transform: scale(1.08); }
+    .portfolio-card img { transition: transform 0.6s cubic-bezier(0.16,1,0.3,1); }
+
+    .testimonial-card {
+      transition: transform 0.4s cubic-bezier(0.16,1,0.3,1), box-shadow 0.4s ease;
+    }
+    .testimonial-card:hover { transform: translateY(-4px); }
+
+    .nav-scrolled {
+      background: rgba(255,255,255,0.85) !important;
+      backdrop-filter: blur(20px) !important;
+      box-shadow: 0 1px 0 rgba(0,0,0,0.06) !important;
+    }
+    .dark .nav-scrolled {
+      background: rgba(10,10,10,0.85) !important;
+      box-shadow: 0 1px 0 rgba(255,255,255,0.06) !important;
+    }
+
+    #mobile-menu {
+      transform: translateX(100%);
+      transition: transform 0.4s cubic-bezier(0.16,1,0.3,1);
+    }
+    #mobile-menu.open { transform: translateX(0); }
+    #menu-backdrop {
+      opacity: 0; visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    #menu-backdrop.open { opacity: 1; visibility: visible; }
+
+    #toast {
+      transform: translateY(20px); opacity: 0; visibility: hidden;
+      transition: transform 0.4s cubic-bezier(0.16,1,0.3,1), opacity 0.4s ease, visibility 0.4s ease;
+    }
+    #toast.show { transform: translateY(0); opacity: 1; visibility: visible; }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+    .dark ::-webkit-scrollbar-thumb { background: #333; }
+
+    .form-input:focus { border-color: #FF6B35; box-shadow: 0 0 0 3px rgba(255,107,53,0.1); }
+    .star { color: #FBBF24; }
+  </style>
+</head>
+<body class="font-sans bg-white text-gray-900 dark:bg-surface-dark dark:text-gray-100 antialiased overflow-x-hidden">
+
+  <!-- LOADING SCREEN -->
+  <div id="loader">
+    <svg class="loader-c" width="60" height="60" viewBox="0 0 100 100" fill="none">
+      <path d="M 73 28 A 32 32 0 0 0 27 28" stroke="#FF6B35" stroke-width="9" fill="none" stroke-linecap="round"/>
+      <path d="M 24 32 A 32 32 0 0 0 24 68" stroke="#E8384F" stroke-width="9" fill="none" stroke-linecap="round"/>
+      <path d="M 27 72 A 32 32 0 0 0 73 72" stroke="#00B8A9" stroke-width="9" fill="none" stroke-linecap="round"/>
+    </svg>
+    <div class="loader-text">Contoura Labs</div>
+  </div>
+
+  <!-- NAVBAR -->
+  <nav id="navbar" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300">
+    <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+      <a href="#hero" class="flex items-center gap-2.5 relative z-50">
+        <img src="https://z-cdn-media.chatglm.cn/files/3240f0b0-369b-4b7e-8da9-c1aab3ed0f33.png?auth_key=1875984736-29552a43a53e4c5d855539340383789d-0-2809bee3c0d4badf1dda58a358f07e00" alt="Contoura Labs" class="h-9 w-auto">
+      </a>
+      <div class="hidden md:flex items-center gap-8">
+        <a href="#about" class="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">About</a>
+        <a href="#services" class="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">Services</a>
+        <a href="#portfolio" class="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">Portfolio</a>
+        <a href="#testimonials" class="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">Testimonials</a>
+        <a href="#contact" class="btn-gradient text-white text-sm font-semibold px-5 py-2.5 rounded-full">Contact Us</a>
+      </div>
+      <div class="flex items-center gap-3">
+        <button id="dark-toggle" class="w-9 h-9 rounded-full flex items-center justify-center bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/15 transition-colors" aria-label="Toggle dark mode">
+          <svg id="icon-sun" class="w-4 h-4 hidden dark:block text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"/></svg>
+          <svg id="icon-moon" class="w-4 h-4 block dark:hidden text-gray-600" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/></svg>
+        </button>
+        <button id="menu-btn" class="md:hidden w-9 h-9 rounded-full flex items-center justify-center bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/15 transition-colors z-50" aria-label="Open menu">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Mobile Menu Backdrop -->
+  <div id="menu-backdrop" class="fixed inset-0 bg-black/40 z-40"></div>
+
+  <!-- Mobile Menu -->
+  <div id="mobile-menu" class="fixed top-0 right-0 bottom-0 w-72 bg-white dark:bg-surface-dark z-40 shadow-2xl flex flex-col pt-20 px-8">
+    <button id="menu-close" class="absolute top-4 right-4 w-9 h-9 rounded-full flex items-center justify-center bg-gray-100 dark:bg-white/10" aria-label="Close menu">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+    </button>
+    <a href="#about" class="mobile-link text-lg font-medium text-gray-800 dark:text-gray-200 py-3 border-b border-gray-100 dark:border-white/10">About</a>
+    <a href="#services" class="mobile-link text-lg font-medium text-gray-800 dark:text-gray-200 py-3 border-b border-gray-100 dark:border-white/10">Services</a>
+    <a href="#portfolio" class="mobile-link text-lg font-medium text-gray-800 dark:text-gray-200 py-3 border-b border-gray-100 dark:border-white/10">Portfolio</a>
+    <a href="#testimonials" class="mobile-link text-lg font-medium text-gray-800 dark:text-gray-200 py-3 border-b border-gray-100 dark:border-white/10">Testimonials</a>
+    <a href="#contact" class="mobile-link btn-gradient text-white text-center font-semibold px-5 py-3 rounded-full mt-6">Contact Us</a>
+    <div class="mt-auto pb-8">
+      <p class="text-xs text-gray-400 mb-3">Follow Us</p>
+      <div class="flex gap-4">
+        <a href="https://www.instagram.com/contouralabs/" target="_blank" rel="noopener" class="text-gray-400 hover:text-brand-orange transition-colors">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+        </a>
+        <a href="https://www.facebook.com/profile.php?id=61581292773749" target="_blank" rel="noopener" class="text-gray-400 hover:text-brand-orange transition-colors">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- HERO SECTION -->
+  <section id="hero" class="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
+    <div class="orb w-[500px] h-[500px] bg-brand-orange top-[-10%] right-[-10%] float"></div>
+    <div class="orb w-[400px] h-[400px] bg-brand-teal bottom-[-5%] left-[-8%] float-delay"></div>
+    <div class="orb w-[300px] h-[300px] bg-brand-red top-[40%] left-[50%]"></div>
+
+    <svg class="absolute top-20 right-10 w-32 h-32 opacity-[0.06] dark:opacity-[0.04] float" viewBox="0 0 100 100" fill="none">
+      <path d="M 73 28 A 32 32 0 0 0 27 28" stroke="#FF6B35" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <path d="M 24 32 A 32 32 0 0 0 24 68" stroke="#E8384F" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <path d="M 27 72 A 32 32 0 0 0 73 72" stroke="#00B8A9" stroke-width="6" fill="none" stroke-linecap="round"/>
+    </svg>
+    <svg class="absolute bottom-32 left-8 w-20 h-20 opacity-[0.05] dark:opacity-[0.03] float-delay" viewBox="0 0 100 100" fill="none">
+      <path d="M 73 28 A 32 32 0 0 0 27 28" stroke="#FF6B35" stroke-width="8" fill="none" stroke-linecap="round"/>
+      <path d="M 24 32 A 32 32 0 0 0 24 68" stroke="#E8384F" stroke-width="8" fill="none" stroke-linecap="round"/>
+      <path d="M 27 72 A 32 32 0 0 0 73 72" stroke="#00B8A9" stroke-width="8" fill="none" stroke-linecap="round"/>
+    </svg>
+
+    <div class="relative z-10 max-w-4xl mx-auto px-6 text-center">
+      <h1 class="reveal text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.08] mb-6">
+        We Build Digital<br>Experiences That <span class="gradient-text">Matter</span>
+      </h1>
+      <p class="reveal reveal-delay-1 text-base sm:text-lg md:text-xl text-gray-500 dark:text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed">
+        Contoura Labs helps businesses grow with modern web, mobile, and design solutions.
+      </p>
+      <div class="reveal reveal-delay-2 flex flex-col sm:flex-row items-center justify-center gap-4">
+        <a href="#contact" class="btn-gradient text-white font-semibold px-8 py-3.5 rounded-full text-sm inline-flex items-center gap-2">
+          Get Started
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+        </a>
+        <a href="#contact" class="px-8 py-3.5 rounded-full text-sm font-semibold border border-gray-200 dark:border-white/15 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors inline-flex items-center gap-2">
+          Contact Us
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ABOUT SECTION -->
+  <section id="about" class="py-24 md:py-32 bg-surface-light dark:bg-surface-alt">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="grid md:grid-cols-2 gap-16 items-center">
+        <div class="reveal relative">
+          <div class="relative rounded-2xl overflow-hidden bg-gradient-to-br from-brand-orange/10 via-brand-red/5 to-brand-teal/10 dark:from-brand-orange/5 dark:via-brand-red/5 dark:to-brand-teal/5 aspect-square flex items-center justify-center">
+            <svg class="w-48 h-48 md:w-64 md:h-64" viewBox="0 0 100 100" fill="none">
+              <path d="M 73 28 A 32 32 0 0 0 27 28" stroke="url(#grad1)" stroke-width="5" fill="none" stroke-linecap="round"/>
+              <path d="M 24 32 A 32 32 0 0 0 24 68" stroke="url(#grad1)" stroke-width="5" fill="none" stroke-linecap="round"/>
+              <path d="M 27 72 A 32 32 0 0 0 73 72" stroke="url(#grad1)" stroke-width="5" fill="none" stroke-linecap="round"/>
+              <defs><linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#FF6B35"/><stop offset="50%" stop-color="#E8384F"/><stop offset="100%" stop-color="#00B8A9"/></linearGradient></defs>
+            </svg>
+          </div>
+        </div>
+
+        <div>
+          <div class="reveal">
+            <span class="text-xs font-semibold uppercase tracking-widest text-brand-orange mb-4 block">About Us</span>
+            <h2 class="text-3xl md:text-4xl font-bold tracking-tight mb-6">A Growing Digital Agency<br>With Big Ambitions</h2>
+          </div>
+          <div class="reveal reveal-delay-1">
+            <p class="text-gray-500 dark:text-gray-400 leading-relaxed mb-6">
+              Contoura Labs is a forward-thinking digital agency passionate about crafting meaningful digital experiences. We partner with businesses to transform ideas into polished, high-performing digital products.
+            </p>
+            <p class="text-gray-500 dark:text-gray-400 leading-relaxed mb-8">
+              Innovation, creativity, and a client-first mindset drive everything we do. From concept to launch, we focus on delivering solutions that not only look great but also drive real results for your business.
+            </p>
+          </div>
+          <div class="reveal reveal-delay-2 grid grid-cols-3 gap-6">
+            <div>
+              <div class="text-2xl md:text-3xl font-bold gradient-text">10+</div>
+              <div class="text-xs text-gray-400 mt-1">Projects Done</div>
+            </div>
+            <div>
+              <div class="text-2xl md:text-3xl font-bold gradient-text">100%</div>
+              <div class="text-xs text-gray-400 mt-1">Client Focus</div>
+            </div>
+            <div>
+              <div class="text-2xl md:text-3xl font-bold gradient-text">24/7</div>
+              <div class="text-xs text-gray-400 mt-1">Support</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SERVICES SECTION -->
+  <section id="services" class="py-24 md:py-32">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="text-center max-w-2xl mx-auto mb-16">
+        <span class="reveal text-xs font-semibold uppercase tracking-widest text-brand-orange mb-4 block">Our Services</span>
+        <h2 class="reveal reveal-delay-1 text-3xl md:text-4xl font-bold tracking-tight mb-4">What We Do Best</h2>
+        <p class="reveal reveal-delay-2 text-gray-500 dark:text-gray-400">End-to-end digital solutions tailored to your business needs.</p>
+      </div>
+
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Service 1: WordPress -->
+        <div class="reveal reveal-delay-1 service-card bg-white dark:bg-surface-card rounded-2xl p-8 border border-gray-100 dark:border-white/5 hover:shadow-xl hover:shadow-brand-orange/5 dark:hover:shadow-brand-orange/5 hover:border-brand-orange/20 dark:hover:border-brand-orange/20">
+          <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-brand-orange/10 to-brand-orange/5 dark:from-brand-orange/15 dark:to-brand-orange/5 flex items-center justify-center mb-6">
+            <svg class="w-7 h-7 text-brand-orange" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418"/></svg>
+          </div>
+          <h3 class="text-lg font-semibold mb-3">WordPress Website Development</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">Scalable, SEO-optimized WordPress solutions tailored to your business. From corporate sites to complex portals, we build with performance and usability at the core.</p>
+        </div>
+
+        <!-- Service 2: Mobile App -->
+        <div class="reveal reveal-delay-2 service-card bg-white dark:bg-surface-card rounded-2xl p-8 border border-gray-100 dark:border-white/5 hover:shadow-xl hover:shadow-brand-red/5 dark:hover:shadow-brand-red/5 hover:border-brand-red/20 dark:hover:border-brand-red/20">
+          <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-brand-red/10 to-brand-red/5 dark:from-brand-red/15 dark:to-brand-red/5 flex items-center justify-center mb-6">
+            <svg class="w-7 h-7 text-brand-red" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3"/></svg>
+          </div>
+          <h3 class="text-lg font-semibold mb-3">Mobile App Development</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">Native and cross-platform mobile applications for iOS and Android. We bring your app idea to life with seamless user experiences and robust performance.</p>
+        </div>
+
+        <!-- Service 3: UI/UX -->
+        <div class="reveal reveal-delay-3 service-card bg-white dark:bg-surface-card rounded-2xl p-8 border border-gray-100 dark:border-white/5 hover:shadow-xl hover:shadow-brand-teal/5 dark:hover:shadow-brand-teal/5 hover:border-brand-teal/20 dark:hover:border-brand-teal/20">
+          <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-brand-teal/10 to-brand-teal/5 dark:from-brand-teal/15 dark:to-brand-teal/5 flex items-center justify-center mb-6">
+            <svg class="w-7 h-7 text-brand-teal" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42"/></svg>
+          </div>
+          <h3 class="text-lg font-semibold mb-3">UI/UX & Graphic Design</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">User-centered design that elevates your brand. From wireframes and prototyping to final visual assets, we craft interfaces that engage and convert.</p>
+        </div>
+
+        <!-- Service 4: ERP -->
+        <div class="reveal reveal-delay-4 service-card bg-white dark:bg-surface-card rounded-2xl p-8 border border-gray-100 dark:border-white/5 hover:shadow-xl hover:shadow-brand-orange/5 dark:hover:shadow-brand-orange/5 hover:border-brand-orange/20 dark:hover:border-brand-orange/20">
+          <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-brand-orange/10 to-brand-red/5 dark:from-brand-orange/15 dark:to-brand-red/5 flex items-center justify-center mb-6">
+            <svg class="w-7 h-7 text-brand-orange" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125"/></svg>
+          </div>
+          <h3 class="text-lg font-semibold mb-3">ERP Softwares</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">Streamline your business operations with custom ERP solutions. We build integrated systems for inventory, HR, finance, and more to boost efficiency.</p>
+        </div>
+
+        <!-- Service 5: POS -->
+        <div class="reveal reveal-delay-5 service-card bg-white dark:bg-surface-card rounded-2xl p-8 border border-gray-100 dark:border-white/5 hover:shadow-xl hover:shadow-brand-red/5 dark:hover:shadow-brand-red/5 hover:border-brand-red/20 dark:hover:border-brand-red/20">
+          <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-brand-red/10 to-brand-teal/5 dark:from-brand-red/15 dark:to-brand-teal/5 flex items-center justify-center mb-6">
+            <svg class="w-7 h-7 text-brand-red" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"/></svg>
+          </div>
+          <h3 class="text-lg font-semibold mb-3">POS Softwares</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">Reliable point-of-sale systems built for speed and accuracy. Our POS solutions support multi-location management, real-time reporting, and seamless payment integration.</p>
+        </div>
+
+        <!-- Service 6: Custom Website -->
+        <div class="reveal reveal-delay-6 service-card bg-white dark:bg-surface-card rounded-2xl p-8 border border-gray-100 dark:border-white/5 hover:shadow-xl hover:shadow-brand-teal/5 dark:hover:shadow-brand-teal/5 hover:border-brand-teal/20 dark:hover:border-brand-teal/20">
+          <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-brand-teal/10 to-brand-orange/5 dark:from-brand-teal/15 dark:to-brand-orange/5 flex items-center justify-center mb-6">
+            <svg class="w-7 h-7 text-brand-teal" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5"/></svg>
+          </div>
+          <h3 class="text-lg font-semibold mb-3">Custom Website Developments</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">Bespoke web solutions built from the ground up. Whether it is a web application, SaaS platform, or a complex portal, we code it to your exact specifications.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PORTFOLIO SECTION -->
+  <section id="portfolio" class="py-24 md:py-32 bg-surface-light dark:bg-surface-alt">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="text-center max-w-2xl mx-auto mb-16">
+        <span class="reveal text-xs font-semibold uppercase tracking-widest text-brand-orange mb-4 block">Portfolio</span>
+        <h2 class="reveal reveal-delay-1 text-3xl md:text-4xl font-bold tracking-tight mb-4">Recent Work</h2>
+        <p class="reveal reveal-delay-2 text-gray-500 dark:text-gray-400">A selection of our recent projects showcasing our capabilities.</p>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-6">
+        <!-- Project 1: Rezolvio -->
+        <a href="https://rezolvio.netlify.app/" target="_blank" rel="noopener" class="reveal reveal-delay-1 portfolio-card group rounded-2xl overflow-hidden bg-white dark:bg-surface-card border border-gray-100 dark:border-white/5 block">
+          <div class="relative aspect-[16/10] overflow-hidden">
+            <img src="https://picsum.photos/seed/rezolvio-cl/900/560.jpg" alt="Rezolvio" class="w-full h-full object-cover" loading="lazy">
+            <div class="overlay absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col justify-end p-6">
+              <span class="text-[10px] uppercase tracking-widest text-brand-orange font-semibold mb-2">Web Application</span>
+              <h3 class="text-white font-semibold text-lg mb-1">Rezolvio</h3>
+              <p class="text-gray-300 text-xs leading-relaxed">A complete web application built with clean architecture and modern design principles.</p>
+              <div class="mt-3 inline-flex items-center gap-1.5 text-brand-orange text-xs font-medium">
+                <span>View Live</span>
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
+              </div>
+            </div>
+          </div>
+          <div class="p-5 md:hidden">
+            <span class="text-[10px] uppercase tracking-widest text-brand-orange font-semibold">Web Application</span>
+            <h3 class="font-semibold mt-1">Rezolvio</h3>
+          </div>
+        </a>
+
+        <!-- Project 2: E-commerce Store -->
+        <div class="reveal reveal-delay-2 portfolio-card group rounded-2xl overflow-hidden bg-white dark:bg-surface-card border border-gray-100 dark:border-white/5">
+          <div class="relative aspect-[16/10] overflow-hidden">
+            <img src="https://picsum.photos/seed/contoura-ecom/900/560.jpg" alt="E-commerce Store" class="w-full h-full object-cover" loading="lazy">
+            <div class="overlay absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col justify-end p-6">
+              <span class="text-[10px] uppercase tracking-widest text-brand-red font-semibold mb-2">E-Commerce</span>
+              <h3 class="text-white font-semibold text-lg mb-1">E-commerce Store</h3>
+              <p class="text-gray-300 text-xs leading-relaxed">A fully functional online store with product filtering, cart system, and seamless checkout experience.</p>
+            </div>
+          </div>
+          <div class="p-5 md:hidden">
+            <span class="text-[10px] uppercase tracking-widest text-brand-red font-semibold">E-Commerce</span>
+            <h3 class="font-semibold mt-1">E-commerce Store</h3>
+          </div>
+        </div>
+
+        <!-- Project 3: Business Website -->
+        <div class="reveal reveal-delay-3 portfolio-card group rounded-2xl overflow-hidden bg-white dark:bg-surface-card border border-gray-100 dark:border-white/5">
+          <div class="relative aspect-[16/10] overflow-hidden">
+            <img src="https://picsum.photos/seed/contoura-biz-site/900/560.jpg" alt="Modern Business Website" class="w-full h-full object-cover" loading="lazy">
+            <div class="overlay absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col justify-end p-6">
+              <span class="text-[10px] uppercase tracking-widest text-brand-teal font-semibold mb-2">Web Development</span>
+              <h3 class="text-white font-semibold text-lg mb-1">Modern Business Website</h3>
+              <p class="text-gray-300 text-xs leading-relaxed">A clean, conversion-focused website for a consulting firm with custom animations and CMS integration.</p>
+            </div>
+          </div>
+          <div class="p-5 md:hidden">
+            <span class="text-[10px] uppercase tracking-widest text-brand-teal font-semibold">Web Development</span>
+            <h3 class="font-semibold mt-1">Modern Business Website</h3>
+          </div>
+        </div>
+
+        <!-- Project 4: Mobile App UI -->
+        <div class="reveal reveal-delay-4 portfolio-card group rounded-2xl overflow-hidden bg-white dark:bg-surface-card border border-gray-100 dark:border-white/5">
+          <div class="relative aspect-[16/10] overflow-hidden">
+            <img src="https://picsum.photos/seed/contoura-app-ui/900/560.jpg" alt="Mobile App UI Design" class="w-full h-full object-cover" loading="lazy">
+            <div class="overlay absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col justify-end p-6">
+              <span class="text-[10px] uppercase tracking-widest text-brand-orange font-semibold mb-2">UI/UX Design</span>
+              <h3 class="text-white font-semibold text-lg mb-1">Mobile App UI Design</h3>
+              <p class="text-gray-300 text-xs leading-relaxed">An intuitive fitness tracking app UI with clean layouts, smooth interactions, and accessible design.</p>
+            </div>
+          </div>
+          <div class="p-5 md:hidden">
+            <span class="text-[10px] uppercase tracking-widest text-brand-orange font-semibold">UI/UX Design</span>
+            <h3 class="font-semibold mt-1">Mobile App UI Design</h3>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHY CHOOSE US -->
+  <section id="why-us" class="py-24 md:py-32 relative overflow-hidden">
+    <div class="orb w-[400px] h-[400px] bg-brand-teal top-0 right-[-10%]"></div>
+    <div class="orb w-[300px] h-[300px] bg-brand-orange bottom-0 left-[-5%]"></div>
+
+    <div class="max-w-6xl mx-auto px-6 relative z-10">
+      <div class="grid md:grid-cols-2 gap-16 items-center">
+        <div>
+          <span class="reveal text-xs font-semibold uppercase tracking-widest text-brand-orange mb-4 block">Why Choose Us</span>
+          <h2 class="reveal reveal-delay-1 text-3xl md:text-4xl font-bold tracking-tight mb-6">Built Different.<br><span class="gradient-text">Delivered Better.</span></h2>
+          <p class="reveal reveal-delay-2 text-gray-500 dark:text-gray-400 leading-relaxed mb-8">
+            We don't just build products, we build partnerships. Every project gets our full attention, creative energy, and technical expertise.
+          </p>
+          <a href="#contact" class="reveal reveal-delay-3 btn-gradient text-white font-semibold px-7 py-3 rounded-full text-sm inline-flex items-center gap-2">
+            Start a Project
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+          </a>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div class="reveal reveal-delay-1 bg-white dark:bg-surface-card rounded-2xl p-6 border border-gray-100 dark:border-white/5">
+            <div class="w-10 h-10 rounded-lg bg-brand-orange/10 dark:bg-brand-orange/10 flex items-center justify-center mb-4">
+              <svg class="w-5 h-5 text-brand-orange" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z"/></svg>
+            </div>
+            <h4 class="font-semibold text-sm mb-1.5">Clean & Modern Design</h4>
+            <p class="text-xs text-gray-400 leading-relaxed">Pixel-perfect designs that follow the latest trends and standards.</p>
+          </div>
+
+          <div class="reveal reveal-delay-2 bg-white dark:bg-surface-card rounded-2xl p-6 border border-gray-100 dark:border-white/5">
+            <div class="w-10 h-10 rounded-lg bg-brand-red/10 dark:bg-brand-red/10 flex items-center justify-center mb-4">
+              <svg class="w-5 h-5 text-brand-red" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/></svg>
+            </div>
+            <h4 class="font-semibold text-sm mb-1.5">Fast Delivery</h4>
+            <p class="text-xs text-gray-400 leading-relaxed">Efficient workflows that get your project launched on time, every time.</p>
+          </div>
+
+          <div class="reveal reveal-delay-3 bg-white dark:bg-surface-card rounded-2xl p-6 border border-gray-100 dark:border-white/5">
+            <div class="w-10 h-10 rounded-lg bg-brand-teal/10 dark:bg-brand-teal/10 flex items-center justify-center mb-4">
+              <svg class="w-5 h-5 text-brand-teal" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z"/></svg>
+            </div>
+            <h4 class="font-semibold text-sm mb-1.5">Affordable Pricing</h4>
+            <p class="text-xs text-gray-400 leading-relaxed">Budget-friendly rates without compromising on quality or features.</p>
+          </div>
+
+          <div class="reveal reveal-delay-4 bg-white dark:bg-surface-card rounded-2xl p-6 border border-gray-100 dark:border-white/5">
+            <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-brand-orange/10 to-brand-teal/10 flex items-center justify-center mb-4">
+              <svg class="w-5 h-5 text-brand-orange" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15"/></svg>
+            </div>
+            <h4 class="font-semibold text-sm mb-1.5">Scalable Solutions</h4>
+            <p class="text-xs text-gray-400 leading-relaxed">Architecture built to grow with your business, from MVP to enterprise.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TESTIMONIALS -->
+  <section id="testimonials" class="py-24 md:py-32 bg-surface-light dark:bg-surface-alt">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="text-center max-w-2xl mx-auto mb-16">
+        <span class="reveal text-xs font-semibold uppercase tracking-widest text-brand-orange mb-4 block">Testimonials</span>
+        <h2 class="reveal reveal-delay-1 text-3xl md:text-4xl font-bold tracking-tight mb-4">What People Say</h2>
+        <p class="reveal reveal-delay-2 text-gray-500 dark:text-gray-400">We value every relationship and strive to exceed expectations.</p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-6">
+        <div class="reveal reveal-delay-1 testimonial-card bg-white dark:bg-surface-card rounded-2xl p-8 border border-gray-100 dark:border-white/5">
+          <div class="flex gap-1 mb-5">
+            <span class="star text-sm">★</span><span class="star text-sm">★</span><span class="star text-sm">★</span><span class="star text-sm">★</span><span class="star text-sm">★</span>
+          </div>
+          <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed mb-6">"Contoura Labs delivered exactly what we needed: a clean, fast website that our customers love. Their attention to detail and communication throughout the project was outstanding."</p>
+          <div class="flex items-center gap-3">
+            <img src="https://picsum.photos/seed/sarah-t/100/100.jpg" alt="Zayan Shahid" class="w-10 h-10 rounded-full object-cover" loading="lazy">
+            <div>
+              <div class="text-sm font-semibold">Zayan Shahid</div>
+              <div class="text-xs text-gray-400">Founder, Rezolvio</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="reveal reveal-delay-2 testimonial-card bg-white dark:bg-surface-card rounded-2xl p-8 border border-gray-100 dark:border-white/5">
+          <div class="flex gap-1 mb-5">
+            <span class="star text-sm">★</span><span class="star text-sm">★</span><span class="star text-sm">★</span><span class="star text-sm">★</span><span class="star text-sm">★</span>
+          </div>
+          <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed mb-6">"Working with Contoura Labs on our mobile app was a great experience. They understood our vision from day one and brought it to life with a polished, intuitive design."</p>
+          <div class="flex items-center gap-3">
+            <img src="https://picsum.photos/seed/mike-r/100/100.jpg" alt="Mike Rodriguez" class="w-10 h-10 rounded-full object-cover" loading="lazy">
+            <div>
+              <div class="text-sm font-semibold">Mike Rodriguez</div>
+              <div class="text-xs text-gray-400">CEO, FitTrack App</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="reveal reveal-delay-3 testimonial-card bg-white dark:bg-surface-card rounded-2xl p-8 border border-gray-100 dark:border-white/5">
+          <div class="flex gap-1 mb-5">
+            <span class="star text-sm">★</span><span class="star text-sm">★</span><span class="star text-sm">★</span><span class="star text-sm">★</span><span class="star text-sm">★</span>
+          </div>
+          <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed mb-6">"The branding package Contoura Labs created for us was spot on. They captured our essence perfectly: modern, bold, and memorable. Highly recommend for any growing business."</p>
+          <div class="flex items-center gap-3">
+            <img src="https://picsum.photos/seed/priya-k/100/100.jpg" alt="Priya Kapoor" class="w-10 h-10 rounded-full object-cover" loading="lazy">
+            <div>
+              <div class="text-sm font-semibold">Priya Kapoor</div>
+              <div class="text-xs text-gray-400">Co-founder, NovaBrand</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT SECTION -->
+  <section id="contact" class="py-24 md:py-32 relative overflow-hidden">
+    <div class="orb w-[500px] h-[500px] bg-brand-red top-[-20%] left-[-10%]"></div>
+    <div class="orb w-[400px] h-[400px] bg-brand-teal bottom-[-10%] right-[-5%]"></div>
+
+    <div class="max-w-6xl mx-auto px-6 relative z-10">
+      <div class="grid md:grid-cols-2 gap-16">
+        <div>
+          <span class="reveal text-xs font-semibold uppercase tracking-widest text-brand-orange mb-4 block">Get in Touch</span>
+          <h2 class="reveal reveal-delay-1 text-3xl md:text-4xl font-bold tracking-tight mb-6">Let's Build Something <span class="gradient-text">Amazing</span> Together</h2>
+          <p class="reveal reveal-delay-2 text-gray-500 dark:text-gray-400 leading-relaxed mb-10">
+            Have a project in mind? We'd love to hear about it. Drop us a message and we'll get back to you within 24 hours.
+          </p>
+
+          <div class="reveal reveal-delay-3 space-y-5">
+            <div class="flex items-center gap-4">
+              <div class="w-11 h-11 rounded-xl bg-gray-100 dark:bg-white/5 flex items-center justify-center shrink-0">
+                <svg class="w-5 h-5 text-brand-orange" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
+              </div>
+              <div>
+                <div class="text-xs text-gray-400 mb-0.5">Email</div>
+                <a href="mailto:contouralabs@gmail.com" class="text-sm font-medium hover:text-brand-orange transition-colors">contouralabs@gmail.com</a>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-4">
+              <div class="w-11 h-11 rounded-xl bg-gray-100 dark:bg-white/5 flex items-center justify-center shrink-0">
+                <svg class="w-5 h-5 text-brand-red" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              </div>
+              <div>
+                <div class="text-xs text-gray-400 mb-0.5">Response Time</div>
+                <span class="text-sm font-medium">Within 24 hours</span>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-4">
+              <div class="w-11 h-11 rounded-xl bg-gray-100 dark:bg-white/5 flex items-center justify-center shrink-0">
+                <svg class="w-5 h-5 text-brand-teal" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418"/></svg>
+              </div>
+              <div>
+                <div class="text-xs text-gray-400 mb-0.5">Working With</div>
+                <span class="text-sm font-medium">Clients Worldwide</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="reveal reveal-delay-4 mt-10">
+            <p class="text-xs text-gray-400 mb-3 uppercase tracking-widest font-medium">Follow Us</p>
+            <div class="flex gap-3">
+              <a href="https://www.instagram.com/contouralabs/" target="_blank" rel="noopener" class="w-10 h-10 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center text-gray-400 hover:text-brand-orange hover:bg-brand-orange/10 dark:hover:bg-brand-orange/10 transition-all">
+                <svg class="w-4.5 h-4.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+              </a>
+              <a href="https://www.facebook.com/profile.php?id=61581292773749" target="_blank" rel="noopener" class="w-10 h-10 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center text-gray-400 hover:text-brand-orange hover:bg-brand-orange/10 dark:hover:bg-brand-orange/10 transition-all">
+                <svg class="w-4.5 h-4.5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="reveal reveal-delay-2">
+          <form id="contact-form" class="bg-white dark:bg-surface-card rounded-2xl p-8 border border-gray-100 dark:border-white/5 shadow-sm">
+            <div class="space-y-5">
+              <div>
+                <label for="name" class="block text-sm font-medium mb-2">Your Name</label>
+                <input type="text" id="name" name="name" required placeholder="John Doe" class="form-input w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600">
+              </div>
+              <div>
+                <label for="email" class="block text-sm font-medium mb-2">Email Address</label>
+                <input type="email" id="email" name="email" required placeholder="john@example.com" class="form-input w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600">
+              </div>
+              <div>
+                <label for="message" class="block text-sm font-medium mb-2">Your Message</label>
+                <textarea id="message" name="message" rows="5" required placeholder="Tell us about your project..." class="form-input w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm outline-none transition-all resize-none placeholder:text-gray-400 dark:placeholder:text-gray-600"></textarea>
+              </div>
+              <button type="submit" class="w-full btn-gradient text-white font-semibold py-3.5 rounded-xl text-sm flex items-center justify-center gap-2">
+                Send Message
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="py-12 border-t border-gray-100 dark:border-white/5">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+        <div class="flex flex-col items-center md:items-start gap-2">
+          <img src="https://z-cdn-media.chatglm.cn/files/3240f0b0-369b-4b7e-8da9-c1aab3ed0f33.png?auth_key=1875984736-29552a43a53e4c5d855539340383789d-0-2809bee3c0d4badf1dda58a358f07e00" alt="Contoura Labs" class="h-8 w-auto">
+          <p class="text-xs text-gray-400">© 2025 Contoura Labs. All rights reserved.</p>
+        </div>
+
+        <div class="flex items-center gap-6 text-sm text-gray-400">
+          <a href="#about" class="hover:text-gray-700 dark:hover:text-gray-200 transition-colors">About</a>
+          <a href="#services" class="hover:text-gray-700 dark:hover:text-gray-200 transition-colors">Services</a>
+          <a href="#portfolio" class="hover:text-gray-700 dark:hover:text-gray-200 transition-colors">Portfolio</a>
+          <a href="#contact" class="hover:text-gray-700 dark:hover:text-gray-200 transition-colors">Contact</a>
+        </div>
+
+        <div class="flex items-center gap-4">
+          <a href="https://www.instagram.com/contouralabs/" target="_blank" rel="noopener" class="text-gray-400 hover:text-brand-orange transition-colors">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+          </a>
+          <a href="https://www.facebook.com/profile.php?id=61581292773749" target="_blank" rel="noopener" class="text-gray-400 hover:text-brand-orange transition-colors">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+          </a>
+          <a href="mailto:contouralabs@gmail.com" class="text-gray-400 hover:text-brand-orange transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-6 py-3.5 rounded-xl shadow-2xl flex items-center gap-3 text-sm font-medium">
+    <svg class="w-5 h-5 text-brand-teal shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    <span id="toast-text">Message sent successfully!</span>
+  </div>
+
+  <!-- JAVASCRIPT -->
+  <script>
+    // Loading Screen
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.getElementById('loader').classList.add('hidden');
+        document.body.style.overflow = '';
+        document.querySelectorAll('#hero .reveal').forEach((el, i) => {
+          setTimeout(() => el.classList.add('visible'), i * 100);
+        });
+      }, 1800);
+    });
+    document.body.style.overflow = 'hidden';
+
+    // Dark Mode Toggle
+    const darkToggle = document.getElementById('dark-toggle');
+    const html = document.documentElement;
+    if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      html.classList.add('dark');
+    }
+    darkToggle.addEventListener('click', () => {
+      html.classList.toggle('dark');
+      localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
+    });
+
+    // Mobile Menu
+    const menuBtn = document.getElementById('menu-btn');
+    const menuClose = document.getElementById('menu-close');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const menuBackdrop = document.getElementById('menu-backdrop');
+    const mobileLinks = document.querySelectorAll('.mobile-link');
+
+    function openMenu() {
+      mobileMenu.classList.add('open');
+      menuBackdrop.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeMenu() {
+      mobileMenu.classList.remove('open');
+      menuBackdrop.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    menuBtn.addEventListener('click', openMenu);
+    menuClose.addEventListener('click', closeMenu);
+    menuBackdrop.addEventListener('click', closeMenu);
+    mobileLinks.forEach(link => link.addEventListener('click', closeMenu));
+
+    // Navbar Scroll Effect
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      if (window.pageYOffset > 50) {
+        navbar.classList.add('nav-scrolled');
+      } else {
+        navbar.classList.remove('nav-scrolled');
+      }
+    }, { passive: true });
+
+    // Scroll Reveal Animations
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -60px 0px' });
+
+    document.querySelectorAll('.reveal').forEach(el => {
+      if (!el.closest('#hero')) {
+        revealObserver.observe(el);
+      }
+    });
+
+    // Contact Form
+    const contactForm = document.getElementById('contact-form');
+    const toast = document.getElementById('toast');
+    const toastText = document.getElementById('toast-text');
+
+    contactForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const message = document.getElementById('message').value.trim();
+
+      if (!name || !email || !message) {
+        showToast('Please fill in all fields.', false);
+        return;
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        showToast('Please enter a valid email address.', false);
+        return;
+      }
+
+      const btn = contactForm.querySelector('button[type="submit"]');
+      const originalHTML = btn.innerHTML;
+      btn.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span>Sending...</span>';
+      btn.disabled = true;
+
+      setTimeout(() => {
+        btn.innerHTML = originalHTML;
+        btn.disabled = false;
+        contactForm.reset();
+        showToast('Message sent successfully! We\'ll get back to you soon.', true);
+      }, 1500);
+    });
+
+    function showToast(message, success) {
+      toastText.textContent = message;
+      const icon = toast.querySelector('svg');
+      if (success) {
+        icon.classList.remove('text-brand-red');
+        icon.classList.add('text-brand-teal');
+      } else {
+        icon.classList.remove('text-brand-teal');
+        icon.classList.add('text-brand-red');
+      }
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3500);
+    }
+
+    // Smooth Scroll
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          const offset = 80;
+          const top = target.getBoundingClientRect().top + window.pageYOffset - offset;
+          window.scrollTo({ top, behavior: 'smooth' });
+        }
+      });
+    });
+  </script>
+</body>
+</html>
