@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Doodle Jump — Contoura Labs</title>
+  <meta name="description" content="Vertical jumping game. Bounce on platforms and climb as high as possible without falling off screen.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 73 28 A 32 32 0 0 0 27 28' stroke='%23FF6B35' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 24 32 A 32 32 0 0 0 24 68' stroke='%23E8384F' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 27 72 A 32 32 0 0 0 73 72' stroke='%2300B8A9' stroke-width='9' fill='none' stroke-linecap='round'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: {
+        colors: {
+          brand: { orange: '#FF6B35', red: '#E8384F', teal: '#00B8A9' },
+          surface: { light: '#F8F9FA', dark: '#0A0A0A', card: '#1A1A1A', alt: '#111111' }
+        },
+        fontFamily: { sans: ['Inter', 'sans-serif'] }
+      }}
+    }
+  </script>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <style>
+    #dj-wrap { display: flex; justify-content: center; }
+    #dj-canvas {
+      background: linear-gradient(180deg, #bfe3f7 0%, #eaf6fb 100%);
+      border-radius: 1rem;
+      display: block;
+      max-width: 100%;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.12);
+      touch-action: none;
+    }
+    .dark #dj-canvas { background: linear-gradient(180deg, #15202b 0%, #0a0a0a 100%); }
+    .dj-stat {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      padding: 0.4rem 0.9rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 700;
+      background: rgba(0,184,169,0.1); color: #00B8A9; font-variant-numeric: tabular-nums;
+    }
+    .dj-stat.red { background: rgba(232,56,79,0.1); color: #E8384F; }
+    #dj-canvas-wrap { position: relative; }
+    #dj-overlay {
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      flex-direction: column; text-align: center; background: rgba(255,255,255,0.9);
+      border-radius: 1rem; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease;
+      gap: 0.75rem;
+    }
+    .dark #dj-overlay { background: rgba(10,10,10,0.9); }
+    #dj-overlay.show { opacity: 1; visibility: visible; }
+    .dj-mobile-controls { display: none; justify-content: center; gap: 1rem; margin-top: 1rem; }
+    @media (max-width: 640px) { .dj-mobile-controls { display: flex; } }
+    .dj-ctrl-btn {
+      width: 80px; height: 56px; border-radius: 0.75rem; border: none;
+      background: linear-gradient(135deg, #FF6B35, #E8384F);
+      color: #fff; font-size: 1.5rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      user-select: none; touch-action: manipulation;
+    }
+    .dj-ctrl-btn:active { transform: scale(0.92); }
+  </style>
+</head>
+<body class="font-sans bg-white text-gray-900 dark:bg-surface-dark dark:text-gray-100 antialiased">
+
+  <div id="navbar-mount"></div>
+
+  <main class="tool-page">
+    <div class="tool-container">
+      <header class="tool-header">
+        <span class="badge mb-3">Games</span>
+        <h1 class="tool-title">Doodle Jump</h1>
+        <p class="tool-subtitle">Your character bounces automatically — steer left and right to land on platforms and climb as high as you can.</p>
+      </header>
+
+      <div class="tool-card">
+        <div class="flex items-center justify-center gap-3 mb-5">
+          <span class="dj-stat">Height: <span id="dj-height">0</span>m</span>
+          <span class="dj-stat red">Best: <span id="dj-best">0</span>m</span>
+        </div>
+
+        <div id="dj-canvas-wrap" class="relative">
+          <div id="dj-wrap"><canvas id="dj-canvas" width="380" height="560"></canvas></div>
+          <div id="dj-overlay">
+            <div class="text-5xl">🪂</div>
+            <h3 class="text-xl font-bold">You Fell!</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Height: <span id="dj-overlay-height">0</span>m</p>
+            <button id="dj-restart" class="btn-primary mt-2">Play Again</button>
+          </div>
+        </div>
+
+        <div class="dj-mobile-controls">
+          <button class="dj-ctrl-btn" id="dj-left">◀</button>
+          <button class="dj-ctrl-btn" id="dj-right">▶</button>
+        </div>
+
+        <div class="text-center mt-6 text-xs text-gray-400">
+          <p><strong>← →</strong> arrow keys, <strong>A / D</strong>, or drag/tap left & right half of the board</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="py-8 border-t border-gray-100 dark:border-white/5 mt-12">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p class="text-xs text-gray-400">© 2025 Contoura Labs</p>
+      <a href="index.html" class="text-xs text-brand-orange hover:text-brand-red transition-colors">← Back to all games</a>
+    </div>
+  </footer>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+  (function () {
+    'use strict';
+
+    const canvas = document.getElementById('dj-canvas');
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+
+    const heightEl = document.getElementById('dj-height');
+    const bestEl = document.getElementById('dj-best');
+    const overlay = document.getElementById('dj-overlay');
+    const overlayHeight = document.getElementById('dj-overlay-height');
+    const restartBtn = document.getElementById('dj-restart');
+
+    const PLAYER_W = 32, PLAYER_H = 32;
+    const PLAT_W = 64, PLAT_H = 14;
+    const GRAVITY = 0.35;
+    const JUMP_V = -9.5;
+    const MOVE_SPEED = 4.2;
+
+    let best = 0;
+    try { best = parseFloat(localStorage.getItem('dj-best') || '0'); } catch (e) {}
+    bestEl.textContent = Math.floor(best);
+
+    let player, platforms, cameraY, maxHeight, gameOver, keys;
+
+    function resetGame() {
+      player = { x: W / 2 - PLAYER_W / 2, y: H - 100, vy: 0, facing: 1 };
+      platforms = [];
+      cameraY = 0;
+      maxHeight = 0;
+      gameOver = false;
+      keys = {};
+      overlay.classList.remove('show');
+
+      // starting platform right under player
+      platforms.push({ x: W / 2 - PLAT_W / 2, y: H - 60, w: PLAT_W, moving: false, dir: 1 });
+
+      // generate platforms upward
+      let y = H - 150;
+      while (y > -H) {
+        platforms.push(randomPlatform(y));
+        y -= 70 + Math.random() * 40;
+      }
+      heightEl.textContent = 0;
+    }
+
+    function randomPlatform(y) {
+      const x = Math.random() * (W - PLAT_W);
+      const moving = Math.random() < 0.25;
+      return { x, y, w: PLAT_W, moving, dir: Math.random() < 0.5 ? 1 : -1, speed: 1 + Math.random() * 1.2 };
+    }
+
+    function ensurePlatformsAbove() {
+      let highest = platforms.reduce((min, p) => Math.min(min, p.y), Infinity);
+      while (highest > cameraY - H) {
+        highest -= 70 + Math.random() * 40;
+        platforms.push(randomPlatform(highest));
+      }
+      // remove platforms way below view
+      platforms = platforms.filter(p => p.y - cameraY < H + 100);
+    }
+
+    function update() {
+      if (gameOver) return;
+
+      // horizontal movement
+      if (keys['ArrowLeft'] || keys['a'] || keys['A']) { player.x -= MOVE_SPEED; player.facing = -1; }
+      if (keys['ArrowRight'] || keys['d'] || keys['D']) { player.x += MOVE_SPEED; player.facing = 1; }
+
+      // wrap around screen edges
+      if (player.x + PLAYER_W < 0) player.x = W;
+      if (player.x > W) player.x = -PLAYER_W;
+
+      // gravity
+      player.vy += GRAVITY;
+      player.y += player.vy;
+
+      // moving platforms
+      for (const p of platforms) {
+        if (p.moving) {
+          p.x += p.dir * p.speed;
+          if (p.x < 0 || p.x + p.w > W) p.dir *= -1;
+        }
+      }
+
+      // platform collision (only when falling)
+      if (player.vy > 0) {
+        for (const p of platforms) {
+          const py = p.y;
+          if (player.x + PLAYER_W > p.x && player.x < p.x + p.w &&
+              player.y + PLAYER_H > py && player.y + PLAYER_H < py + PLAT_H + player.vy + 1) {
+            player.vy = JUMP_V;
+          }
+        }
+      }
+
+      // camera follows player upward only
+      const screenY = player.y - cameraY;
+      if (screenY < H * 0.45) {
+        const diff = H * 0.45 - screenY;
+        cameraY -= diff;
+      }
+
+      const currentHeight = Math.max(0, -cameraY / 12);
+      if (currentHeight > maxHeight) {
+        maxHeight = currentHeight;
+        heightEl.textContent = Math.floor(maxHeight);
+      }
+
+      ensurePlatformsAbove();
+
+      // fall off bottom of screen = game over
+      if (player.y - cameraY > H + 40) {
+        endGame();
+      }
+    }
+
+    function endGame() {
+      gameOver = true;
+      if (maxHeight > best) {
+        best = maxHeight;
+        try { localStorage.setItem('dj-best', String(best)); } catch (e) {}
+        bestEl.textContent = Math.floor(best);
+      }
+      overlayHeight.textContent = Math.floor(maxHeight);
+      setTimeout(() => overlay.classList.add('show'), 300);
+      CL.toast(maxHeight >= best ? `🏆 New best: ${Math.floor(maxHeight)}m!` : `You fell at ${Math.floor(maxHeight)}m`, maxHeight > 0);
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, W, H);
+
+      // platforms
+      for (const p of platforms) {
+        const drawY = p.y - cameraY;
+        if (drawY < -PLAT_H || drawY > H) continue;
+        ctx.fillStyle = p.moving ? '#FF6B35' : '#00B8A9';
+        roundRect(ctx, p.x, drawY, p.w, PLAT_H, 5);
+        ctx.fill();
+      }
+
+      // player (simple doodle character)
+      const drawPY = player.y - cameraY;
+      ctx.save();
+      ctx.translate(player.x + PLAYER_W / 2, drawPY + PLAYER_H / 2);
+      if (player.facing < 0) ctx.scale(-1, 1);
+      ctx.fillStyle = '#E8384F';
+      roundRect(ctx, -PLAYER_W / 2, -PLAYER_H / 2, PLAYER_W, PLAYER_H, 8);
+      ctx.fill();
+      // eyes
+      ctx.fillStyle = '#fff';
+      ctx.beginPath(); ctx.arc(4, -6, 6, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#1a1a1a';
+      ctx.beginPath(); ctx.arc(6, -6, 2.5, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+
+    function roundRect(c, x, y, w, h, r) {
+      c.beginPath();
+      c.moveTo(x + r, y);
+      c.arcTo(x + w, y, x + w, y + h, r);
+      c.arcTo(x + w, y + h, x, y + h, r);
+      c.arcTo(x, y + h, x, y, r);
+      c.arcTo(x, y, x + w, y, r);
+      c.closePath();
+    }
+
+    function loop() {
+      update();
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    document.addEventListener('keydown', (e) => { keys[e.key] = true; });
+    document.addEventListener('keyup', (e) => { keys[e.key] = false; });
+
+    // touch: left/right half of canvas
+    canvas.addEventListener('touchstart', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const tx = e.touches[0].clientX - rect.left;
+      if (tx < rect.width / 2) keys['ArrowLeft'] = true;
+      else keys['ArrowRight'] = true;
+    }, { passive: true });
+    canvas.addEventListener('touchend', () => {
+      keys['ArrowLeft'] = false;
+      keys['ArrowRight'] = false;
+    }, { passive: true });
+
+    const leftBtn = document.getElementById('dj-left');
+    const rightBtn = document.getElementById('dj-right');
+    function bindHold(btn, key) {
+      btn.addEventListener('touchstart', (e) => { e.preventDefault(); keys[key] = true; }, { passive: false });
+      btn.addEventListener('touchend', (e) => { e.preventDefault(); keys[key] = false; }, { passive: false });
+      btn.addEventListener('mousedown', () => { keys[key] = true; });
+      btn.addEventListener('mouseup', () => { keys[key] = false; });
+      btn.addEventListener('mouseleave', () => { keys[key] = false; });
+    }
+    bindHold(leftBtn, 'ArrowLeft');
+    bindHold(rightBtn, 'ArrowRight');
+
+    restartBtn.addEventListener('click', resetGame);
+
+    resetGame();
+    loop();
+  })();
+  </script>
+</body>
+</html>

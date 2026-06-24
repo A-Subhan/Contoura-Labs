@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hangman — Contoura Labs</title>
+  <meta name="description" content="Guess the secret word letter by letter before you run out of attempts. Multiple categories.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 73 28 A 32 32 0 0 0 27 28' stroke='%23FF6B35' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 24 32 A 32 32 0 0 0 24 68' stroke='%23E8384F' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 27 72 A 32 32 0 0 0 73 72' stroke='%2300B8A9' stroke-width='9' fill='none' stroke-linecap='round'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: {
+        colors: {
+          brand: { orange: '#FF6B35', red: '#E8384F', teal: '#00B8A9' },
+          surface: { light: '#F8F9FA', dark: '#0A0A0A', card: '#1A1A1A', alt: '#111111' }
+        },
+        fontFamily: { sans: ['Inter', 'sans-serif'] }
+      }}
+    }
+  </script>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <style>
+    .hm-cat-btn {
+      padding: 0.5rem 1rem; border-radius: 9999px; font-size: 0.8125rem; font-weight: 600;
+      border: 1px solid #e5e7eb; background: #fff; color: #6b7280; cursor: pointer; transition: all 0.2s ease;
+    }
+    .dark .hm-cat-btn { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.1); color: #9ca3af; }
+    .hm-cat-btn.active { background: linear-gradient(135deg, #FF6B35, #E8384F, #00B8A9); color: #fff; border-color: transparent; }
+
+    .hm-word {
+      display: flex; justify-content: center; gap: 0.5rem; flex-wrap: wrap;
+      margin: 1.5rem 0; min-height: 3rem;
+    }
+    .hm-letter-slot {
+      width: 2.25rem; height: 2.75rem;
+      display: flex; align-items: center; justify-content: center;
+      border-bottom: 3px solid #9ca3af;
+      font-size: 1.5rem; font-weight: 800; text-transform: uppercase;
+      font-family: 'Inter', sans-serif;
+    }
+    .dark .hm-letter-slot { border-bottom-color: #6b7280; }
+    .hm-letter-slot.space { border-bottom: none; width: 1rem; }
+
+    .hm-keyboard { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.4rem; max-width: 500px; margin: 0 auto; }
+    .hm-key {
+      width: 38px; height: 44px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.875rem;
+      text-transform: uppercase;
+      background: #e5e7eb; color: #111;
+      border-radius: 6px; border: none;
+      cursor: pointer; user-select: none;
+      transition: background 0.15s ease, transform 0.1s ease;
+      font-family: 'Inter', sans-serif;
+    }
+    .dark .hm-key { background: rgba(255,255,255,0.1); color: #f3f4f6; }
+    .hm-key:hover:not(:disabled) { background: #d1d5db; }
+    .dark .hm-key:hover:not(:disabled) { background: rgba(255,255,255,0.18); }
+    .hm-key:active:not(:disabled) { transform: scale(0.9); }
+    .hm-key.correct { background: var(--brand-teal); color: #fff; }
+    .hm-key.wrong { background: #9ca3af; color: #fff; }
+    .dark .hm-key.wrong { background: #4b5563; }
+    .hm-key:disabled { cursor: not-allowed; }
+
+    .hm-attempts { display: flex; justify-content: center; gap: 0.4rem; margin-bottom: 1rem; }
+    .hm-heart { font-size: 1.5rem; transition: opacity 0.3s ease, transform 0.3s ease; }
+    .hm-heart.lost { opacity: 0.2; transform: scale(0.7); }
+
+    .hm-hint { text-align: center; font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem; }
+    .dark .hm-hint { color: #9ca3af; }
+
+    #hm-modal-backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 60;
+      display: flex; align-items: center; justify-content: center; padding: 1.5rem;
+      opacity: 0; visibility: hidden; transition: opacity 0.25s ease, visibility 0.25s ease;
+    }
+    #hm-modal-backdrop.show { opacity: 1; visibility: visible; }
+    #hm-modal {
+      background: #fff; border-radius: 1rem; padding: 2rem; max-width: 360px; width: 100%;
+      text-align: center; transform: translateY(20px); transition: transform 0.25s ease;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+    }
+    .dark #hm-modal { background: #1A1A1A; }
+    #hm-modal-backdrop.show #hm-modal { transform: translateY(0); }
+  </style>
+</head>
+<body class="font-sans bg-white text-gray-900 dark:bg-surface-dark dark:text-gray-100 antialiased">
+
+  <div id="navbar-mount"></div>
+
+  <main class="tool-page">
+    <div class="tool-container">
+      <header class="tool-header">
+        <span class="badge mb-3">Games</span>
+        <h1 class="tool-title">Hangman</h1>
+        <p class="tool-subtitle">Guess the secret word letter by letter. You've got 6 attempts before the word is revealed.</p>
+      </header>
+
+      <div class="tool-card">
+
+        <div class="flex flex-wrap items-center justify-center gap-2 mb-5">
+          <button class="hm-cat-btn active" data-cat="animals">🐾 Animals</button>
+          <button class="hm-cat-btn" data-cat="countries">🌍 Countries</button>
+          <button class="hm-cat-btn" data-cat="food">🍕 Food</button>
+          <button class="hm-cat-btn" data-cat="tech">💻 Tech</button>
+        </div>
+
+        <div class="hm-attempts" id="hm-attempts"></div>
+        <p class="hm-hint">Category: <strong id="hm-cat-label">Animals</strong></p>
+
+        <div class="hm-word" id="hm-word"></div>
+
+        <div class="hm-keyboard" id="hm-keyboard"></div>
+
+        <div class="text-center mt-6 text-xs text-gray-400">
+          <p>Click a letter or use your physical keyboard.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="hm-modal-backdrop">
+    <div id="hm-modal">
+      <div id="hm-modal-emoji" class="text-5xl mb-3">🎉</div>
+      <h3 id="hm-modal-title" class="text-xl font-bold mb-2">You got it!</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">The word was</p>
+      <p id="hm-modal-word" class="text-2xl font-extrabold gradient-text mb-5 tracking-wide">WORD</p>
+      <button id="hm-modal-btn" class="btn-primary w-full">Play Again</button>
+    </div>
+  </div>
+
+  <footer class="py-8 border-t border-gray-100 dark:border-white/5 mt-12">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p class="text-xs text-gray-400">© 2025 Contoura Labs</p>
+      <a href="index.html" class="text-xs text-brand-orange hover:text-brand-red transition-colors">← Back to all games</a>
+    </div>
+  </footer>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+  (function () {
+    'use strict';
+
+    const WORDS = {
+      animals: ['ELEPHANT','GIRAFFE','DOLPHIN','PENGUIN','KANGAROO','OCTOPUS','CHEETAH','FLAMINGO','HEDGEHOG','RACCOON','PEACOCK','SQUIRREL','BUTTERFLY','CROCODILE','GORILLA'],
+      countries: ['CANADA','BRAZIL','JAPAN','EGYPT','FRANCE','MEXICO','GERMANY','ARGENTINA','THAILAND','PORTUGAL','NORWAY','VIETNAM','GREECE','MOROCCO','ICELAND'],
+      food: ['PIZZA','BURGER','SUSHI','PANCAKE','LASAGNA','BURRITO','SANDWICH','SPAGHETTI','PRETZEL','WAFFLE','DUMPLING','BAGUETTE','OMELETTE','NACHOS','CROISSANT'],
+      tech: ['KEYBOARD','MONITOR','INTERNET','SOFTWARE','BLUETOOTH','ALGORITHM','DATABASE','PROCESSOR','FIREWALL','BROWSER','JAVASCRIPT','BANDWIDTH','ENCRYPTION','LAPTOP','ROUTER']
+    };
+    const CAT_LABELS = { animals: 'Animals', countries: 'Countries', food: 'Food', tech: 'Tech' };
+    const MAX_WRONG = 6;
+    const HEARTS = '❤️';
+
+    let category = 'animals';
+    let word = '';
+    let guessed = new Set();
+    let wrongCount = 0;
+    let gameOver = false;
+
+    const wordEl = document.getElementById('hm-word');
+    const keyboardEl = document.getElementById('hm-keyboard');
+    const attemptsEl = document.getElementById('hm-attempts');
+    const catLabelEl = document.getElementById('hm-cat-label');
+    const modalBackdrop = document.getElementById('hm-modal-backdrop');
+    const modalEmoji = document.getElementById('hm-modal-emoji');
+    const modalTitle = document.getElementById('hm-modal-title');
+    const modalWord = document.getElementById('hm-modal-word');
+    const modalBtn = document.getElementById('hm-modal-btn');
+
+    function pickWord(cat) {
+      const list = WORDS[cat];
+      return list[Math.floor(Math.random() * list.length)];
+    }
+
+    function buildHearts() {
+      attemptsEl.innerHTML = '';
+      for (let i = 0; i < MAX_WRONG; i++) {
+        const span = document.createElement('span');
+        span.className = 'hm-heart';
+        span.textContent = HEARTS;
+        attemptsEl.appendChild(span);
+      }
+    }
+
+    function updateHearts() {
+      const hearts = attemptsEl.querySelectorAll('.hm-heart');
+      hearts.forEach((h, i) => {
+        h.classList.toggle('lost', i < wrongCount);
+      });
+    }
+
+    function renderWord() {
+      wordEl.innerHTML = '';
+      word.split('').forEach(ch => {
+        const slot = document.createElement('div');
+        if (ch === ' ') {
+          slot.className = 'hm-letter-slot space';
+        } else {
+          slot.className = 'hm-letter-slot';
+          slot.textContent = guessed.has(ch) || gameOver ? ch : '';
+          if (gameOver && !guessed.has(ch)) {
+            slot.style.color = 'var(--brand-red)';
+            slot.style.opacity = '0.6';
+          }
+        }
+        wordEl.appendChild(slot);
+      });
+    }
+
+    function buildKeyboard() {
+      keyboardEl.innerHTML = '';
+      'QWERTYUIOPASDFGHJKLZXCVBNM'.split('').forEach(letter => {
+        const btn = document.createElement('button');
+        btn.className = 'hm-key';
+        btn.textContent = letter;
+        btn.dataset.letter = letter;
+        btn.addEventListener('click', () => guessLetter(letter));
+        keyboardEl.appendChild(btn);
+      });
+    }
+
+    function guessLetter(letter) {
+      if (gameOver || guessed.has(letter)) return;
+      guessed.add(letter);
+      const btn = keyboardEl.querySelector(`[data-letter="${letter}"]`);
+
+      if (word.includes(letter)) {
+        if (btn) { btn.classList.add('correct'); btn.disabled = true; }
+        renderWord();
+        checkWin();
+      } else {
+        wrongCount++;
+        if (btn) { btn.classList.add('wrong'); btn.disabled = true; }
+        updateHearts();
+        if (wrongCount >= MAX_WRONG) {
+          endGame(false);
+        }
+      }
+    }
+
+    function checkWin() {
+      const allGuessed = word.split('').every(ch => ch === ' ' || guessed.has(ch));
+      if (allGuessed) endGame(true);
+    }
+
+    function endGame(won) {
+      gameOver = true;
+      renderWord();
+      keyboardEl.querySelectorAll('.hm-key').forEach(b => b.disabled = true);
+      modalEmoji.textContent = won ? '🎉' : '💀';
+      modalTitle.textContent = won ? 'You got it!' : 'Out of attempts!';
+      modalWord.textContent = word;
+      setTimeout(() => modalBackdrop.classList.add('show'), 400);
+      CL.toast(won ? `🎉 Solved it! The word was ${word}` : `The word was ${word}`, won);
+    }
+
+    function newGame() {
+      word = pickWord(category);
+      guessed = new Set();
+      wrongCount = 0;
+      gameOver = false;
+      catLabelEl.textContent = CAT_LABELS[category];
+      buildHearts();
+      updateHearts();
+      renderWord();
+      buildKeyboard();
+      modalBackdrop.classList.remove('show');
+    }
+
+    document.addEventListener('keydown', (e) => {
+      const key = e.key.toUpperCase();
+      if (/^[A-Z]$/.test(key)) guessLetter(key);
+    });
+
+    document.querySelectorAll('.hm-cat-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.hm-cat-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        category = btn.dataset.cat;
+        newGame();
+      });
+    });
+
+    modalBtn.addEventListener('click', newGame);
+
+    newGame();
+  })();
+  </script>
+</body>
+</html>
