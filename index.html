@@ -3,12 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Contoura Labs — We Build Digital Experiences That Matter</title>
+  <title>Contoura Labs — Digital Agency + Free Tools & Games</title>
   <meta name="description" content="Contoura Labs helps businesses grow with modern web, mobile, and design solutions. WordPress development, mobile apps, UI/UX design, ERP, POS software.">
   <meta property="og:title" content="Contoura Labs — Digital Agency">
   <meta property="og:description" content="Modern web, mobile, and design solutions for businesses.">
   <meta property="og:type" content="website">
-  <link rel="icon" href="logo.png" type="image/png">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 73 28 A 32 32 0 0 0 27 28' stroke='%23FF6B35' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 24 32 A 32 32 0 0 0 24 68' stroke='%23E8384F' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 27 72 A 32 32 0 0 0 73 72' stroke='%2300B8A9' stroke-width='9' fill='none' stroke-linecap='round'/></svg>">
+  <link rel="stylesheet" href="assets/css/common.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -133,14 +134,22 @@
     .why-card:hover .why-title { color: #FF6B35; }
     .dark .why-card:hover .why-title { color: #FF6B35; }
 
+    #navbar {
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(20px);
+      box-shadow: 0 1px 0 rgba(0,0,0,0.06);
+    }
+    .dark #navbar {
+      background: rgba(10,10,10,0.95);
+      box-shadow: 0 1px 0 rgba(255,255,255,0.06);
+    }
     .nav-scrolled {
-      background: rgba(255,255,255,0.85) !important;
-      backdrop-filter: blur(20px) !important;
-      box-shadow: 0 1px 0 rgba(0,0,0,0.06) !important;
+      background: rgba(255,255,255,1) !important;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08) !important;
     }
     .dark .nav-scrolled {
-      background: rgba(10,10,10,0.85) !important;
-      box-shadow: 0 1px 0 rgba(255,255,255,0.06) !important;
+      background: rgba(10,10,10,1) !important;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3) !important;
     }
 
     #mobile-menu {
@@ -196,12 +205,19 @@
   <!-- NAVBAR -->
   <nav id="navbar" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300">
     <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-      <a href="#hero" class="flex items-center relative z-50">
-        <img src="logo.png" alt="Contoura Labs" class="h-11 w-auto">
+      <a href="#hero" class="flex items-center gap-2.5 relative z-50">
+        <svg width="40" height="40" viewBox="0 0 100 100" fill="none">
+          <path d="M 73 28 A 32 32 0 0 0 27 28" stroke="#FF6B35" stroke-width="9" fill="none" stroke-linecap="round"/>
+          <path d="M 24 32 A 32 32 0 0 0 24 68" stroke="#E8384F" stroke-width="9" fill="none" stroke-linecap="round"/>
+          <path d="M 27 72 A 32 32 0 0 0 73 72" stroke="#00B8A9" stroke-width="9" fill="none" stroke-linecap="round"/>
+        </svg>
+        <span class="font-bold text-base tracking-tight">Contoura Labs</span>
       </a>
-      <div class="hidden md:flex items-center gap-8">
+      <div class="hidden md:flex items-center gap-7">
         <a href="#about" class="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">About</a>
         <a href="#services" class="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">Services</a>
+        <a href="tools/index.html" class="text-sm font-semibold text-brand-orange hover:text-brand-red transition-colors">Tools</a>
+        <a href="games/index.html" class="text-sm font-semibold text-brand-teal hover:text-brand-orange transition-colors">Games</a>
         <a href="#portfolio" class="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">Portfolio</a>
         <a href="#testimonials" class="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">Testimonials</a>
         <a href="#contact" class="btn-gradient text-white text-sm font-semibold px-5 py-2.5 rounded-full">Contact Us</a>
@@ -228,6 +244,8 @@
     </button>
     <a href="#about" class="mobile-link text-lg font-medium text-gray-800 dark:text-gray-200 py-3 border-b border-gray-100 dark:border-white/10">About</a>
     <a href="#services" class="mobile-link text-lg font-medium text-gray-800 dark:text-gray-200 py-3 border-b border-gray-100 dark:border-white/10">Services</a>
+    <a href="tools/index.html" class="mobile-link text-lg font-semibold text-brand-orange py-3 border-b border-gray-100 dark:border-white/10">Tools</a>
+    <a href="games/index.html" class="mobile-link text-lg font-semibold text-brand-teal py-3 border-b border-gray-100 dark:border-white/10">Games</a>
     <a href="#portfolio" class="mobile-link text-lg font-medium text-gray-800 dark:text-gray-200 py-3 border-b border-gray-100 dark:border-white/10">Portfolio</a>
     <a href="#testimonials" class="mobile-link text-lg font-medium text-gray-800 dark:text-gray-200 py-3 border-b border-gray-100 dark:border-white/10">Testimonials</a>
     <a href="#contact" class="mobile-link btn-gradient text-white text-center font-semibold px-5 py-3 rounded-full mt-6">Contact Us</a>
@@ -584,6 +602,78 @@
     </div>
   </section>
 
+  <!-- TOOLS & GAMES SHOWCASE -->
+  <section id="tools" class="py-24 md:py-32 bg-white dark:bg-surface-dark">
+    <div class="max-w-6xl mx-auto px-6">
+      <!-- Minimal section intro -->
+      <div class="text-center max-w-2xl mx-auto mb-20">
+        <span class="reveal text-xs font-medium uppercase tracking-[0.22em] text-gray-400 dark:text-gray-500 mb-5 block">Free Tools &amp; Games</span>
+        <h2 class="reveal reveal-delay-1 text-3xl md:text-5xl font-light tracking-tight mb-5 text-gray-900 dark:text-white">
+          More than an agency.<br>
+          <span class="italic font-normal" style="font-family: 'Iowan Old Style', 'Palatino', 'Georgia', serif;">A toolkit.</span>
+        </h2>
+        <p class="reveal reveal-delay-2 text-gray-500 dark:text-gray-400 leading-relaxed max-w-xl mx-auto">
+          We built 30+ free in-browser tools and 6 games. No signup, no ads, no data leaves your device.
+        </p>
+      </div>
+
+      <!-- Two-column minimalist showcase with thin divider -->
+      <div class="grid md:grid-cols-2 border-t border-gray-100 dark:border-white/5">
+        <!-- Tools column -->
+        <a href="tools/index.html" class="reveal reveal-delay-2 group block py-14 md:py-16 md:pr-16 border-b md:border-b-0 md:border-r border-gray-100 dark:border-white/5 transition-all hover:bg-gray-50/40 dark:hover:bg-white/[0.015] -mx-6 px-6 md:mx-0 md:px-0">
+          <div class="flex items-baseline gap-4 mb-6">
+            <span class="text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-brand-orange">30+ Tools</span>
+            <span class="h-px flex-1 bg-gray-200 dark:bg-white/10 group-hover:bg-brand-orange/40 group-hover:dark:bg-brand-orange/40 transition-colors"></span>
+          </div>
+          <h3 class="text-3xl md:text-4xl font-light tracking-tight mb-4 text-gray-900 dark:text-white group-hover:text-brand-orange transition-colors" style="font-family: 'Iowan Old Style', 'Palatino', 'Georgia', serif;">Tools</h3>
+          <p class="text-gray-500 dark:text-gray-400 mb-10 leading-relaxed max-w-md text-[0.95rem]">
+            PDF utilities, image processing, generators, calculators, and developer tools — all running locally in your browser.
+          </p>
+          <span class="inline-flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100 group-hover:text-brand-orange group-hover:gap-3 transition-all">
+            Explore tools
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+          </span>
+        </a>
+
+        <!-- Games column -->
+        <a href="games/index.html" class="reveal reveal-delay-3 group block py-14 md:py-16 md:pl-16 border-b border-gray-100 dark:border-white/5 transition-all hover:bg-gray-50/40 dark:hover:bg-white/[0.015] -mx-6 px-6 md:mx-0 md:px-0">
+          <div class="flex items-baseline gap-4 mb-6">
+            <span class="text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-brand-teal">6 Games</span>
+            <span class="h-px flex-1 bg-gray-200 dark:bg-white/10 group-hover:bg-brand-teal/40 group-hover:dark:bg-brand-teal/40 transition-colors"></span>
+          </div>
+          <h3 class="text-3xl md:text-4xl font-light tracking-tight mb-4 text-gray-900 dark:text-white group-hover:text-brand-teal transition-colors" style="font-family: 'Iowan Old Style', 'Palatino', 'Georgia', serif;">Games</h3>
+          <p class="text-gray-500 dark:text-gray-400 mb-10 leading-relaxed max-w-md text-[0.95rem]">
+            Quick in-browser games for your coffee break. Tic-Tac-Toe vs AI, Flappy Dot, Minesweeper, and more.
+          </p>
+          <span class="inline-flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100 group-hover:text-brand-teal group-hover:gap-3 transition-all">
+            Play games
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+          </span>
+        </a>
+      </div>
+
+      <!-- Minimal stats row -->
+      <div class="reveal reveal-delay-4 mt-20 pt-12 border-t border-gray-100 dark:border-white/5 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+        <div>
+          <div class="text-2xl md:text-3xl font-light tracking-tight text-gray-900 dark:text-white">30+</div>
+          <div class="text-[0.7rem] uppercase tracking-[0.18em] text-gray-400 dark:text-gray-500 mt-2">Tools</div>
+        </div>
+        <div>
+          <div class="text-2xl md:text-3xl font-light tracking-tight text-gray-900 dark:text-white">6</div>
+          <div class="text-[0.7rem] uppercase tracking-[0.18em] text-gray-400 dark:text-gray-500 mt-2">Games</div>
+        </div>
+        <div>
+          <div class="text-2xl md:text-3xl font-light tracking-tight text-gray-900 dark:text-white">0</div>
+          <div class="text-[0.7rem] uppercase tracking-[0.18em] text-gray-400 dark:text-gray-500 mt-2">Signups</div>
+        </div>
+        <div>
+          <div class="text-2xl md:text-3xl font-light tracking-tight text-gray-900 dark:text-white">100%</div>
+          <div class="text-[0.7rem] uppercase tracking-[0.18em] text-gray-400 dark:text-gray-500 mt-2">In-Browser</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- CONTACT SECTION -->
   <section id="contact" class="py-24 md:py-32 relative overflow-hidden">
     <div class="orb w-[500px] h-[500px] bg-brand-red top-[-20%] left-[-10%]"></div>
@@ -674,13 +764,22 @@
     <div class="max-w-6xl mx-auto px-6">
       <div class="flex flex-col md:flex-row items-center justify-between gap-6">
         <div class="flex flex-col items-center md:items-start gap-2">
-          <img src="logo.png" alt="Contoura Labs" class="h-8 w-auto">
+          <div class="flex items-center gap-2">
+          <svg width="28" height="28" viewBox="0 0 100 100" fill="none">
+            <path d="M 73 28 A 32 32 0 0 0 27 28" stroke="#FF6B35" stroke-width="9" fill="none" stroke-linecap="round"/>
+            <path d="M 24 32 A 32 32 0 0 0 24 68" stroke="#E8384F" stroke-width="9" fill="none" stroke-linecap="round"/>
+            <path d="M 27 72 A 32 32 0 0 0 73 72" stroke="#00B8A9" stroke-width="9" fill="none" stroke-linecap="round"/>
+          </svg>
+          <span class="font-bold text-sm">Contoura Labs</span>
+        </div>
           <p class="text-xs text-gray-400">© 2025 Contoura Labs. All rights reserved.</p>
         </div>
 
         <div class="flex items-center gap-6 text-sm text-gray-400">
           <a href="#about" class="hover:text-gray-700 dark:hover:text-gray-200 transition-colors">About</a>
           <a href="#services" class="hover:text-gray-700 dark:hover:text-gray-200 transition-colors">Services</a>
+          <a href="tools/index.html" class="hover:text-brand-orange transition-colors">Tools</a>
+          <a href="games/index.html" class="hover:text-brand-teal transition-colors">Games</a>
           <a href="#portfolio" class="hover:text-gray-700 dark:hover:text-gray-200 transition-colors">Portfolio</a>
           <a href="#contact" class="hover:text-gray-700 dark:hover:text-gray-200 transition-colors">Contact</a>
         </div>
