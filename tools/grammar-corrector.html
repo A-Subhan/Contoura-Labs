@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grammar Corrector — Contoura Labs</title>
+  <meta name="description" content="Fix capitalization, punctuation, double spaces, spacing issues, common typos, and repeating punctuation — all toggleable.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 73 28 A 32 32 0 0 0 27 28' stroke='%23FF6B35' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 24 32 A 32 32 0 0 0 24 68' stroke='%23E8384F' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 27 72 A 32 32 0 0 0 73 72' stroke='%2300B8A9' stroke-width='9' fill='none' stroke-linecap='round'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: {
+        colors: {
+          brand: { orange: '#FF6B35', red: '#E8384F', teal: '#00B8A9' },
+          surface: { light: '#F8F9FA', dark: '#0A0A0A', card: '#1A1A1A', alt: '#111111' }
+        },
+        fontFamily: { sans: ['Inter', 'sans-serif'] }
+      }}
+    }
+  </script>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <style>
+    .diff-add { background: rgba(255,107,53,0.18); color: #FF6B35; padding: 0.05em 0.2em; border-radius: 4px; font-weight: 500; }
+    .fix-toggle { display: flex; align-items: center; gap: 0.6rem; padding: 0.6rem 0.85rem; border-radius: 0.6rem; background: #f9fafb; cursor: pointer; transition: background 0.2s; }
+    .dark .fix-toggle { background: rgba(255,255,255,0.04); }
+    .fix-toggle:hover { background: rgba(255,107,53,0.06); }
+    .fix-toggle input { width: 1rem; height: 1rem; accent-color: #FF6B35; }
+    .fix-toggle span { font-size: 0.8125rem; }
+    .diff-legend { display:inline-block; width:0.85em; height:0.85em; border-radius:3px; vertical-align: middle; }
+    .stat-pill { display:inline-flex; align-items:center; gap:0.35rem; padding:0.25rem 0.7rem; border-radius:9999px; font-size:0.75rem; font-weight:600; }
+  </style>
+</head>
+<body class="font-sans bg-white text-gray-900 dark:bg-surface-dark dark:text-gray-100 antialiased">
+
+  <div id="navbar-mount"></div>
+
+  <main class="tool-page">
+    <div class="tool-container">
+      <header class="tool-header">
+        <span class="badge mb-3">Text / Dev Tools</span>
+        <h1 class="tool-title">Grammar <span class="gradient-text">Corrector</span></h1>
+        <p class="tool-subtitle">Fix capitalization, punctuation, spacing, typos, and repeating punctuation. Toggle each fix on or off.</p>
+      </header>
+
+      <div class="tool-card">
+        <label class="field-label" for="input">Your text</label>
+        <textarea id="input" rows="6" placeholder="paste ur text here with  mistakes  ,teh cat sat.on it  "></textarea>
+
+        <!-- Fix toggles -->
+        <p class="field-label mt-4">Fixes to apply</p>
+        <div class="grid-2" id="fix-toggles"></div>
+
+        <div class="flex flex-wrap gap-3 mt-5">
+          <button class="btn-primary" id="fix-btn">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.562.562 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/></svg>
+            Fix text
+          </button>
+          <button class="btn-secondary" id="clear-btn">Clear</button>
+          <button class="btn-secondary" id="sample-btn">Load sample</button>
+          <button class="btn-secondary" id="all-btn">Enable all</button>
+        </div>
+
+        <!-- Output -->
+        <div id="output-wrap" class="mt-5 hidden">
+          <div class="flex items-center justify-between mb-2 flex-wrap gap-2">
+            <h3 class="font-semibold text-sm">Corrected text <span id="fix-count" class="stat-pill ml-2 bg-brand-teal/10 text-brand-teal">0 fixes</span></h3>
+            <div class="flex items-center gap-3">
+              <span class="text-xs text-gray-400 flex items-center gap-1.5">
+                <span class="diff-legend" style="background: rgba(255,107,53,0.45);"></span> changed
+              </span>
+              <button class="btn-secondary" id="copy-btn" style="padding:0.4rem 0.85rem;">Copy</button>
+            </div>
+          </div>
+          <div id="diff-output" class="p-4 rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/10" style="line-height:1.7; font-size:0.9375rem;"></div>
+
+          <details class="mt-3">
+            <summary class="cursor-pointer text-xs text-gray-400 hover:text-gray-600">Show plain text</summary>
+            <textarea id="plain-output" rows="4" readonly class="mt-2" style="min-height:120px;"></textarea>
+          </details>
+        </div>
+
+        <p class="text-xs text-gray-400 mt-4 text-center">All fixes run locally in your browser. This is a rule-based corrector — not a full NLP engine.</p>
+      </div>
+    </div>
+  </main>
+
+  <footer class="py-8 border-t border-gray-100 dark:border-white/5 mt-12">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p class="text-xs text-gray-400">© 2025 Contoura Labs</p>
+      <a href="index.html" class="text-xs text-brand-orange hover:text-brand-red transition-colors">← Back to all tools</a>
+    </div>
+  </footer>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+  (function () {
+    'use strict';
+
+    // ===== Common typo list (30+) =====
+    const TYPOS = {
+      teh:'the', adn:'and', nad:'and', recieve:'receive', definately:'definitely',
+      seperate:'separate', occured:'occurred', untill:'until', wich:'which',
+      becouse:'because', becuase:'because', thier:'their', freind:'friend',
+      beleive:'believe', acheive:'achieve', arguement:'argument', calender:'calendar',
+      cemetary:'cemetery', changable:'changeable', collegue:'colleague',
+      comming:'coming', commited:'committed', concious:'conscious',
+      embarass:'embarrass', enviroment:'environment', existance:'existence',
+      experiance:'experience', goverment:'government', grammer:'grammar',
+      happend:'happened', harrass:'harass', independant:'independent',
+      knowlege:'knowledge', liason:'liaison', maintenence:'maintenance',
+      neccessary:'necessary', occassion:'occasion', occurance:'occurrence',
+      persistant:'persistent', posession:'possession', prefered:'preferred',
+      priviledge:'privilege', publically:'publically', recomend:'recommend',
+      rythm:'rhythm', succesful:'successful', tommorow:'tomorrow',
+      truely:'truly', unfortunatly:'unfortunately', wierd:'weird',
+      writting:'writing', your:'your', you're:'you\'re', alot:'a lot',
+      cant:"can't", dont:"don't", wont:"won't", didnt:"didn't", isnt:"isn't",
+      im:'I\'m', ive:'I\'ve', ill:'I\'ll', id:'I\'d'
+    };
+
+    const FIXES = [
+      { id:'cap-sentence', label:'Capitalize first letter of each sentence', defaultOn:true },
+      { id:'cap-i', label:'Capitalize standalone "i" → "I"', defaultOn:true },
+      { id:'period-end', label:'Add period at end if missing', defaultOn:true },
+      { id:'double-space', label:'Fix double spaces → single', defaultOn:true },
+      { id:'space-punct', label:'Fix " ," → "," and " ." → "."', defaultOn:true },
+      { id:'typos', label:'Fix common typos (teh → the, recieve → receive…)', defaultOn:true },
+      { id:'repeat-punct', label:'Fix repeating punctuation (?? → ?, !! → !)', defaultOn:true },
+      { id:'space-after-punct', label:'Add space after . , ; : if missing', defaultOn:false }
+    ];
+
+    const togglesEl = document.getElementById('fix-toggles');
+    const inputEl = document.getElementById('input');
+    const state = {};
+    FIXES.forEach(f => state[f.id] = f.defaultOn);
+
+    function buildToggles() {
+      togglesEl.innerHTML = '';
+      FIXES.forEach(f => {
+        const lbl = document.createElement('label');
+        lbl.className = 'fix-toggle';
+        lbl.innerHTML = `<input type="checkbox" data-fix="${f.id}" ${state[f.id] ? 'checked' : ''}><span>${f.label}</span>`;
+        lbl.querySelector('input').addEventListener('change', e => { state[f.id] = e.target.checked; });
+        togglesEl.appendChild(lbl);
+      });
+    }
+
+    function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    // Apply each fix (order matters!)
+    function applyFixes(text) {
+      let t = text;
+
+      if (state['double-space']) {
+        t = t.replace(/  +/g, ' ');
+      }
+
+      if (state['space-punct']) {
+        t = t.replace(/\s+([,.;:!?])/g, '$1');
+      }
+
+      if (state['space-after-punct']) {
+        // Add space after . , ; : when followed by a non-space and non-punct char
+        t = t.replace(/([,;:])([^\s\d])/g, '$1 $2');
+        t = t.replace(/\.([A-Za-z])/g, '. $1');
+      }
+
+      if (state['repeat-punct']) {
+        t = t.replace(/\?{2,}/g, '?');
+        t = t.replace(/!{2,}/g, '!');
+        t = t.replace(/\.{4,}/g, '...');  // keep ellipsis
+        t = t.replace(/,{2,}/g, ',');
+      }
+
+      if (state['typos']) {
+        t = t.replace(/\b([A-Za-z']+)\b/g, (word) => {
+          const lower = word.toLowerCase();
+          if (TYPOS[lower]) {
+            const fix = TYPOS[lower];
+            return word[0] === word[0].toUpperCase() ? fix.charAt(0).toUpperCase() + fix.slice(1) : fix;
+          }
+          return word;
+        });
+      }
+
+      if (state['cap-i']) {
+        // Capitalize standalone i, but not as part of a word
+        t = t.replace(/\bi\b/g, 'I');
+        // Also fix i'm, i've, i'll, i'd
+        t = t.replace(/\bi'(m|ve|ll|d)\b/gi, (match, suf) => "I'" + suf.toLowerCase());
+      }
+
+      if (state['cap-sentence']) {
+        // Capitalize first non-space char of the entire text
+        t = t.replace(/^(\s*)([a-z])/, (m, sp, ch) => sp + ch.toUpperCase());
+        // Capitalize after . ! ? (followed by optional quotes/brackets and whitespace)
+        t = t.replace(/([.!?]['")\]]?\s+)([a-z])/g, (m, lead, ch) => lead + ch.toUpperCase());
+      }
+
+      if (state['period-end']) {
+        const trimmed = t.replace(/\s+$/g, '');
+        if (trimmed.length > 0) {
+          const last = trimmed[trimmed.length - 1];
+          if (!/[.!?]/.test(last)) {
+            t = trimmed + '.';
+          } else {
+            t = trimmed;
+          }
+        }
+      }
+
+      return t;
+    }
+
+    // Word-level diff (LCS)
+    function tokenize(str) {
+      const out = [];
+      const re = /([A-Za-z]+(?:'[A-Za-z]+)?)|([^A-Za-z]+)/g;
+      let m;
+      while ((m = re.exec(str)) !== null) {
+        out.push({ text: m[1] !== undefined ? m[1] : m[2] });
+      }
+      return out;
+    }
+    function diffWords(a, b) {
+      const ta = tokenize(a), tb = tokenize(b);
+      const na = ta.length, nb = tb.length;
+      const dp = Array.from({length: na+1}, () => new Array(nb+1).fill(0));
+      for (let i = na - 1; i >= 0; i--) {
+        for (let j = nb - 1; j >= 0; j--) {
+          if (ta[i].text === tb[j].text) dp[i][j] = dp[i+1][j+1] + 1;
+          else dp[i][j] = Math.max(dp[i+1][j], dp[i][j+1]);
+        }
+      }
+      const matched = new Array(nb).fill(false);
+      let i = 0, j = 0;
+      while (i < na && j < nb) {
+        if (ta[i].text === tb[j].text) { matched[j] = true; i++; j++; }
+        else if (dp[i+1][j] >= dp[i][j+1]) i++;
+        else j++;
+      }
+      return tb.map((t, idx) => ({ text: t.text, changed: !matched[idx] }));
+    }
+
+    function run() {
+      const original = inputEl.value;
+      if (!original.trim()) { CL.toast('Please enter some text first', false); return; }
+      const fixed = applyFixes(original);
+      const diff = diffWords(original, fixed);
+      const html = diff.map(t => {
+        return t.changed ? `<span class="diff-add">${esc(t.text)}</span>` : esc(t.text);
+      }).join('');
+      document.getElementById('diff-output').innerHTML = html;
+      document.getElementById('plain-output').value = fixed;
+
+      const changeCount = diff.filter(d => d.changed).length;
+      document.getElementById('fix-count').textContent = changeCount + (changeCount === 1 ? ' change' : ' changes');
+
+      document.getElementById('output-wrap').classList.remove('hidden');
+      CL.toast(changeCount === 0 ? 'No fixes needed!' : 'Fixed!');
+    }
+
+    document.getElementById('fix-btn').addEventListener('click', run);
+    document.getElementById('clear-btn').addEventListener('click', () => {
+      inputEl.value = '';
+      document.getElementById('output-wrap').classList.add('hidden');
+      CL.toast('Cleared');
+    });
+    document.getElementById('sample-btn').addEventListener('click', () => {
+      inputEl.value = "i went to teh store  ,and bought alot of stuff.i recieve a definately seperate  package  !!it was wierd but  kinda cool.untill next time";
+      CL.toast('Sample loaded');
+    });
+    document.getElementById('all-btn').addEventListener('click', () => {
+      FIXES.forEach(f => state[f.id] = true);
+      buildToggles();
+      CL.toast('All fixes enabled');
+    });
+    document.getElementById('copy-btn').addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(document.getElementById('plain-output').value);
+        CL.toast('Copied!');
+      } catch (e) { CL.toast('Copy failed', false); }
+    });
+
+    buildToggles();
+  })();
+  </script>
+</body>
+</html>

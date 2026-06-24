@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Would You Rather — Contoura Labs</title>
+  <meta name="description" content="Tough choices and silly scenarios. Pick a category, choose 10/15/20 questions, and vote your way through funny, deep, educational, gross, and hard Would You Rather questions.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 73 28 A 32 32 0 0 0 27 28' stroke='%23FF6B35' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 24 32 A 32 32 0 0 0 24 68' stroke='%23E8384F' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 27 72 A 32 32 0 0 0 73 72' stroke='%2300B8A9' stroke-width='9' fill='none' stroke-linecap='round'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: {
+        colors: {
+          brand: { orange: '#FF6B35', red: '#E8384F', teal: '#00B8A9' },
+          surface: { light: '#F8F9FA', dark: '#0A0A0A', card: '#1A1A1A', alt: '#111111' }
+        },
+        fontFamily: { sans: ['Inter', 'sans-serif'] }
+      }}
+    }
+  </script>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <style>
+    /* ===== Setup screen ===== */
+    .cat-card {
+      position: relative;
+      padding: 1.25rem 1rem;
+      border-radius: 0.9rem;
+      border: 2px solid #e5e7eb;
+      background: #fff;
+      cursor: pointer;
+      transition: all 0.22s cubic-bezier(0.16,1,0.3,1);
+      text-align: center;
+      display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+    }
+    .dark .cat-card { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.1); }
+    .cat-card:hover {
+      transform: translateY(-3px);
+      border-color: #FF6B35;
+      box-shadow: 0 12px 30px rgba(255,107,53,0.15);
+    }
+    .cat-card.selected {
+      border-color: transparent;
+      background: linear-gradient(135deg, #FF6B35, #E8384F, #00B8A9);
+      color: #fff;
+      box-shadow: 0 12px 30px rgba(255,107,53,0.3);
+    }
+    .cat-card .cat-emoji { font-size: 2rem; line-height: 1; }
+    .cat-card .cat-name { font-weight: 700; font-size: 0.95rem; }
+    .cat-card .cat-desc { font-size: 0.7rem; opacity: 0.7; line-height: 1.2; }
+    .count-card {
+      padding: 0.85rem 1.5rem;
+      border-radius: 0.75rem;
+      border: 2px solid #e5e7eb;
+      background: #fff;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 1.05rem;
+      transition: all 0.2s ease;
+      min-width: 5.5rem;
+      text-align: center;
+    }
+    .dark .count-card { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.1); }
+    .count-card:hover { border-color: #FF6B35; }
+    .count-card.selected {
+      border-color: transparent;
+      background: linear-gradient(135deg, #FF6B35, #E8384F);
+      color: #fff;
+      box-shadow: 0 6px 16px rgba(255,107,53,0.25);
+    }
+
+    /* ===== Game grid ===== */
+    .wyr-grid {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 1rem;
+      align-items: stretch;
+    }
+    @media (max-width: 640px) {
+      .wyr-grid { grid-template-columns: 1fr; }
+      .wyr-vs { display: none !important; }
+    }
+    .wyr-option {
+      position: relative;
+      min-height: 240px;
+      padding: 2rem 1.5rem;
+      border-radius: 1rem;
+      cursor: pointer;
+      overflow: hidden;
+      border: 2px solid transparent;
+      transition: transform 0.35s cubic-bezier(0.16,1,0.3,1),
+                  opacity 0.35s ease,
+                  box-shadow 0.25s ease,
+                  border-color 0.25s ease;
+      display: flex; flex-direction: column;
+      justify-content: space-between;
+      text-align: center;
+      color: #fff;
+      font-weight: 600;
+      font-size: 1.05rem;
+      line-height: 1.4;
+    }
+    .wyr-option.left { background: linear-gradient(135deg, #FF6B35 0%, #E8384F 100%); }
+    .wyr-option.right { background: linear-gradient(135deg, #00B8A9 0%, #00857c 100%); }
+    .wyr-option:hover:not(.voted) {
+      transform: translateY(-4px);
+      box-shadow: 0 18px 40px rgba(0,0,0,0.18);
+    }
+    .wyr-option.voted { cursor: default; }
+    .wyr-option.voted.chosen {
+      border-color: #fff;
+      transform: scale(1.04);
+      box-shadow: 0 0 0 4px rgba(255,255,255,0.4), 0 18px 40px rgba(0,0,0,0.25);
+    }
+    .wyr-option.voted.not-chosen {
+      opacity: 0.55;
+      transform: scale(0.95);
+    }
+    .wyr-option .opt-label {
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      opacity: 0.7;
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+    .wyr-option .opt-text {
+      flex: 1;
+      display: flex; align-items: center; justify-content: center;
+      padding: 0.5rem;
+    }
+    .wyr-option .opt-stats {
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+    .wyr-option.voted .opt-stats { opacity: 1; }
+    .pct-bar {
+      width: 100%; height: 6px;
+      background: rgba(255,255,255,0.25);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 0.5rem;
+    }
+    .pct-bar-fill {
+      height: 100%; background: #fff;
+      width: 0;
+      transition: width 0.9s cubic-bezier(0.16,1,0.3,1);
+    }
+    .pct-text {
+      font-size: 1.5rem; font-weight: 800; margin-top: 0.5rem;
+    }
+    .wyr-vs {
+      display: flex; align-items: center; justify-content: center;
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      background: #0a0a0a; color: #fff;
+      font-weight: 800; font-size: 0.875rem;
+      letter-spacing: 0.05em;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+      flex-shrink: 0;
+    }
+    .dark .wyr-vs { background: #fff; color: #0a0a0a; }
+
+    /* ===== Slide transition ===== */
+    .q-card-wrap { overflow: hidden; }
+    .q-card {
+      transition: transform 0.35s cubic-bezier(0.16,1,0.3,1),
+                  opacity 0.35s ease;
+    }
+    .q-card.slide-out-left { transform: translateX(-60px); opacity: 0; }
+    .q-card.slide-in-right { transform: translateX(60px); opacity: 0; }
+
+    /* ===== Progress dots ===== */
+    .prog-dots {
+      display: flex; gap: 0.25rem; flex-wrap: wrap; justify-content: center;
+    }
+    .prog-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: #e5e7eb; transition: background 0.25s ease;
+    }
+    .dark .prog-dot { background: #374151; }
+    .prog-dot.l { background: #FF6B35; }
+    .prog-dot.r { background: #00B8A9; }
+    .prog-dot.current { box-shadow: 0 0 0 2px rgba(255,107,53,0.4); transform: scale(1.2); }
+
+    /* ===== Result screen ===== */
+    .result-stat {
+      padding: 1.25rem; border-radius: 0.85rem; text-align: center;
+    }
+    .result-stat.a { background: linear-gradient(135deg, rgba(255,107,53,0.12), rgba(232,56,79,0.12)); border: 1px solid rgba(255,107,53,0.25); }
+    .result-stat.b { background: linear-gradient(135deg, rgba(0,184,169,0.12), rgba(0,133,124,0.12)); border: 1px solid rgba(0,184,169,0.25); }
+
+    .hidden-screen { display: none !important; }
+  </style>
+</head>
+<body class="font-sans bg-white text-gray-900 dark:bg-surface-dark dark:text-gray-100 antialiased">
+
+  <div id="navbar-mount"></div>
+
+  <main class="tool-page">
+    <div class="tool-container">
+      <header class="tool-header">
+        <span class="badge mb-3">Games</span>
+        <h1 class="tool-title">Would You Rather</h1>
+        <p class="tool-subtitle">Tough choices, sillier answers. Pick a category, choose your length, and vote your way through.</p>
+      </header>
+
+      <div class="tool-card">
+
+        <!-- ===== SETUP SCREEN ===== -->
+        <div id="setup-screen">
+          <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3 text-center">1. Choose a category</h3>
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-7" id="cat-cards"></div>
+
+          <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3 text-center">2. How many questions?</h3>
+          <div class="flex justify-center gap-3 mb-7" id="count-cards">
+            <button class="count-card" data-count="10">10</button>
+            <button class="count-card selected" data-count="15">15</button>
+            <button class="count-card" data-count="20">20</button>
+          </div>
+
+          <div class="flex justify-center">
+            <button class="btn-primary" id="start-btn" style="min-width:14rem;">Start Game →</button>
+          </div>
+
+          <div class="mt-6 p-4 rounded-lg bg-gray-50 dark:bg-white/5 text-xs text-gray-500 leading-relaxed text-center">
+            <p>Vote by clicking Option A or Option B. After each vote, see how others voted, then the next question slides in automatically. At the end you'll get a summary of your choices.</p>
+          </div>
+        </div>
+
+        <!-- ===== GAME SCREEN ===== -->
+        <div id="game-screen" class="hidden-screen">
+          <!-- Top status bar -->
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-xs font-semibold text-gray-500 dark:text-gray-400">
+              Question <span id="q-current">1</span> / <span id="q-total">15</span>
+            </span>
+            <span class="text-xs font-semibold px-2 py-0.5 rounded-full" id="cat-badge" style="background:rgba(255,107,53,0.1);color:#FF6B35;">—</span>
+          </div>
+
+          <div class="w-full h-1.5 rounded-full bg-gray-100 dark:bg-white/10 overflow-hidden mb-5">
+            <div id="game-progress" class="h-full" style="width:0%;background:linear-gradient(90deg,#FF6B35,#E8384F,#00B8A9);transition:width 0.4s ease;"></div>
+          </div>
+
+          <div class="q-card-wrap">
+            <div class="q-card" id="q-card">
+              <div class="wyr-grid" id="wyr-grid">
+                <button class="wyr-option left" id="opt-left">
+                  <div class="opt-label">Option A</div>
+                  <div class="opt-text" id="text-left"></div>
+                  <div class="opt-stats">
+                    <div class="pct-text" id="pct-left">—</div>
+                    <div class="pct-bar"><div class="pct-bar-fill" id="bar-left"></div></div>
+                    <div class="text-xs mt-1 opacity-80" id="count-left"></div>
+                  </div>
+                </button>
+
+                <div class="wyr-vs">VS</div>
+
+                <button class="wyr-option right" id="opt-right">
+                  <div class="opt-label">Option B</div>
+                  <div class="opt-text" id="text-right"></div>
+                  <div class="opt-stats">
+                    <div class="pct-text" id="pct-right">—</div>
+                    <div class="pct-bar"><div class="pct-bar-fill" id="bar-right"></div></div>
+                    <div class="text-xs mt-1 opacity-80" id="count-right"></div>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex flex-col items-center gap-3 mt-6">
+            <div class="prog-dots" id="prog-dots"></div>
+            <div class="flex gap-3">
+              <button class="btn-secondary" id="skip-btn">Skip</button>
+              <button class="btn-primary hidden" id="next-btn">Next Question →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== RESULTS SCREEN ===== -->
+        <div id="results-screen" class="hidden-screen text-center">
+          <div class="text-5xl mb-3" id="result-emoji">🎉</div>
+          <h3 class="text-2xl font-bold mb-1" id="result-title">Game Over!</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mb-6" id="result-tagline">Here's how you voted…</p>
+
+          <div class="grid grid-cols-2 gap-3 mb-6">
+            <div class="result-stat a">
+              <div class="text-xs font-semibold uppercase tracking-wider text-brand-orange mb-1">Option A</div>
+              <div class="text-3xl font-extrabold" id="result-a-count">0</div>
+              <div class="text-xs text-gray-500 mt-1">time(s) chosen</div>
+            </div>
+            <div class="result-stat b">
+              <div class="text-xs font-semibold uppercase tracking-wider text-brand-teal mb-1">Option B</div>
+              <div class="text-3xl font-extrabold" id="result-b-count">0</div>
+              <div class="text-xs text-gray-500 mt-1">time(s) chosen</div>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-lg bg-gray-50 dark:bg-white/5 text-sm text-gray-600 dark:text-gray-300 mb-6" id="result-summary"></div>
+
+          <div class="flex flex-col sm:flex-row gap-3 justify-center">
+            <button class="btn-primary" id="play-again-btn">Play Again (Same Setup)</button>
+            <button class="btn-secondary" id="new-setup-btn">New Setup</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <footer class="py-8 border-t border-gray-100 dark:border-white/5 mt-12">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p class="text-xs text-gray-400">© 2025 Contoura Labs</p>
+      <a href="index.html" class="text-xs text-brand-orange hover:text-brand-red transition-colors">← Back to all games</a>
+    </div>
+  </footer>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+  (function () {
+    'use strict';
+
+    // ===== Categories metadata =====
+    const CATEGORIES = {
+      humorous: { name: 'Humorous', emoji: '🤣', desc: 'Funny, silly questions' },
+      deep:     { name: 'Deep',     emoji: '🧠', desc: 'Philosophical, thought-provoking' },
+      educational: { name: 'Educational', emoji: '🎓', desc: 'Learning-oriented' },
+      gross:    { name: 'Gross',    emoji: '🤢', desc: 'Disgusting but fun' },
+      hard:     { name: 'Hard',     emoji: '😈', desc: 'Impossible choices' },
+      mixed:    { name: 'Mixed',    emoji: '🎲', desc: 'All categories' }
+    };
+
+    // ===== Question bank — tagged by category =====
+    const QUESTIONS = [
+      // ===== HUMOROUS (17) =====
+      { cat: 'humorous', a: "Always have to sing everything you say", b: "Always have to dance everywhere you walk", pctA: 42 },
+      { cat: 'humorous', a: "Have a permanent unibrow", b: "Have no eyebrows at all", pctA: 38 },
+      { cat: 'humorous', a: "Sneeze confetti every time you laugh", b: "Cry glitter every time you blink", pctA: 55 },
+      { cat: 'humorous', a: "Have a pet dinosaur the size of a horse", b: "Have a pet dragon the size of a cat", pctA: 60 },
+      { cat: 'humorous', a: "Speak only in rhyme for the rest of your life", b: "Have to whisper every word you say", pctA: 47 },
+      { cat: 'humorous', a: "Wear wet socks every day", b: "Wear a wet swimsuit under your clothes every day", pctA: 33 },
+      { cat: 'humorous', a: "Have hiccups every time you laugh", b: "Laugh every time you hiccup", pctA: 50 },
+      { cat: 'humorous', a: "Fight one horse-sized duck", b: "Fight 100 duck-sized horses", pctA: 58 },
+      { cat: 'humorous', a: "Always be 10 minutes late to everything", b: "Always be 20 minutes early to everything", pctA: 35 },
+      { cat: 'humorous', a: "Have a rewind button for your life", b: "Have a pause button for your life", pctA: 44 },
+      { cat: 'humorous', a: "Have spaghetti for hair", b: "Have marshmallows for fingers", pctA: 52 },
+      { cat: 'humorous', a: "Fart every time you sit down", b: "Burp every time you stand up", pctA: 41 },
+      { cat: 'humorous', a: "Have a personal theme song that plays everywhere you go", b: "Have a laugh track follow you around", pctA: 57 },
+      { cat: 'humorous', a: "Be able to talk to animals but they're all rude", b: "Be able to talk to plants but they complain constantly", pctA: 61 },
+      { cat: 'humorous', a: "Have fingers for toes", b: "Have toes for fingers", pctA: 44 },
+      { cat: 'humorous', a: "Always have a small bird on your head", b: "Always have a squirrel on your shoulder", pctA: 49 },
+      { cat: 'humorous', a: "Be 10 inches tall", b: "Be 10 feet tall", pctA: 63 },
+
+      // ===== DEEP (15) =====
+      { cat: 'deep', a: "Know exactly when you'll die", b: "Know exactly how you'll die", pctA: 37 },
+      { cat: 'deep', a: "Be forgotten after you die", b: "Be remembered but hated after you die", pctA: 64 },
+      { cat: 'deep', a: "Never feel physical pain again", b: "Never feel emotional pain again", pctA: 28 },
+      { cat: 'deep', a: "Live forever but watch everyone you love die", b: "Die at 50 surrounded by loved ones", pctA: 31 },
+      { cat: 'deep', a: "Know the meaning of life", b: "Know your life's purpose", pctA: 56 },
+      { cat: 'deep', a: "Be able to read minds but everyone knows", b: "Be able to read minds but it hurts your head", pctA: 49 },
+      { cat: 'deep', a: "Have unlimited money but no friends", b: "Have great friends but be broke forever", pctA: 32 },
+      { cat: 'deep', a: "Always know the truth", b: "Never be lied to", pctA: 45 },
+      { cat: 'deep', a: "Relive your best memory forever", b: "Skip ahead to your future success", pctA: 53 },
+      { cat: 'deep', a: "Have one wish granted now", b: "Three wishes granted in 20 years", pctA: 68 },
+      { cat: 'deep', a: "Forgive but never forget", b: "Forget but never forgive", pctA: 71 },
+      { cat: 'deep', a: "Lose all your memories from birth to age 18", b: "Lose all your memories from age 18 onward", pctA: 39 },
+      { cat: 'deep', a: "Know all the answers to the universe", b: "Be at peace with not knowing", pctA: 42 },
+      { cat: 'deep', a: "Be able to undo one mistake", b: "Be able to prevent one future mistake", pctA: 38 },
+      { cat: 'deep', a: "Have tomorrow's news today", b: "Have next year's news today", pctA: 46 },
+
+      // ===== EDUCATIONAL (15) — learning-oriented =====
+      { cat: 'educational', a: "Master every spoken language on Earth", b: "Master every musical instrument", pctA: 54 },
+      { cat: 'educational', a: "Memorize the entire dictionary", b: "Memorize the entire periodic table", pctA: 47 },
+      { cat: 'educational', a: "Learn history by living through it", b: "Learn science by conducting every experiment", pctA: 58 },
+      { cat: 'educational', a: "Be an expert in mathematics", b: "Be an expert in literature", pctA: 51 },
+      { cat: 'educational', a: "Speak fluent Latin", b: "Speak fluent ancient Greek", pctA: 44 },
+      { cat: 'educational', a: "Understand quantum physics deeply", b: "Understand economics deeply", pctA: 56 },
+      { cat: 'educational', a: "Visit every museum in the world", b: "Visit every natural wonder in the world", pctA: 39 },
+      { cat: 'educational', a: "Read every book ever written", b: "Watch every documentary ever made", pctA: 62 },
+      { cat: 'educational', a: "Know the name of every star in the sky", b: "Know the name of every species on Earth", pctA: 48 },
+      { cat: 'educational', a: "Be able to solve any equation instantly", b: "Be able to write any poem flawlessly", pctA: 53 },
+      { cat: 'educational', a: "Study one subject for the rest of your life", b: "Study a new subject every month forever", pctA: 41 },
+      { cat: 'educational', a: "Learn from a famous historian", b: "Learn from a famous scientist", pctA: 46 },
+      { cat: 'educational', a: "Memorize every world capital", b: "Memorize every country's flag", pctA: 57 },
+      { cat: 'educational', a: "Understand how the brain works", b: "Understand how the universe began", pctA: 49 },
+      { cat: 'educational', a: "Be able to teach any topic clearly", b: "Be able to learn any topic in a day", pctA: 60 },
+
+      // ===== GROSS (15) =====
+      { cat: 'gross', a: "Eat a live worm", b: "Eat a boiled spider", pctA: 44 },
+      { cat: 'gross', a: "Have to smell garbage all day", b: "Have to taste garbage once", pctA: 67 },
+      { cat: 'gross', a: "Bathe in pickle juice for a week", b: "Bathe in hot sauce for a day", pctA: 51 },
+      { cat: 'gross', a: "Lick a public doorknob", b: "Lick the bottom of a stranger's shoe", pctA: 38 },
+      { cat: 'gross', a: "Have permanent bad breath", b: "Have permanent body odor", pctA: 41 },
+      { cat: 'gross', a: "Sweat mayonnaise", b: "Cry hot sauce", pctA: 57 },
+      { cat: 'gross', a: "Eat a sandwich that fell in dirt", b: "Eat a sandwich that fell in a puddle", pctA: 62 },
+      { cat: 'gross', a: "Have snails for nails", b: "Have centipedes for eyelashes", pctA: 47 },
+      { cat: 'gross', a: "Drink a glass of sweat", b: "Drink a glass of saliva", pctA: 33 },
+      { cat: 'gross', a: "Brush your teeth with soap", b: "Brush your teeth with mustard", pctA: 58 },
+      { cat: 'gross', a: "Have to chew every bite 100 times", b: "Have to swallow every bite whole", pctA: 65 },
+      { cat: 'gross', a: "Wipe with sandpaper once", b: "Not wipe for a week", pctA: 30 },
+      { cat: 'gross', a: "Bathe in milk that's been sitting out for a week", b: "Bathe in warm vinegar", pctA: 36 },
+      { cat: 'gross', a: "Have to share a toothbrush with a stranger", b: "Have to share a towel with a stranger", pctA: 58 },
+      { cat: 'gross', a: "Eat a raw onion like an apple", b: "Eat a clove of raw garlic whole", pctA: 53 },
+
+      // ===== HARD (18) =====
+      { cat: 'hard', a: "Give up coffee for the rest of your life", b: "Give up alcohol for the rest of your life", pctA: 49 },
+      { cat: 'hard', a: "Never use social media again", b: "Never watch TV or movies again", pctA: 44 },
+      { cat: 'hard', a: "Give up music for a year", b: "Give up books for a year", pctA: 38 },
+      { cat: 'hard', a: "Lose all your photos", b: "Lose all your text messages", pctA: 31 },
+      { cat: 'hard', a: "Only be able to whisper", b: "Only be able to shout", pctA: 56 },
+      { cat: 'hard', a: "Never travel outside your country again", b: "Never see your best friend again", pctA: 47 },
+      { cat: 'hard', a: "Work a job you hate for $500k/year", b: "Work a job you love for $40k/year", pctA: 42 },
+      { cat: 'hard', a: "Give up your phone for a year", b: "Give up the internet for a year", pctA: 65 },
+      { cat: 'hard', a: "Always be cold", b: "Always be hot", pctA: 48 },
+      { cat: 'hard', a: "Lose your sense of taste", b: "Lose your sense of smell", pctA: 53 },
+      { cat: 'hard', a: "Be the funniest person in the room", b: "Be the smartest person in the room", pctA: 46 },
+      { cat: 'hard', a: "Have a million dollars right now", b: "Have $100 million in 20 years", pctA: 67 },
+      { cat: 'hard', a: "Give up sweets forever", b: "Give up savory snacks forever", pctA: 51 },
+      { cat: 'hard', a: "Have one true best friend forever", b: "Have 100 casual friends forever", pctA: 62 },
+      { cat: 'hard', a: "Be famous but poor", b: "Be rich but anonymous", pctA: 35 },
+      { cat: 'hard', a: "Know every language fluently", b: "Be able to play every instrument", pctA: 54 },
+      { cat: 'hard', a: "Always have to say what you're thinking", b: "Never be able to speak again", pctA: 70 },
+      { cat: 'hard', a: "Give up weekends forever", b: "Give up holidays forever", pctA: 45 }
+    ];
+
+    // ===== State =====
+    let selectedCat = null;
+    let selectedCount = 15;
+    let gamePool = [];
+    let gameIdx = 0;
+    let votesA = 0;
+    let votesB = 0;
+    let answeredThisQ = false;
+    let autoAdvanceTimer = null;
+
+    // ===== DOM refs =====
+    const setupScreen = document.getElementById('setup-screen');
+    const gameScreen = document.getElementById('game-screen');
+    const resultsScreen = document.getElementById('results-screen');
+    const catCardsEl = document.getElementById('cat-cards');
+    const startBtn = document.getElementById('start-btn');
+
+    const qCard = document.getElementById('q-card');
+    const optLeft = document.getElementById('opt-left');
+    const optRight = document.getElementById('opt-right');
+    const textLeft = document.getElementById('text-left');
+    const textRight = document.getElementById('text-right');
+    const pctLeft = document.getElementById('pct-left');
+    const pctRight = document.getElementById('pct-right');
+    const barLeft = document.getElementById('bar-left');
+    const barRight = document.getElementById('bar-right');
+    const countLeft = document.getElementById('count-left');
+    const countRight = document.getElementById('count-right');
+    const qCurrent = document.getElementById('q-current');
+    const qTotal = document.getElementById('q-total');
+    const catBadge = document.getElementById('cat-badge');
+    const gameProgress = document.getElementById('game-progress');
+    const progDots = document.getElementById('prog-dots');
+    const skipBtn = document.getElementById('skip-btn');
+    const nextBtn = document.getElementById('next-btn');
+
+    // ===== Build category cards =====
+    function buildCatCards() {
+      catCardsEl.innerHTML = '';
+      Object.keys(CATEGORIES).forEach(key => {
+        const meta = CATEGORIES[key];
+        const card = document.createElement('button');
+        card.className = 'cat-card';
+        card.dataset.cat = key;
+        card.innerHTML = `
+          <div class="cat-emoji">${meta.emoji}</div>
+          <div class="cat-name">${meta.name}</div>
+          <div class="cat-desc">${meta.desc}</div>
+        `;
+        card.addEventListener('click', () => {
+          document.querySelectorAll('.cat-card').forEach(c => c.classList.remove('selected'));
+          card.classList.add('selected');
+          selectedCat = key;
+        });
+        catCardsEl.appendChild(card);
+      });
+    }
+
+    // ===== Count selection =====
+    document.querySelectorAll('.count-card').forEach(c => {
+      c.addEventListener('click', () => {
+        document.querySelectorAll('.count-card').forEach(x => x.classList.remove('selected'));
+        c.classList.add('selected');
+        selectedCount = parseInt(c.dataset.count, 10);
+      });
+    });
+
+    // ===== Helpers =====
+    function shuffle(arr) {
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function show(screen) {
+      [setupScreen, gameScreen, resultsScreen].forEach(s => s.classList.add('hidden-screen'));
+      screen.classList.remove('hidden-screen');
+    }
+
+    // ===== Start game =====
+    function startGame() {
+      if (!selectedCat) {
+        CL.toast('Pick a category first!', false);
+        return;
+      }
+      const pool = selectedCat === 'mixed'
+        ? QUESTIONS
+        : QUESTIONS.filter(q => q.cat === selectedCat);
+      if (pool.length < selectedCount) {
+        // If not enough unique questions in this category, allow repeats by sampling with replacement
+        gamePool = [];
+        while (gamePool.length < selectedCount) {
+          gamePool.push(pool[Math.floor(Math.random() * pool.length)]);
+        }
+      } else {
+        gamePool = shuffle(pool).slice(0, selectedCount);
+      }
+      gameIdx = 0;
+      votesA = 0;
+      votesB = 0;
+      qTotal.textContent = selectedCount;
+      catBadge.textContent = CATEGORIES[selectedCat].name + ' ' + CATEGORIES[selectedCat].emoji;
+      renderProgDots();
+      show(gameScreen);
+      loadQuestion(false);
+    }
+
+    function renderProgDots() {
+      progDots.innerHTML = '';
+      for (let i = 0; i < selectedCount; i++) {
+        const d = document.createElement('span');
+        d.className = 'prog-dot';
+        if (i === gameIdx) d.classList.add('current');
+        progDots.appendChild(d);
+      }
+    }
+
+    function updateProgDots(side) {
+      const dots = progDots.querySelectorAll('.prog-dot');
+      dots.forEach((d, i) => {
+        d.classList.remove('current');
+        if (i < gameIdx) {
+          // already voted: leave coloring
+        } else if (i === gameIdx) {
+          if (side === 'a' || side === 'b') d.classList.add(side === 'a' ? 'l' : 'r');
+          else d.classList.add('current');
+        }
+      });
+      if (gameIdx < selectedCount) dots[gameIdx].classList.add('current');
+    }
+
+    function loadQuestion(animate) {
+      answeredThisQ = false;
+      clearTimeout(autoAdvanceTimer);
+
+      const applyState = () => {
+        const q = gamePool[gameIdx];
+        textLeft.textContent = q.a;
+        textRight.textContent = q.b;
+        pctLeft.textContent = '—';
+        pctRight.textContent = '—';
+        barLeft.style.width = '0%';
+        barRight.style.width = '0%';
+        countLeft.textContent = '';
+        countRight.textContent = '';
+        optLeft.classList.remove('voted','chosen','not-chosen');
+        optRight.classList.remove('voted','chosen','not-chosen');
+        nextBtn.classList.add('hidden');
+        qCurrent.textContent = gameIdx + 1;
+        gameProgress.style.width = ((gameIdx) / selectedCount * 100) + '%';
+        catBadge.textContent = CATEGORIES[q.cat].name + ' ' + CATEGORIES[q.cat].emoji;
+        renderProgDots();
+      };
+
+      if (animate) {
+        qCard.classList.add('slide-out-left');
+        setTimeout(() => {
+          applyState();
+          qCard.classList.remove('slide-out-left');
+          qCard.classList.add('slide-in-right');
+          // Force reflow then ease into place
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              qCard.classList.remove('slide-in-right');
+            });
+          });
+        }, 280);
+      } else {
+        applyState();
+        gameProgress.style.width = ((gameIdx) / selectedCount * 100) + '%';
+      }
+    }
+
+    function vote(side) {
+      if (answeredThisQ) return;
+      answeredThisQ = true;
+
+      optLeft.classList.add('voted');
+      optRight.classList.add('voted');
+      if (side === 'left') {
+        optLeft.classList.add('chosen');
+        optRight.classList.add('not-chosen');
+        votesA++;
+      } else {
+        optRight.classList.add('chosen');
+        optLeft.classList.add('not-chosen');
+        votesB++;
+      }
+
+      const q = gamePool[gameIdx];
+      const pa = q.pctA;
+      const pb = 100 - pa;
+      const totalVotes = 12000 + Math.floor(Math.random() * 8000);
+      const votesAVal = Math.round(totalVotes * pa / 100);
+      const votesBVal = totalVotes - votesAVal;
+
+      // Animate percentages + bars after a brief tick so transitions run
+      setTimeout(() => {
+        pctLeft.textContent = pa + '%';
+        pctRight.textContent = pb + '%';
+        barLeft.style.width = pa + '%';
+        barRight.style.width = pb + '%';
+        countLeft.textContent = `${votesAVal.toLocaleString()} votes`;
+        countRight.textContent = `${votesBVal.toLocaleString()} votes`;
+      }, 120);
+
+      // Update progress dot color
+      const dots = progDots.querySelectorAll('.prog-dot');
+      if (dots[gameIdx]) {
+        dots[gameIdx].classList.remove('current');
+        dots[gameIdx].classList.add(side === 'left' ? 'l' : 'r');
+      }
+
+      const chosenPct = side === 'left' ? pa : pb;
+      const agree = chosenPct >= 60 ? "Most people agree with you!" :
+                    chosenPct >= 40 ? "You're in the majority." :
+                    chosenPct >= 20 ? "Close call — you're slightly in the minority." :
+                                      "Bold choice — few would pick that!";
+      CL.toast(`You chose ${side === 'left' ? 'A' : 'B'} — ${chosenPct}% agree. ${agree}`, chosenPct >= 40);
+
+      // Reveal Next button as fallback in case auto-advance is interrupted
+      nextBtn.classList.remove('hidden');
+
+      // Auto-advance after 2 seconds
+      autoAdvanceTimer = setTimeout(() => {
+        advance();
+      }, 2000);
+    }
+
+    function advance() {
+      clearTimeout(autoAdvanceTimer);
+      gameIdx++;
+      if (gameIdx >= selectedCount) {
+        showResults();
+      } else {
+        loadQuestion(true);
+      }
+    }
+
+    function skip() {
+      if (answeredThisQ) return;
+      // mark current dot as skipped (no color)
+      const dots = progDots.querySelectorAll('.prog-dot');
+      if (dots[gameIdx]) dots[gameIdx].classList.remove('current');
+      CL.toast('Skipped!', true);
+      advance();
+    }
+
+    // ===== Results =====
+    function showResults() {
+      gameProgress.style.width = '100%';
+      show(resultsScreen);
+
+      document.getElementById('result-a-count').textContent = votesA;
+      document.getElementById('result-b-count').textContent = votesB;
+
+      const total = votesA + votesB;
+      const skipped = selectedCount - total;
+      const pctA = total ? Math.round(votesA / total * 100) : 0;
+      const pctB = total ? Math.round(votesB / total * 100) : 0;
+
+      // Fun summary based on bias
+      let emoji, title, tagline, summary;
+      if (total === 0) {
+        emoji = '😏'; title = 'A Master of Indecision';
+        tagline = 'You skipped every single one. Commitment issues?';
+        summary = `You skipped all ${selectedCount} questions. Sometimes that's the safest answer.`;
+      } else if (votesA === 0) {
+        emoji = '🔵'; title = 'Team B All the Way';
+        tagline = 'You went 100% Option B. Bold consistency!';
+        summary = `Out of ${total} answered, you chose Option B every single time. You know what you like.`;
+      } else if (votesB === 0) {
+        emoji = '🔴'; title = 'Team A Through and Through';
+        tagline = 'You went 100% Option A. No doubts!';
+        summary = `Out of ${total} answered, you chose Option A every single time. Decisive!`;
+      } else if (pctA >= 70) {
+        emoji = '🔴'; title = 'Option A Loyalist';
+        tagline = `You leaned heavily toward Option A (${pctA}%).`;
+        summary = `Out of ${total} answered, you picked Option A ${votesA} times and Option B ${votesB} times${skipped ? `, skipping ${skipped}` : ''}. You favor the orange/red side of life.`;
+      } else if (pctB >= 70) {
+        emoji = '🔵'; title = 'Option B Devotee';
+        tagline = `You leaned heavily toward Option B (${pctB}%).`;
+        summary = `Out of ${total} answered, you picked Option B ${votesB} times and Option A ${votesA} times${skipped ? `, skipping ${skipped}` : ''}. You favor the teal side of life.`;
+      } else {
+        emoji = '⚖️'; title = 'Perfectly Balanced';
+        tagline = `You split almost down the middle: ${pctA}% A vs ${pctB}% B.`;
+        summary = `Out of ${total} answered, you chose Option A ${votesA} times and Option B ${votesB} times${skipped ? `, skipping ${skipped}` : ''}. You see both sides of every story.`;
+      }
+
+      document.getElementById('result-emoji').textContent = emoji;
+      document.getElementById('result-title').textContent = title;
+      document.getElementById('result-tagline').textContent = tagline;
+      document.getElementById('result-summary').textContent = summary;
+
+      CL.toast(`Game complete: ${votesA} A vs ${votesB} B`, true);
+    }
+
+    // ===== Wire up =====
+    optLeft.addEventListener('click', () => vote('left'));
+    optRight.addEventListener('click', () => vote('right'));
+    nextBtn.addEventListener('click', advance);
+    skipBtn.addEventListener('click', skip);
+    startBtn.addEventListener('click', startGame);
+
+    document.getElementById('play-again-btn').addEventListener('click', () => {
+      startGame();
+    });
+    document.getElementById('new-setup-btn').addEventListener('click', () => {
+      show(setupScreen);
+    });
+
+    // Init
+    buildCatCards();
+    show(setupScreen);
+  })();
+  </script>
+</body>
+</html>

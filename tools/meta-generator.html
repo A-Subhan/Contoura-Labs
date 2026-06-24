@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meta Tag Generator — Contoura Labs</title>
+  <meta name="description" content="Generate SEO meta tags, Open Graph, and Twitter cards. Live Google SERP preview with character counters.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 73 28 A 32 32 0 0 0 27 28' stroke='%23FF6B35' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 24 32 A 32 32 0 0 0 24 68' stroke='%23E8384F' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 27 72 A 32 32 0 0 0 73 72' stroke='%2300B8A9' stroke-width='9' fill='none' stroke-linecap='round'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: {
+        colors: {
+          brand: { orange: '#FF6B35', red: '#E8384F', teal: '#00B8A9' },
+          surface: { light: '#F8F9FA', dark: '#0A0A0A', card: '#1A1A1A', alt: '#111111' }
+        },
+        fontFamily: { sans: ['Inter', 'sans-serif'] }
+      }}
+    }
+  </script>
+  <link rel="stylesheet" href="../assets/css/common.css">
+</head>
+<body class="font-sans bg-white text-gray-900 dark:bg-surface-dark dark:text-gray-100 antialiased">
+
+  <div id="navbar-mount"></div>
+
+  <main class="tool-page">
+    <div class="tool-container" style="max-width:56rem;">
+      <header class="tool-header">
+        <span class="badge mb-3">Generators</span>
+        <h1 class="tool-title">Meta Tag <span class="gradient-text">Generator</span></h1>
+        <p class="tool-subtitle">Build SEO + Open Graph + Twitter meta tags with a live Google SERP preview and character counters.</p>
+      </header>
+
+      <div class="tool-card">
+        <div class="grid-2 mb-4">
+          <div>
+            <label class="field-label" for="m-title">Page title <span id="title-count" class="text-xs text-gray-400 ml-1">0 / 60</span></label>
+            <input type="text" id="m-title" placeholder="My Awesome Page — Brand" value="Free Online Tools — Contoura Labs">
+          </div>
+          <div>
+            <label class="field-label" for="m-author">Author</label>
+            <input type="text" id="m-author" placeholder="Author name" value="Contoura Labs">
+          </div>
+        </div>
+
+        <label class="field-label" for="m-desc">Description <span id="desc-count" class="text-xs text-gray-400 ml-1">0 / 160</span></label>
+        <textarea id="m-desc" rows="2" style="min-height:70px;" placeholder="A short, compelling description of the page that appears in search results.">A growing collection of fast, in-browser tools. Everything runs on your device — your files never leave your browser.</textarea>
+
+        <div class="grid-2 mt-4">
+          <div>
+            <label class="field-label" for="m-url">Canonical URL</label>
+            <input type="text" id="m-url" placeholder="https://example.com/page" value="https://contoura-labs.example.com/tools">
+          </div>
+          <div>
+            <label class="field-label" for="m-img">OG image URL</label>
+            <input type="text" id="m-img" placeholder="https://example.com/og.png" value="https://contoura-labs.example.com/og.png">
+          </div>
+        </div>
+
+        <div class="grid-2 mt-4">
+          <div>
+            <label class="field-label" for="m-keywords">Keywords (comma-separated)</label>
+            <input type="text" id="m-keywords" placeholder="tools, free, online" value="tools, generators, free, online">
+          </div>
+          <div>
+            <label class="field-label" for="m-twitter">Twitter card type</label>
+            <select id="m-twitter">
+              <option value="summary">summary</option>
+              <option value="summary_large_image" selected>summary_large_image</option>
+              <option value="player">player</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- SERP preview -->
+        <div class="mt-6">
+          <h3 class="font-semibold mb-3">Google SERP preview</h3>
+          <div class="rounded-xl p-4" style="background:#fff;border:1px solid #e5e7eb;">
+            <div id="serp-url" class="text-xs" style="color:#202124;">https://example.com › page</div>
+            <div id="serp-title" class="text-xl mt-1" style="color:#1a0dab;font-family:Arial,sans-serif;line-height:1.3;">My Awesome Page — Brand</div>
+            <div id="serp-desc" class="text-sm mt-1" style="color:#4d5156;font-family:Arial,sans-serif;line-height:1.4;">Description text…</div>
+          </div>
+        </div>
+
+        <!-- Twitter card preview -->
+        <div class="mt-6">
+          <h3 class="font-semibold mb-3">Twitter card preview</h3>
+          <div class="rounded-xl overflow-hidden" style="max-width:506px;border:1px solid #e5e7eb;">
+            <div id="tw-img-wrap" style="aspect-ratio:1.91/1;background:#f3f4f6;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+              <img id="tw-img" alt="" style="width:100%;height:100%;object-fit:cover;display:none;" onerror="this.style.display='none';">
+              <span id="tw-img-ph" class="text-xs text-gray-400">No image</span>
+            </div>
+            <div class="p-3" style="background:#fff;">
+              <div id="tw-url" class="text-xs" style="color:#8899a6;">example.com</div>
+              <div id="tw-title" class="font-semibold mt-0.5" style="color:#14171a;">Title</div>
+              <div id="tw-desc" class="text-sm mt-0.5" style="color:#657786;">Description</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Generated code -->
+        <div class="mt-6">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="font-semibold">Generated meta tags</h3>
+            <button class="btn-secondary" id="copy-btn" style="padding:0.5rem 1rem;">Copy code</button>
+          </div>
+          <pre class="code-output" id="code-out"></pre>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="py-8 border-t border-gray-100 dark:border-white/5 mt-12">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p class="text-xs text-gray-400">© 2025 Contoura Labs</p>
+      <a href="index.html" class="text-xs text-brand-orange hover:text-brand-red transition-colors">← Back to all tools</a>
+    </div>
+  </footer>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    function escapeHtml(s) {
+      return (s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+    function domainOf(url) {
+      try { return new URL(url).hostname.replace(/^www\./, ''); }
+      catch { return url.replace(/^https?:\/\//, '').split('/')[0]; }
+    }
+    function serpUrlOf(url) {
+      if (!url) return 'example.com';
+      const d = domainOf(url);
+      let path = '';
+      try { path = new URL(url).pathname.replace(/\/$/, ''); } catch {}
+      return path ? `${d} › ${path.split('/').filter(Boolean).join(' › ')}` : d;
+    }
+    function truncate(s, n) { return (s || '').length > n ? (s.slice(0, n - 1) + '…') : (s || ''); }
+
+    function render() {
+      const title = $('m-title').value.trim();
+      const desc  = $('m-desc').value.trim();
+      const url   = $('m-url').value.trim();
+      const img   = $('m-img').value.trim();
+      const author= $('m-author').value.trim();
+      const kw    = $('m-keywords').value.trim();
+      const tw    = $('m-twitter').value;
+
+      // Counters
+      const tLen = title.length, dLen = desc.length;
+      $('title-count').textContent = `${tLen} / 60`;
+      $('desc-count').textContent  = `${dLen} / 160`;
+      $('title-count').style.color = tLen > 60 ? '#E8384F' : (tLen < 30 ? '#FF6B35' : '#9ca3af');
+      $('desc-count').style.color  = dLen > 160 ? '#E8384F' : (dLen < 70 ? '#FF6B35' : '#9ca3af');
+
+      // SERP preview
+      $('serp-title').textContent = truncate(title, 60) || 'Page title';
+      $('serp-url').textContent   = serpUrlOf(url);
+      $('serp-desc').textContent  = truncate(desc, 160) || 'Page description appears here.';
+
+      // Twitter preview
+      $('tw-title').textContent = truncate(title, 70) || 'Title';
+      $('tw-desc').textContent  = truncate(desc, 200) || 'Description';
+      $('tw-url').textContent   = domainOf(url) || 'example.com';
+      const twImg = $('tw-img'), twPh = $('tw-img-ph');
+      if (img) { twImg.src = img; twImg.style.display = 'block'; twPh.style.display = 'none'; }
+      else { twImg.removeAttribute('src'); twImg.style.display = 'none'; twPh.style.display = 'block'; }
+
+      // Generated code
+      const lines = [];
+      lines.push('<meta charset="UTF-8">');
+      lines.push('<meta name="viewport" content="width=device-width, initial-scale=1.0">');
+      lines.push(`<title>${escapeHtml(title)}</title>`);
+      lines.push(`<meta name="description" content="${escapeHtml(desc)}">`);
+      if (kw)     lines.push(`<meta name="keywords" content="${escapeHtml(kw)}">`);
+      if (author) lines.push(`<meta name="author" content="${escapeHtml(author)}">`);
+      if (url)    lines.push(`<link rel="canonical" href="${escapeHtml(url)}">`);
+      lines.push('');
+      lines.push('<!-- Open Graph -->');
+      lines.push(`<meta property="og:type" content="website">`);
+      if (url)   lines.push(`<meta property="og:url" content="${escapeHtml(url)}">`);
+      lines.push(`<meta property="og:title" content="${escapeHtml(title)}">`);
+      lines.push(`<meta property="og:description" content="${escapeHtml(desc)}">`);
+      if (img)   lines.push(`<meta property="og:image" content="${escapeHtml(img)}">`);
+      lines.push('');
+      lines.push('<!-- Twitter -->');
+      lines.push(`<meta name="twitter:card" content="${tw}">`);
+      lines.push(`<meta name="twitter:title" content="${escapeHtml(title)}">`);
+      lines.push(`<meta name="twitter:description" content="${escapeHtml(desc)}">`);
+      if (img)   lines.push(`<meta name="twitter:image" content="${escapeHtml(img)}">`);
+
+      $('code-out').textContent = lines.join('\n');
+    }
+
+    ['m-title','m-desc','m-url','m-img','m-author','m-keywords','m-twitter'].forEach(id => {
+      const el = $(id);
+      el.addEventListener('input', render);
+      el.addEventListener('change', render);
+    });
+
+    $('copy-btn').addEventListener('click', () => {
+      navigator.clipboard.writeText($('code-out').textContent).then(() => CL.toast('Meta tags copied'));
+    });
+
+    render();
+  </script>
+</body>
+</html>

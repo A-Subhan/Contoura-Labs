@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Text Rewriter — Contoura Labs</title>
+  <meta name="description" content="Rewrite text three ways: synonym swap, sentence restructure, and formal/casual tone shift. Diff highlighted in orange.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 73 28 A 32 32 0 0 0 27 28' stroke='%23FF6B35' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 24 32 A 32 32 0 0 0 24 68' stroke='%23E8384F' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 27 72 A 32 32 0 0 0 73 72' stroke='%2300B8A9' stroke-width='9' fill='none' stroke-linecap='round'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: {
+        colors: {
+          brand: { orange: '#FF6B35', red: '#E8384F', teal: '#00B8A9' },
+          surface: { light: '#F8F9FA', dark: '#0A0A0A', card: '#1A1A1A', alt: '#111111' }
+        },
+        fontFamily: { sans: ['Inter', 'sans-serif'] }
+      }}
+    }
+  </script>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <style>
+    .mode-tab {
+      padding: 0.55rem 1rem; border-radius: 9999px; font-size: 0.8125rem; font-weight: 600;
+      cursor: pointer; border: 1px solid #e5e7eb; background:#fff; color:#6b7280; transition: all 0.2s ease;
+    }
+    .dark .mode-tab { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.1); color:#9ca3af; }
+    .mode-tab.active {
+      background: linear-gradient(135deg,#FF6B35,#E8384F); color:#fff; border-color: transparent;
+      box-shadow: 0 4px 12px rgba(255,107,53,0.25);
+    }
+    .diff-out { line-height: 1.7; font-size: 0.9375rem; }
+    .diff-add { background: rgba(255,107,53,0.18); color: #FF6B35; padding: 0.05em 0.25em; border-radius: 4px; font-weight: 500; }
+    .diff-keep { color: inherit; }
+    .diff-legend { display:inline-block; width:0.85em; height:0.85em; border-radius:3px; vertical-align: middle; }
+  </style>
+</head>
+<body class="font-sans bg-white text-gray-900 dark:bg-surface-dark dark:text-gray-100 antialiased">
+
+  <div id="navbar-mount"></div>
+
+  <main class="tool-page">
+    <div class="tool-container">
+      <header class="tool-header">
+        <span class="badge mb-3">Text / Dev Tools</span>
+        <h1 class="tool-title">Text <span class="gradient-text">Rewriter</span></h1>
+        <p class="tool-subtitle">Three rewrite modes: synonym swap, sentence restructure (active→passive), and formal/casual tone toggle. Changes highlighted in orange.</p>
+      </header>
+
+      <div class="tool-card">
+        <!-- Mode tabs -->
+        <div id="mode-tabs" class="flex flex-wrap justify-center gap-2 mb-5"></div>
+
+        <!-- Tone sub-toggle (only for tone mode) -->
+        <div id="tone-options" class="hidden flex justify-center mb-5">
+          <div class="inline-flex p-1 rounded-xl bg-gray-100 dark:bg-white/5">
+            <button id="tone-formal" class="px-4 py-2 rounded-lg text-sm font-semibold bg-white dark:bg-surface-card shadow-sm text-brand-orange">Make formal</button>
+            <button id="tone-casual" class="px-4 py-2 rounded-lg text-sm font-semibold text-gray-500 dark:text-gray-400">Make casual</button>
+          </div>
+        </div>
+
+        <label class="field-label" for="input">Your text</label>
+        <textarea id="input" rows="6" placeholder="Type or paste text to rewrite…"></textarea>
+        <div class="flex items-center justify-between mt-2 text-xs text-gray-400">
+          <span id="char-count">0 chars</span>
+          <span id="word-count">0 words</span>
+        </div>
+
+        <div class="flex flex-wrap gap-3 mt-4">
+          <button class="btn-primary" id="rewrite-btn">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
+            Rewrite
+          </button>
+          <button class="btn-secondary" id="clear-btn">Clear</button>
+          <button class="btn-secondary" id="sample-btn">Load sample</button>
+        </div>
+
+        <!-- Output -->
+        <div id="output-wrap" class="mt-5 hidden">
+          <div class="flex items-center justify-between mb-2 flex-wrap gap-2">
+            <h3 class="font-semibold text-sm">Rewritten text</h3>
+            <div class="flex items-center gap-3">
+              <span class="text-xs text-gray-400 flex items-center gap-1.5">
+                <span class="diff-legend" style="background: rgba(255,107,53,0.45);"></span> changed
+              </span>
+              <button class="btn-secondary" id="copy-btn" style="padding:0.4rem 0.85rem;">Copy</button>
+            </div>
+          </div>
+          <div id="diff-output" class="diff-out p-4 rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/10"></div>
+
+          <details class="mt-3">
+            <summary class="cursor-pointer text-xs text-gray-400 hover:text-gray-600">Show plain text</summary>
+            <textarea id="plain-output" rows="4" readonly class="mt-2" style="min-height:120px;"></textarea>
+          </details>
+        </div>
+
+        <p class="text-xs text-gray-400 mt-4 text-center">All rewriting uses embedded dictionaries — runs entirely in your browser. Transforms are intentionally simple.</p>
+      </div>
+    </div>
+  </main>
+
+  <footer class="py-8 border-t border-gray-100 dark:border-white/5 mt-12">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p class="text-xs text-gray-400">© 2025 Contoura Labs</p>
+      <a href="index.html" class="text-xs text-brand-orange hover:text-brand-red transition-colors">← Back to all tools</a>
+    </div>
+  </footer>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+  (function () {
+    'use strict';
+
+    // ===== SYNONYM DICTIONARY (100+ pairs) =====
+    const SYNONYMS = {
+      big:'large', small:'tiny', fast:'quick', slow:'sluggish',
+      happy:'joyful', sad:'unhappy', good:'excellent', bad:'terrible',
+      smart:'intelligent', stupid:'foolish', beautiful:'gorgeous', ugly:'unattractive',
+      begin:'commence', start:'initiate', end:'conclude', finish:'complete',
+      help:'assist', buy:'purchase', show:'display', make:'create',
+      get:'obtain', give:'provide', take:'acquire', use:'utilize',
+      need:'require', want:'desire', like:'enjoy', love:'adore',
+      hate:'detest', look:'observe', see:'perceive', think:'consider',
+      know:'understand', learn:'study', work:'labor', eat:'consume',
+      drink:'sip', sleep:'rest', walk:'stroll', run:'sprint',
+      talk:'converse', speak:'articulate', listen:'heed', read:'peruse',
+      write:'compose', build:'construct', destroy:'demolish', fix:'repair',
+      break:'shatter', change:'modify', stop:'halt', find:'discover',
+      lose:'misplace', keep:'retain', send:'dispatch', bring:'convey',
+      try:'attempt', fail:'falter', win:'triumph', beat:'defeat',
+      important:'crucial', easy:'simple', hard:'difficult', old:'ancient',
+      new:'fresh', rich:'wealthy', poor:'impoverished', strong:'powerful',
+      weak:'fragile', angry:'furious', calm:'peaceful', loud:'noisy',
+      quiet:'silent', bright:'luminous', dark:'dim', warm:'balmy',
+      cold:'freezing', wet:'damp', dry:'arid', clean:'spotless',
+      dirty:'soiled', full:'complete', empty:'vacant', heavy:'weighty',
+      cheap:'inexpensive', expensive:'costly', safe:'secure', dangerous:'hazardous',
+      usual:'customary', rare:'uncommon', common:'prevalent', different:'distinct',
+      same:'identical', real:'genuine', fake:'counterfeit', true:'accurate',
+      false:'incorrect', kind:'generous', nice:'pleasant', friendly:'amiable',
+      fast:'rapid', quick:'swift', nice:'delightful', big:'enormous',
+      smart:'clever', funny:'humorous', brave:'courageous', honest:'truthful',
+      lazy:'indolent', busy:'occupied', tired:'exhausted', sick:'ill',
+      healthy:'fit', wrong:'incorrect', right:'correct', certain:'sure'
+    };
+
+    // ===== CASUAL ↔ FORMAL word pairs =====
+    const TONE_PAIRS = [
+      ['kid','child'], ['kids','children'], ['guy','person'], ['guys','people'],
+      ['stuff','items'], ['thing','item'], ['things','items'], ['awesome','excellent'],
+      ['cool','good'], ['great','excellent'], ['ok','acceptable'], ['okay','acceptable'],
+      ['yeah','yes'], ['nope','no'], ['gonna','going to'], ['wanna','want to'],
+      ['gotta','have to'], ['kinda','somewhat'], ['sorta','somewhat'],
+      ['big','substantial'], ['huge','considerable'], ['a lot','numerous'],
+      ['tons','many'], ['pretty','quite'], ['really','particularly'],
+      ['so','therefore'], ['but','however'], ['also','additionally'],
+      ['and','as well as'], ['or','alternatively'], ['get','obtain'],
+      ['show','demonstrate'], ['tell','inform'], ['ask','inquire'],
+      ['help','assist'], ['buy','purchase'], ['use','utilize'],
+      ['make','create'], ['find','discover'], ['start','commence'],
+      ['end','conclude'], ['try','attempt'], ['need','require']
+    ];
+    const CONTRACTIONS = [
+      ["don't",'do not'], ["doesn't",'does not'], ["didn't",'did not'],
+      ["can't",'cannot'], ["won't",'will not'], ["shouldn't",'should not'],
+      ["wouldn't",'would not'], ["couldn't",'could not'], ["isn't",'is not'],
+      ["aren't",'are not'], ["wasn't",'was not'], ["weren't",'were not'],
+      ["hasn't",'has not'], ["haven't",'have not'], ["hadn't",'had not'],
+      ["I'm",'I am'], ["you're",'you are'], ["we're",'we are'],
+      ["they're",'they are'], ["it's",'it is'], ["he's",'he is'], ["she's",'she is'],
+      ["that's",'that is'], ["there's",'there is'], ["I'll",'I will'],
+      ["you'll",'you will'], ["we'll",'we will'], ["they'll",'they will'],
+      ["I've",'I have'], ["you've",'you have'], ["we've",'we have'],
+      ["they've",'they have'], ["I'd",'I would'], ["you'd",'you would']
+    ];
+
+    // ===== IRREGULAR VERBS for active→passive =====
+    const PAST_PARTICIPLE = {
+      be:'been', have:'had', do:'done', say:'said', go:'gone', get:'got',
+      make:'made', know:'known', take:'taken', see:'seen', come:'come',
+      think:'thought', give:'given', find:'found', tell:'told', become:'become',
+      leave:'left', feel:'felt', put:'put', bring:'brought', begin:'begun',
+      keep:'kept', hold:'held', write:'written', stand:'stood', hear:'heard',
+      let:'let', mean:'meant', set:'set', meet:'met', pay:'paid', sit:'sat',
+      speak:'spoken', lay:'laid', lead:'led', read:'read', grow:'grown',
+      lose:'lost', fall:'fallen', send:'sent', build:'built', understand:'understood',
+      draw:'drawn', break:'broken', spend:'spent', cut:'cut', rise:'risen',
+      drive:'driven', buy:'bought', wear:'worn', choose:'chosen', eat:'eaten',
+      catch:'caught', fly:'flown', throw:'thrown', sing:'sung', drink:'drunk',
+      swim:'swum', ring:'rung', ride:'ridden', win:'won', forbid:'forbidden',
+      forget:'forgotten', forgive:'forgiven', hide:'hidden', freeze:'frozen',
+      steal:'stolen', shake:'shaken', weave:'woven', bid:'bidden'
+    };
+    function toPastPartiple(verb) {
+      const v = verb.toLowerCase();
+      if (PAST_PARTICIPLE[v]) return PAST_PARTICIPLE[v];
+      if (/e$/.test(v)) return v + 'd';
+      if (/[^aeiou]y$/.test(v)) return v.replace(/y$/, 'ied');
+      if (/^[^aeiou][aeiou][^aeiou]$/.test(v)) return v + v.slice(-1) + 'ed'; // CVC → doubled
+      return v + 'ed';
+    }
+
+    // ===== Tokenizer: returns array of {text, isWord} =====
+    function tokenize(str) {
+      const out = [];
+      const re = /([A-Za-z]+(?:'[A-Za-z]+)?)|([^A-Za-z]+)/g;
+      let m;
+      while ((m = re.exec(str)) !== null) {
+        if (m[1] !== undefined) out.push({ text: m[1], isWord: true });
+        else out.push({ text: m[2], isWord: false });
+      }
+      return out;
+    }
+    function detokenize(tokens) { return tokens.map(t => t.text).join(''); }
+
+    // ===== Synonym swap =====
+    function rewriteSynonyms(text) {
+      const tokens = tokenize(text);
+      tokens.forEach(t => {
+        if (!t.isWord) return;
+        const lower = t.text.toLowerCase();
+        if (SYNONYMS[lower]) {
+          const syn = SYNONYMS[lower];
+          // preserve capitalization of first letter
+          if (t.text[0] === t.text[0].toUpperCase()) {
+            t.text = syn.charAt(0).toUpperCase() + syn.slice(1);
+          } else {
+            t.text = syn;
+          }
+        }
+      });
+      return detokenize(tokens);
+    }
+
+    // ===== Sentence restructure: active→passive =====
+    function rewritePassive(text) {
+      // Split into sentences (keep delimiter)
+      const sentences = text.match(/[^.!?]+[.!?]+|\S[^.!?]*$/g) || [text];
+      const out = sentences.map(s => {
+        // Match: ^<Subject word> <verb word> <rest>. Sentence may start with capital.
+        const m = s.match(/^(\s*)([A-Za-z]+)\s+([A-Za-z]+)\s+([^?.!]+?)([.!?]?\s*)$/);
+        if (!m) return s;
+        const [, lead, subject, verb, obj, tail] = m;
+        const pp = toPastPartiple(verb);
+        // Lowercase the subject since it's no longer sentence-initial; capitalize object
+        const subLower = subject.charAt(0).toLowerCase() + subject.slice(1);
+        const objCap = obj.charAt(0).toUpperCase() + obj.slice(1);
+        return `${lead}${objCap} is ${pp} by ${subLower}${tail}`;
+      });
+      return out.join('');
+    }
+
+    // ===== Tone shift =====
+    function rewriteTone(text, toFormal) {
+      let out = text;
+      if (toFormal) {
+        // Expand contractions first
+        CONTRACTIONS.forEach(([c, exp]) => {
+          const re = new RegExp('\\b' + c.replace(/'/g, "'") + '\\b', 'gi');
+          out = out.replace(re, (match) => {
+            return match[0] === match[0].toUpperCase() ? exp.charAt(0).toUpperCase() + exp.slice(1) : exp;
+          });
+        });
+        // Casual → formal
+        TONE_PAIRS.forEach(([cas, form]) => {
+          const re = new RegExp('\\b' + cas.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'gi');
+          out = out.replace(re, (match) => {
+            return match[0] === match[0].toUpperCase() ? form.charAt(0).toUpperCase() + form.slice(1) : form;
+          });
+        });
+      } else {
+        // Formal → casual (reverse direction)
+        TONE_PAIRS.forEach(([cas, form]) => {
+          const re = new RegExp('\\b' + form.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'gi');
+          out = out.replace(re, (match) => {
+            return match[0] === match[0].toUpperCase() ? cas.charAt(0).toUpperCase() + cas.slice(1) : cas;
+          });
+        });
+        // Contract common patterns
+        CONTRACTIONS.forEach(([c, exp]) => {
+          const re = new RegExp('\\b' + exp.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'gi');
+          out = out.replace(re, (match) => {
+            return match[0] === match[0].toUpperCase() ? c.charAt(0).toUpperCase() + c.slice(1) : c;
+          });
+        });
+      }
+      return out;
+    }
+
+    // ===== LCS-based word diff =====
+    function diffWords(a, b) {
+      const ta = tokenize(a);
+      const tb = tokenize(b);
+      const na = ta.length, nb = tb.length;
+      // dp[i][j] = LCS length
+      const dp = Array.from({ length: na + 1 }, () => new Array(nb + 1).fill(0));
+      for (let i = na - 1; i >= 0; i--) {
+        for (let j = nb - 1; j >= 0; j--) {
+          if (ta[i].text.toLowerCase() === tb[j].text.toLowerCase()) dp[i][j] = dp[i+1][j+1] + 1;
+          else dp[i][j] = Math.max(dp[i+1][j], dp[i][j+1]);
+        }
+      }
+      // Walk to build output: mark b-tokens as 'changed' if they're not matched in a
+      const matchedB = new Array(nb).fill(false);
+      let i = 0, j = 0;
+      while (i < na && j < nb) {
+        if (ta[i].text.toLowerCase() === tb[j].text.toLowerCase()) {
+          matchedB[j] = true; i++; j++;
+        } else if (dp[i+1][j] >= dp[i][j+1]) {
+          i++; // a-token dropped
+        } else {
+          j++; // b-token is "changed"
+        }
+      }
+      return tb.map((t, idx) => ({ text: t.text, isWord: t.isWord, changed: !matchedB[idx] }));
+    }
+
+    function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    function renderDiff(rewritten, original) {
+      const diff = diffWords(original, rewritten);
+      return diff.map(t => {
+        if (!t.isWord) return esc(t.text);
+        return t.changed ? `<span class="diff-add">${esc(t.text)}</span>` : `<span class="diff-keep">${esc(t.text)}</span>`;
+      }).join('');
+    }
+
+    // ===== UI =====
+    const MODES = [
+      { id:'synonyms', label:'Synonym swap' },
+      { id:'restructure', label:'Sentence restructure' },
+      { id:'tone', label:'Formal / casual' }
+    ];
+    let mode = 'synonyms';
+    let toneDir = 'formal';
+
+    const modeTabsEl = document.getElementById('mode-tabs');
+    const toneOptionsEl = document.getElementById('tone-options');
+    const inputEl = document.getElementById('input');
+
+    function buildTabs() {
+      modeTabsEl.innerHTML = '';
+      MODES.forEach(m => {
+        const b = document.createElement('button');
+        b.className = 'mode-tab' + (m.id === mode ? ' active' : '');
+        b.textContent = m.label;
+        b.addEventListener('click', () => { mode = m.id; buildTabs(); updateToneVisibility(); });
+        modeTabsEl.appendChild(b);
+      });
+    }
+    function updateToneVisibility() {
+      if (mode === 'tone') toneOptionsEl.classList.remove('hidden');
+      else toneOptionsEl.classList.add('hidden');
+    }
+    function setTone(dir) {
+      toneDir = dir;
+      const f = document.getElementById('tone-formal');
+      const c = document.getElementById('tone-casual');
+      if (dir === 'formal') {
+        f.classList.add('bg-white','dark:bg-surface-card','shadow-sm','text-brand-orange');
+        f.classList.remove('text-gray-500','dark:text-gray-400');
+        c.classList.remove('bg-white','dark:bg-surface-card','shadow-sm','text-brand-orange');
+        c.classList.add('text-gray-500','dark:text-gray-400');
+      } else {
+        c.classList.add('bg-white','dark:bg-surface-card','shadow-sm','text-brand-orange');
+        c.classList.remove('text-gray-500','dark:text-gray-400');
+        f.classList.remove('bg-white','dark:bg-surface-card','shadow-sm','text-brand-orange');
+        f.classList.add('text-gray-500','dark:text-gray-400');
+      }
+    }
+    document.getElementById('tone-formal').addEventListener('click', () => setTone('formal'));
+    document.getElementById('tone-casual').addEventListener('click', () => setTone('casual'));
+
+    function updateCounts() {
+      const v = inputEl.value;
+      document.getElementById('char-count').textContent = v.length + ' chars';
+      const w = v.trim() ? v.trim().split(/\s+/).length : 0;
+      document.getElementById('word-count').textContent = w + ' words';
+    }
+    inputEl.addEventListener('input', updateCounts);
+
+    function run() {
+      const txt = inputEl.value;
+      if (!txt.trim()) { CL.toast('Please enter some text first', false); return; }
+      let rewritten;
+      if (mode === 'synonyms') rewritten = rewriteSynonyms(txt);
+      else if (mode === 'restructure') rewritten = rewritePassive(txt);
+      else rewritten = rewriteTone(txt, toneDir === 'formal');
+
+      document.getElementById('diff-output').innerHTML = renderDiff(rewritten, txt);
+      document.getElementById('plain-output').value = rewritten;
+      document.getElementById('output-wrap').classList.remove('hidden');
+      CL.toast('Rewritten!');
+    }
+
+    document.getElementById('rewrite-btn').addEventListener('click', run);
+    document.getElementById('clear-btn').addEventListener('click', () => {
+      inputEl.value = ''; updateCounts();
+      document.getElementById('output-wrap').classList.add('hidden');
+      CL.toast('Cleared');
+    });
+    document.getElementById('sample-btn').addEventListener('click', () => {
+      inputEl.value = "The quick brown fox jumps over the lazy dog. Mary wrote a long letter to her friend. I'm gonna get some stuff for the kids, it's gonna be awesome.";
+      updateCounts();
+      CL.toast('Sample loaded');
+    });
+    document.getElementById('copy-btn').addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(document.getElementById('plain-output').value);
+        CL.toast('Copied!');
+      } catch (e) { CL.toast('Copy failed', false); }
+    });
+
+    buildTabs();
+    updateToneVisibility();
+    updateCounts();
+  })();
+  </script>
+</body>
+</html>

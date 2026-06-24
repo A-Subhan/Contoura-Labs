@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Typing Speed Test — Contoura Labs</title>
+  <meta name="description" content="Measure your typing speed (WPM) and accuracy with timed tests of 30, 60, or 120 seconds. Real-time character-by-character highlighting.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 73 28 A 32 32 0 0 0 27 28' stroke='%23FF6B35' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 24 32 A 32 32 0 0 0 24 68' stroke='%23E8384F' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 27 72 A 32 32 0 0 0 73 72' stroke='%2300B8A9' stroke-width='9' fill='none' stroke-linecap='round'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: {
+        colors: {
+          brand: { orange: '#FF6B35', red: '#E8384F', teal: '#00B8A9' },
+          surface: { light: '#F8F9FA', dark: '#0A0A0A', card: '#1A1A1A', alt: '#111111' }
+        },
+        fontFamily: { sans: ['Inter', 'sans-serif'] }
+      }}
+    }
+  </script>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <style>
+    .passage {
+      font-family: 'JetBrains Mono', 'Sarasa Mono SC', 'Menlo', 'Courier New', monospace;
+      font-size: 1.125rem;
+      line-height: 2;
+      letter-spacing: 0.01em;
+      padding: 1.5rem;
+      background: #f9fafb;
+      border-radius: 0.75rem;
+      border: 1px solid #f3f4f6;
+      min-height: 200px;
+      max-height: 280px;
+      overflow-y: auto;
+      user-select: none;
+    }
+    .dark .passage { background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.06); }
+    .passage .ch {
+      color: #9ca3af;
+      transition: background 0.05s ease;
+      border-radius: 2px;
+    }
+    .passage .ch.correct { color: #00B8A9; }
+    .passage .ch.incorrect { color: #fff; background: #E8384F; }
+    .passage .ch.current {
+      background: rgba(255,107,53,0.25);
+      border-bottom: 2px solid #FF6B35;
+      color: #FF6B35;
+      animation: blink 1s ease infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.7} }
+    .passage .ch.space-incorrect { background: #E8384F; }
+
+    .typing-input {
+      font-family: 'JetBrains Mono', 'Sarasa Mono SC', monospace;
+      letter-spacing: 0.01em;
+    }
+
+    .stat-card {
+      flex: 1;
+      text-align: center;
+      padding: 1rem 0.5rem;
+      border-radius: 0.75rem;
+      background: #f9fafb;
+      border: 1px solid #f3f4f6;
+    }
+    .dark .stat-card { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.06); }
+    .stat-num { font-size: 1.75rem; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+    .stat-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: #9ca3af; margin-top: 0.35rem; font-weight: 600; }
+
+    .duration-btn {
+      padding: 0.5rem 1rem;
+      border-radius: 9999px;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      border: 1px solid #e5e7eb;
+      background: #fff;
+      color: #6b7280;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .dark .duration-btn { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.1); color: #9ca3af; }
+    .duration-btn.active { background: linear-gradient(135deg, #FF6B35, #E8384F, #00B8A9); color: #fff; border-color: transparent; }
+
+    .time-ring {
+      width: 56px; height: 56px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 50%;
+      font-weight: 800;
+      font-size: 1.125rem;
+      font-variant-numeric: tabular-nums;
+      background: conic-gradient(#FF6B35 0deg, #E8384F 180deg, #00B8A9 360deg);
+      color: #fff;
+      position: relative;
+    }
+    .time-ring::before {
+      content: ''; position: absolute; inset: 4px;
+      background: #0a0a0a; border-radius: 50%;
+    }
+    .time-ring span { position: relative; z-index: 1; }
+    .dark .time-ring::before { background: #1a1a1a; }
+    .time-ring.light::before { background: #fff; }
+    .time-ring.light span { color: #0a0a0a; }
+
+    .result-circle {
+      width: 140px; height: 140px;
+      border-radius: 50%;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, #FF6B35, #E8384F, #00B8A9);
+      color: #fff;
+      margin: 0 auto 1rem;
+      box-shadow: 0 12px 30px rgba(255,107,53,0.3);
+    }
+    .result-circle .big { font-size: 2.25rem; font-weight: 800; line-height: 1; }
+    .result-circle .small { font-size: 0.75rem; font-weight: 600; opacity: 0.9; margin-top: 0.25rem; }
+  </style>
+</head>
+<body class="font-sans bg-white text-gray-900 dark:bg-surface-dark dark:text-gray-100 antialiased">
+
+  <div id="navbar-mount"></div>
+
+  <main class="tool-page">
+    <div class="tool-container">
+      <header class="tool-header">
+        <span class="badge mb-3">Games</span>
+        <h1 class="tool-title">Typing Speed Test</h1>
+        <p class="tool-subtitle">How fast can you type? Measure your WPM and accuracy with timed tests.</p>
+      </header>
+
+      <div class="tool-card">
+
+        <!-- Duration selector -->
+        <div class="flex flex-wrap items-center justify-center gap-2 mb-5">
+          <span class="text-xs text-gray-400 font-semibold uppercase tracking-wider mr-1">Duration</span>
+          <button class="duration-btn active" data-dur="30">30s</button>
+          <button class="duration-btn" data-dur="60">60s</button>
+          <button class="duration-btn" data-dur="120">120s</button>
+        </div>
+
+        <!-- Live stats -->
+        <div class="flex gap-3 mb-5">
+          <div class="stat-card">
+            <div class="stat-num text-brand-orange" id="stat-wpm">0</div>
+            <div class="stat-label">WPM</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num text-brand-teal" id="stat-acc">100%</div>
+            <div class="stat-label">Accuracy</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num text-gray-700 dark:text-gray-200" id="stat-time">0:30</div>
+            <div class="stat-label">Time</div>
+          </div>
+        </div>
+
+        <!-- Passage -->
+        <div class="passage" id="passage"></div>
+
+        <!-- Hidden input for capturing keystrokes -->
+        <input type="text" id="typing-input" class="typing-input mt-4" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Click here or press any key to start typing…">
+
+        <div class="flex flex-wrap justify-center gap-3 mt-5">
+          <button class="btn-primary" id="restart-btn">Restart</button>
+          <button class="btn-secondary" id="new-passage-btn">New Passage</button>
+        </div>
+
+        <p class="text-xs text-gray-400 text-center mt-4">
+          Tip: click the input box, then start typing. The test begins on your first keystroke.
+        </p>
+      </div>
+    </div>
+  </main>
+
+  <footer class="py-8 border-t border-gray-100 dark:border-white/5 mt-12">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p class="text-xs text-gray-400">© 2025 Contoura Labs</p>
+      <a href="index.html" class="text-xs text-brand-orange hover:text-brand-red transition-colors">← Back to all games</a>
+    </div>
+  </footer>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+  (function () {
+    'use strict';
+
+    const PASSAGES = [
+      "The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs. How vexingly quick daft zebras jump!",
+      "Programming is the art of telling another human what one wants the computer to do. Good code is its own best documentation.",
+      "Time flies when you're having fun, but the seconds feel like hours when you're staring at a blank page waiting for inspiration to strike.",
+      "The sun dipped below the horizon, painting the sky in shades of orange, pink, and purple. A gentle breeze whispered through the trees.",
+      "To be, or not to be, that is the question. Whether it is nobler in the mind to suffer the slings and arrows of outrageous fortune.",
+      "Coffee is a brewed drink prepared from roasted coffee beans. It is one of the most popular drinks in the world, enjoyed by millions daily.",
+      "The journey of a thousand miles begins with a single step. Patience and persistence can conquer mountains and cross oceans alike.",
+      "Music is the universal language of mankind. It transcends borders, cultures, and generations, connecting us all through melody.",
+      "In the middle of difficulty lies opportunity. The greatest discoveries often come from the most unexpected places and moments.",
+      "A smooth sea never made a skilled sailor. Every challenge you face is a chance to grow stronger and wiser than you were yesterday.",
+      "The best way to predict the future is to invent it. Innovation rarely arrives on schedule, but it always rewards those who keep building.",
+      "Words have the power to inspire, to heal, to wound, and to transform. Choose them carefully, for they echo long after they are spoken.",
+      "Curiosity is the engine of achievement. Every great inventor, scientist, and artist started by simply asking why or how something worked.",
+      "The night sky stretched endlessly above, dotted with countless stars. Each one a sun in its own right, perhaps warming its own planets.",
+      "Reading is to the mind what exercise is to the body. A good book can transport you to worlds you never knew existed within your imagination.",
+      "Practice does not make perfect. Only perfect practice makes perfect. Focus on form, repetition, and steady improvement over time.",
+      "The smell of fresh rain on dry earth is called petrichor. It is a scent that signals renewal, growth, and the start of something new.",
+      "Happiness is not something ready made. It comes from your own actions, your relationships, and the small moments you choose to notice.",
+      "The internet has transformed how we learn, work, and connect. Yet the most meaningful conversations still happen face to face, in person.",
+      "A single idea, written down at the right moment, can change the course of your entire life. Always carry a notebook or a notes app.",
+      "The mountains called, and I had to go. There is something deeply restorative about standing at altitude, breathing thin clean air.",
+      "Cooking is an act of love. Every meal prepared with care carries a piece of the cook's heart to those who gather around the table.",
+      "The early bird catches the worm, but the second mouse gets the cheese. Sometimes patience and observation beat speed and ambition.",
+      "Technology is best when it brings people together. The most powerful devices are those that disappear into the background of our lives.",
+      "Every expert was once a beginner. The difference between mastery and mediocrity is simply the willingness to keep showing up daily."
+    ];
+
+    let duration = 30;
+    let passage = '';
+    let typed = '';
+    let startTime = null;
+    let timerInterval = null;
+    let timeLeft = duration;
+    // Lifetime keystroke counters (do not decrement on backspace)
+    let totalKeystrokes = 0;   // every char typed forward
+    let correctKeystrokes = 0; // every char typed forward that was correct at the time
+    let testState = 'idle'; // idle | running | finished
+
+    const passageEl = document.getElementById('passage');
+    const inputEl = document.getElementById('typing-input');
+    const wpmEl = document.getElementById('stat-wpm');
+    const accEl = document.getElementById('stat-acc');
+    const timeEl = document.getElementById('stat-time');
+
+    function pickPassage() {
+      let p;
+      do {
+        p = PASSAGES[Math.floor(Math.random() * PASSAGES.length)];
+      } while (p === passage && PASSAGES.length > 1);
+      return p;
+    }
+
+    function formatTime(s) {
+      const m = Math.floor(s / 60);
+      const sec = s % 60;
+      return `${m}:${String(sec).padStart(2, '0')}`;
+    }
+
+    function resetTest(newPassage = true) {
+      if (newPassage) passage = pickPassage();
+      typed = '';
+      startTime = null;
+      timeLeft = duration;
+      totalKeystrokes = 0;
+      correctKeystrokes = 0;
+      testState = 'idle';
+      if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+      inputEl.value = '';
+      inputEl.disabled = false;
+      wpmEl.textContent = '0';
+      accEl.textContent = '100%';
+      timeEl.textContent = formatTime(duration);
+      renderPassage();
+    }
+
+    function renderPassage() {
+      passageEl.innerHTML = '';
+      const chars = passage.split('');
+      chars.forEach((ch, i) => {
+        const span = document.createElement('span');
+        span.className = 'ch';
+        if (i < typed.length) {
+          if (typed[i] === ch) {
+            span.classList.add('correct');
+          } else {
+            span.classList.add('incorrect');
+            if (ch === ' ') span.classList.add('space-incorrect');
+          }
+        } else if (i === typed.length) {
+          span.classList.add('current');
+        }
+        span.textContent = ch === ' ' ? '\u00A0' : ch;
+        passageEl.appendChild(span);
+      });
+      // scroll to current
+      const current = passageEl.querySelector('.current');
+      if (current) {
+        current.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }
+    }
+
+    // Returns count of currently-correct chars in `typed` (for WPM — net WPM uses current correct chars)
+    function currentCorrectCount() {
+      let n = 0;
+      for (let i = 0; i < typed.length; i++) {
+        if (typed[i] === passage[i]) n++;
+      }
+      return n;
+    }
+
+    function updateStats() {
+      if (!startTime) return;
+      const elapsedSec = (Date.now() - startTime) / 1000;
+      const elapsedMin = elapsedSec / 60;
+      // Net WPM = (current correct chars / 5) / minutes
+      const correctNow = currentCorrectCount();
+      const wpm = elapsedMin > 0 ? Math.round((correctNow / 5) / elapsedMin) : 0;
+      wpmEl.textContent = wpm;
+      // Accuracy = correctKeystrokes / totalKeystrokes (lifetime, includes backspaced mistakes)
+      const acc = totalKeystrokes > 0 ? Math.round((correctKeystrokes / totalKeystrokes) * 100) : 100;
+      accEl.textContent = acc + '%';
+      timeEl.textContent = formatTime(Math.max(0, Math.ceil(timeLeft)));
+    }
+
+    function startTest() {
+      if (testState === 'running') return;
+      testState = 'running';
+      startTime = Date.now();
+      timerInterval = setInterval(() => {
+        timeLeft -= 1;
+        if (timeLeft <= 0) {
+          timeLeft = 0;
+          finishTest();
+        }
+        updateStats();
+      }, 1000);
+    }
+
+    function finishTest() {
+      testState = 'finished';
+      if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+      inputEl.disabled = true;
+      updateStats();
+      const elapsedMin = (Date.now() - startTime) / 1000 / 60;
+      const correctNow = currentCorrectCount();
+      const finalWpm = elapsedMin > 0 ? Math.round((correctNow / 5) / elapsedMin) : 0;
+      const finalAcc = totalKeystrokes > 0 ? Math.round((correctKeystrokes / totalKeystrokes) * 100) : 100;
+      CL.toast(`Done! ${finalWpm} WPM · ${finalAcc}% accuracy`, finalWpm >= 40);
+    }
+
+    function handleInput(value) {
+      if (testState === 'finished') return;
+      // Don't allow typing beyond passage length
+      if (value.length > passage.length) {
+        value = value.slice(0, passage.length);
+        inputEl.value = value;
+      }
+      // Track lifetime keystrokes when user adds chars (not on backspace)
+      const oldLen = typed.length;
+      const newLen = value.length;
+      if (newLen > oldLen) {
+        for (let i = oldLen; i < newLen; i++) {
+          totalKeystrokes++;
+          // At the moment of typing, the char at position i should match passage[i]
+          if (value[i] === passage[i]) correctKeystrokes++;
+        }
+      }
+      typed = value;
+      updateStats();
+      renderPassage();
+      // If finished typing entire passage, end test
+      if (value.length >= passage.length) {
+        finishTest();
+      }
+    }
+
+    // ---- Wire UI ----
+    inputEl.addEventListener('input', (e) => {
+      if (testState === 'idle') startTest();
+      handleInput(e.target.value);
+    });
+
+    // Prevent paste (so user actually types)
+    inputEl.addEventListener('paste', (e) => {
+      e.preventDefault();
+      CL.toast('Pasting is disabled — type it out!', false);
+    });
+
+    document.getElementById('restart-btn').addEventListener('click', () => {
+      resetTest(false);
+      inputEl.focus();
+    });
+
+    document.getElementById('new-passage-btn').addEventListener('click', () => {
+      resetTest(true);
+      inputEl.focus();
+      CL.toast('New passage loaded.', true);
+    });
+
+    document.querySelectorAll('.duration-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.duration-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        duration = parseInt(btn.dataset.dur, 10);
+        resetTest(false);
+        inputEl.focus();
+      });
+    });
+
+    // Focus input when clicking on passage area
+    passageEl.addEventListener('click', () => inputEl.focus());
+
+    // Auto-focus input on load
+    setTimeout(() => inputEl.focus(), 200);
+
+    // Init
+    resetTest(true);
+  })();
+  </script>
+</body>
+</html>

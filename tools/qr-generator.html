@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QR Code Generator — Contoura Labs</title>
+  <meta name="description" content="Generate custom QR codes from any URL or text. Choose size, colors, and download as PNG. 100% in-browser.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 73 28 A 32 32 0 0 0 27 28' stroke='%23FF6B35' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 24 32 A 32 32 0 0 0 24 68' stroke='%23E8384F' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 27 72 A 32 32 0 0 0 73 72' stroke='%2300B8A9' stroke-width='9' fill='none' stroke-linecap='round'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: {
+        colors: {
+          brand: { orange: '#FF6B35', red: '#E8384F', teal: '#00B8A9' },
+          surface: { light: '#F8F9FA', dark: '#0A0A0A', card: '#1A1A1A', alt: '#111111' }
+        },
+        fontFamily: { sans: ['Inter', 'sans-serif'] }
+      }}
+    }
+  </script>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <!-- QRCode library — loaded synchronously, available as window.QRCode -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <script>
+    // Fallback: if qrcodejs doesn't expose QRCode, try the node-qrcode build
+    if (typeof window.QRCode === 'undefined') {
+      document.write('<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"><\/script>');
+    }
+  </script>
+</head>
+<body class="font-sans bg-white text-gray-900 dark:bg-surface-dark dark:text-gray-100 antialiased">
+
+  <div id="navbar-mount"></div>
+
+  <main class="tool-page">
+    <div class="tool-container">
+      <header class="tool-header">
+        <span class="badge mb-3">Generators</span>
+        <h1 class="tool-title">QR Code <span class="gradient-text">Generator</span></h1>
+        <p class="tool-subtitle">Create custom QR codes from any URL or text. Pick colors, choose a size, and download as PNG.</p>
+      </header>
+
+      <div class="tool-card">
+        <div style="display:grid;grid-template-columns:1fr;gap:1.5rem;" class="md:grid md:grid-cols-2 md:gap-6">
+          <!-- LEFT: Controls -->
+          <div>
+            <label class="field-label" for="qr-text">URL or text</label>
+            <textarea id="qr-text" rows="3" placeholder="https://example.com" style="min-height:90px;">https://contoura-labs.example.com</textarea>
+
+            <label class="field-label mt-4" for="qr-size">Size</label>
+            <select id="qr-size">
+              <option value="128">Small — 128 × 128 px</option>
+              <option value="256" selected>Medium — 256 × 256 px</option>
+              <option value="512">Large — 512 × 512 px</option>
+              <option value="1024">Extra Large — 1024 × 1024 px</option>
+            </select>
+
+            <div class="grid-2 mt-4">
+              <div>
+                <label class="field-label" for="qr-fg">Foreground</label>
+                <input type="color" id="qr-fg" value="#0A0A0A" style="height:46px;width:100%;padding:4px;border-radius:0.75rem;border:1px solid #e5e7eb;background:#f9fafb;">
+              </div>
+              <div>
+                <label class="field-label" for="qr-bg">Background</label>
+                <input type="color" id="qr-bg" value="#FFFFFF" style="height:46px;width:100%;padding:4px;border-radius:0.75rem;border:1px solid #e5e7eb;background:#f9fafb;">
+              </div>
+            </div>
+
+            <label class="field-label mt-4" for="qr-ec">Error correction</label>
+            <select id="qr-ec">
+              <option value="L">Low (7%)</option>
+              <option value="M" selected>Medium (15%)</option>
+              <option value="Q">Quartile (25%)</option>
+              <option value="H">High (30%)</option>
+            </select>
+
+            <label class="field-label mt-4" style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+              <input type="checkbox" id="qr-auto" checked style="width:auto;">
+              <span>Auto-update as I type</span>
+            </label>
+
+            <div class="flex gap-3 mt-6" style="flex-wrap:wrap;">
+              <button class="btn-primary" id="generate-btn">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z"/></svg>
+                Generate QR Code
+              </button>
+              <button class="btn-secondary" id="download-btn">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+                Download PNG
+              </button>
+              <button class="btn-secondary" id="copy-btn">Copy Image</button>
+            </div>
+          </div>
+
+          <!-- RIGHT: Preview -->
+          <div class="flex flex-col items-center justify-start">
+            <label class="field-label self-start">Live preview</label>
+            <div class="rounded-xl p-4 flex items-center justify-center" style="background:#fafafa;border:1px solid #e5e7eb;min-height:320px;width:100%;">
+              <canvas id="qr-canvas"></canvas>
+            </div>
+            <p class="text-xs text-gray-400 mt-2" id="qr-meta">Click "Generate QR Code" to start</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-card mt-6">
+        <h3 class="font-semibold mb-2">Tips</h3>
+        <ul class="text-sm text-gray-600 dark:text-gray-300 list-disc pl-5 space-y-1">
+          <li>Higher error correction lets the QR still scan if partially obscured — but makes the code denser.</li>
+          <li>For dark-on-light QR codes, keep contrast high (avoid similar hues).</li>
+          <li>URLs with long query strings work fine — but shorter URLs scan faster.</li>
+          <li>Uncheck "Auto-update" if you want to manually click Generate after typing.</li>
+        </ul>
+      </div>
+    </div>
+  </main>
+
+  <footer class="py-8 border-t border-gray-100 dark:border-white/5 mt-12">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p class="text-xs text-gray-400">© 2025 Contoura Labs</p>
+      <a href="index.html" class="text-xs text-brand-orange hover:text-brand-red transition-colors">← Back to all tools</a>
+    </div>
+  </footer>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const textEl = $('qr-text'), sizeEl = $('qr-size'), fgEl = $('qr-fg'), bgEl = $('qr-bg'),
+          ecEl = $('qr-ec'), autoEl = $('qr-auto'), canvas = $('qr-canvas'), metaEl = $('qr-meta');
+
+    // Wait for QRCode library to be available (handles slow CDN)
+    function waitForQRCode(cb, attempts = 0) {
+      if (typeof window.QRCode !== 'undefined' && typeof window.QRCode.toCanvas === 'function') {
+        cb();
+      } else if (attempts < 50) {
+        setTimeout(() => waitForQRCode(cb, attempts + 1), 100);
+      } else {
+        CL.toast('QR library failed to load. Check your connection and refresh.', false);
+        metaEl.textContent = 'Library failed to load';
+      }
+    }
+
+    function render() {
+      const text = (textEl.value || '').trim();
+      if (!text) {
+        const ctx = canvas.getContext('2d');
+        const sz = parseInt(sizeEl.value, 10) || 256;
+        canvas.width = canvas.height = sz;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#9ca3af'; ctx.font = '14px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Enter text to generate QR', canvas.width / 2, canvas.height / 2);
+        metaEl.textContent = 'Enter text above';
+        return;
+      }
+      const size = parseInt(sizeEl.value, 10);
+      try {
+        QRCode.toCanvas(canvas, text, {
+          width: size,
+          margin: 2,
+          errorCorrectionLevel: ecEl.value,
+          color: { dark: fgEl.value, light: bgEl.value }
+        }, (err) => {
+          if (err) {
+            CL.toast('QR error: ' + (err.message || 'unknown'), false);
+            metaEl.textContent = 'Error: ' + err.message;
+            return;
+          }
+          metaEl.textContent = `${canvas.width} × ${canvas.height} px · Ready`;
+        });
+      } catch (e) {
+        CL.toast('QR error: ' + e.message, false);
+      }
+    }
+
+    // Generate button — always works
+    $('generate-btn').addEventListener('click', () => {
+      waitForQRCode(render);
+    });
+
+    // Auto-update on input (if enabled)
+    [textEl, sizeEl, fgEl, bgEl, ecEl].forEach(el => {
+      el.addEventListener('input', () => { if (autoEl.checked) waitForQRCode(render); });
+      el.addEventListener('change', () => { if (autoEl.checked) waitForQRCode(render); });
+    });
+
+    $('download-btn').addEventListener('click', () => {
+      const text = (textEl.value || '').trim();
+      if (!text) { CL.toast('Enter text first', false); return; }
+      waitForQRCode(() => {
+        QRCode.toDataURL(text, {
+          width: parseInt(sizeEl.value, 10),
+          margin: 2,
+          errorCorrectionLevel: ecEl.value,
+          color: { dark: fgEl.value, light: bgEl.value }
+        }, (err, url) => {
+          if (err) { CL.toast('Download failed: ' + err.message, false); return; }
+          fetch(url).then(r => r.blob()).then(blob => {
+            CL.download(blob, `qr-${Date.now()}.png`);
+            CL.toast('PNG downloaded');
+          });
+        });
+      });
+    });
+
+    $('copy-btn').addEventListener('click', async () => {
+      try {
+        const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+        CL.toast('QR image copied to clipboard');
+      } catch (e) {
+        CL.toast('Copy failed — try Download instead', false);
+      }
+    });
+
+    // Initial render once library is ready
+    waitForQRCode(() => {
+      render();
+      CL.toast('QR generator ready');
+    });
+  </script>
+</body>
+</html>

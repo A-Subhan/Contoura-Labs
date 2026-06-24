@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JSON Formatter — Contoura Labs</title>
+  <meta name="description" content="Format, minify, and validate JSON. Browse a collapsible tree view and get error messages with line numbers.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 73 28 A 32 32 0 0 0 27 28' stroke='%23FF6B35' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 24 32 A 32 32 0 0 0 24 68' stroke='%23E8384F' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 27 72 A 32 32 0 0 0 73 72' stroke='%2300B8A9' stroke-width='9' fill='none' stroke-linecap='round'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: {
+        colors: {
+          brand: { orange: '#FF6B35', red: '#E8384F', teal: '#00B8A9' },
+          surface: { light: '#F8F9FA', dark: '#0A0A0A', card: '#1A1A1A', alt: '#111111' }
+        },
+        fontFamily: { sans: ['Inter', 'sans-serif'] }
+      }}
+    }
+  </script>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <style>
+    .json-tree { font-family: 'Sarasa Mono SC','JetBrains Mono','Menlo',monospace; font-size: 0.8125rem; line-height: 1.6; }
+    .json-tree ul { list-style:none; padding-left: 1.25rem; border-left: 1px dashed rgba(150,150,150,0.25); margin-left: 0.25rem; }
+    .json-tree li { margin: 0.15rem 0; }
+    .json-key { color: #FF6B35; }
+    .json-str { color: #10B981; }
+    .json-num { color: #60A5FA; }
+    .json-bool { color: #E8384F; }
+    .json-null { color: #9ca3af; font-style: italic; }
+    .json-toggle { cursor: pointer; user-select: none; }
+    .json-toggle::before { content: '▼ '; color:#6b7280; font-size: 0.7rem; display:inline-block; transition: transform 0.15s ease; }
+    .json-toggle.collapsed::before { content: '▶ '; }
+    .json-toggle.collapsed + ul { display: none; }
+    .json-preview { color: #6b7280; font-style: italic; margin-left: 0.25rem; }
+    .json-error {
+      background: rgba(232,56,79,0.08); border:1px solid rgba(232,56,79,0.3); color:#E8384F;
+      padding: 0.6rem 0.85rem; border-radius:0.5rem; font-family: monospace; font-size:0.8125rem;
+    }
+  </style>
+</head>
+<body class="font-sans bg-white text-gray-900 dark:bg-surface-dark dark:text-gray-100 antialiased">
+
+  <div id="navbar-mount"></div>
+
+  <main class="tool-page">
+    <div class="tool-container">
+      <header class="tool-header">
+        <span class="badge mb-3">Text / Dev Tools</span>
+        <h1 class="tool-title">JSON <span class="gradient-text">Formatter</span></h1>
+        <p class="tool-subtitle">Format, minify, validate, and explore JSON with a collapsible tree view. Errors point to the exact line.</p>
+      </header>
+
+      <div class="tool-card">
+        <label class="field-label" for="json-input">JSON input</label>
+        <textarea id="json-input" rows="9" placeholder='Paste JSON here, e.g.\n{\n  "name": "Contoura",\n  "tools": 16,\n  "free": true\n}' style="min-height:200px;"></textarea>
+
+        <div class="flex flex-wrap gap-3 mt-4">
+          <button class="btn-primary" id="format-btn">Format (2-space)</button>
+          <button class="btn-secondary" id="minify-btn">Minify</button>
+          <button class="btn-secondary" id="validate-btn">Validate</button>
+          <button class="btn-secondary" id="clear-btn">Clear</button>
+          <button class="btn-secondary" id="sample-btn">Load sample</button>
+        </div>
+
+        <!-- Status line -->
+        <div id="status" class="mt-4 text-sm hidden"></div>
+
+        <!-- Output -->
+        <div id="output-wrap" class="mt-5 hidden">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="font-semibold text-sm">Output</h3>
+            <button class="btn-secondary" id="copy-btn" style="padding:0.4rem 0.85rem;">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.5a2.25 2.25 0 00-2.25-2.25h-2.5a2.25 2.25 0 01-2.25-2.25v-2.5A2.25 2.25 0 009.375 3h-1.5"/></svg>
+              Copy
+            </button>
+          </div>
+          <pre id="output-pre" class="code-output" style="max-height:400px; overflow:auto;"></pre>
+        </div>
+
+        <!-- Tree view -->
+        <div id="tree-wrap" class="mt-5 hidden">
+          <h3 class="font-semibold text-sm mb-2">Tree view <span class="text-xs text-gray-400 font-normal">(click ▼ to collapse)</span></h3>
+          <div id="tree" class="json-tree p-4 rounded-lg" style="background:#0a0a0a; color:#e5e7eb; max-height:400px; overflow:auto;"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="py-8 border-t border-gray-100 dark:border-white/5 mt-12">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p class="text-xs text-gray-400">© 2025 Contoura Labs</p>
+      <a href="index.html" class="text-xs text-brand-orange hover:text-brand-red transition-colors">← Back to all tools</a>
+    </div>
+  </footer>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+  (function () {
+    'use strict';
+
+    const inputEl = document.getElementById('json-input');
+    const statusEl = document.getElementById('status');
+    const outputWrap = document.getElementById('output-wrap');
+    const outputPre = document.getElementById('output-pre');
+    const treeWrap = document.getElementById('tree-wrap');
+    const treeEl = document.getElementById('tree');
+    let currentOutput = '';
+
+    function setStatus(msg, ok = true) {
+      statusEl.classList.remove('hidden');
+      if (ok) {
+        statusEl.className = 'mt-4 text-sm p-3 rounded-lg bg-brand-teal/10 text-brand-teal border border-brand-teal/20';
+      } else {
+        statusEl.className = 'mt-4 text-sm json-error';
+      }
+      statusEl.innerHTML = msg;
+    }
+
+    function tryParse() {
+      const raw = inputEl.value.trim();
+      if (!raw) { setStatus('Please paste some JSON first.', false); return null; }
+      try {
+        return JSON.parse(raw);
+      } catch (e) {
+        // Try to extract line/col from message
+        const msg = e.message || 'Invalid JSON';
+        const posMatch = msg.match(/position (\d+)/i);
+        let lineCol = '';
+        if (posMatch) {
+          const pos = parseInt(posMatch[1], 10);
+          const upto = raw.substring(0, pos);
+          const line = upto.split('\n').length;
+          const col = pos - upto.lastIndexOf('\n');
+          lineCol = ` <span class="text-gray-400">(line ${line}, col ${col})</span>`;
+        }
+        setStatus('⚠ ' + msg + lineCol, false);
+        outputWrap.classList.add('hidden');
+        treeWrap.classList.add('hidden');
+        return null;
+      }
+    }
+
+    function format() {
+      const obj = tryParse();
+      if (obj === null) return;
+      currentOutput = JSON.stringify(obj, null, 2);
+      outputPre.textContent = currentOutput;
+      outputWrap.classList.remove('hidden');
+      renderTree(obj);
+      treeWrap.classList.remove('hidden');
+      setStatus('✓ Valid JSON · formatted with 2-space indent', true);
+      CL.toast('Formatted!');
+    }
+
+    function minify() {
+      const obj = tryParse();
+      if (obj === null) return;
+      currentOutput = JSON.stringify(obj);
+      outputPre.textContent = currentOutput;
+      outputWrap.classList.remove('hidden');
+      renderTree(obj);
+      treeWrap.classList.remove('hidden');
+      setStatus('✓ Valid JSON · minified', true);
+      CL.toast('Minified!');
+    }
+
+    function validate() {
+      const obj = tryParse();
+      if (obj === null) return;
+      outputWrap.classList.add('hidden');
+      treeWrap.classList.add('hidden');
+      setStatus('✓ Valid JSON · no errors found', true);
+      CL.toast('Valid JSON');
+    }
+
+    function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    function renderValue(val, key) {
+      if (val === null) return `<span class="json-null">null</span>`;
+      if (typeof val === 'boolean') return `<span class="json-bool">${val}</span>`;
+      if (typeof val === 'number') return `<span class="json-num">${val}</span>`;
+      if (typeof val === 'string') return `<span class="json-str">"${esc(val)}"</span>`;
+      return '';
+    }
+
+    function renderTree(obj) {
+      treeEl.innerHTML = '';
+      const root = document.createElement('div');
+      root.appendChild(buildNode(obj, null));
+      treeEl.appendChild(root);
+      // wire toggles
+      treeEl.querySelectorAll('.json-toggle').forEach(t => {
+        t.addEventListener('click', () => t.classList.toggle('collapsed'));
+      });
+    }
+
+    function buildNode(val, key) {
+      const wrap = document.createElement('div');
+      const isArr = Array.isArray(val);
+      const isObj = val !== null && typeof val === 'object' && !isArr;
+
+      if (!isArr && !isObj) {
+        const span = document.createElement('div');
+        if (key !== null) {
+          span.innerHTML = `<span class="json-key">"${esc(key)}"</span>: ${renderValue(val)}`;
+        } else {
+          span.innerHTML = renderValue(val);
+        }
+        return span;
+      }
+
+      const entries = isArr ? val.map((v,i) => [i, v]) : Object.entries(val);
+      const open = isArr ? '[' : '{';
+      const close = isArr ? ']' : '}';
+      const preview = isArr
+        ? `Array(${val.length})`
+        : `{${Object.keys(val).length} keys}`;
+
+      const header = document.createElement('div');
+      header.className = 'json-toggle';
+      const keyHtml = key !== null ? `<span class="json-key">"${esc(key)}"</span>: ` : '';
+      header.innerHTML = `${keyHtml}<span class="text-gray-300">${open}</span><span class="json-preview">${preview}</span><span class="text-gray-300">${close}</span>`;
+      wrap.appendChild(header);
+
+      const ul = document.createElement('ul');
+      entries.forEach(([k, v]) => {
+        const li = document.createElement('li');
+        li.appendChild(buildNode(v, isArr ? null : k));
+        ul.appendChild(li);
+      });
+      // closing brace line
+      const closeLi = document.createElement('li');
+      closeLi.innerHTML = `<span class="text-gray-300">${close}</span>`;
+      ul.appendChild(closeLi);
+      wrap.appendChild(ul);
+      return wrap;
+    }
+
+    document.getElementById('format-btn').addEventListener('click', format);
+    document.getElementById('minify-btn').addEventListener('click', minify);
+    document.getElementById('validate-btn').addEventListener('click', validate);
+    document.getElementById('clear-btn').addEventListener('click', () => {
+      inputEl.value = '';
+      statusEl.classList.add('hidden');
+      outputWrap.classList.add('hidden');
+      treeWrap.classList.add('hidden');
+      CL.toast('Cleared');
+    });
+    document.getElementById('sample-btn').addEventListener('click', () => {
+      inputEl.value = JSON.stringify({
+        company: 'Contoura Labs',
+        founded: 2025,
+        free: true,
+        tools: ['pdf-to-word', 'qr-generator', 'age-calculator'],
+        metrics: { users: 12450, countries: 87, avgRating: 4.8 },
+        contact: null
+      }, null, 2);
+      CL.toast('Sample loaded');
+    });
+    document.getElementById('copy-btn').addEventListener('click', async () => {
+      if (!currentOutput) return;
+      try {
+        await navigator.clipboard.writeText(currentOutput);
+        CL.toast('Copied!');
+      } catch (e) { CL.toast('Copy failed', false); }
+    });
+  })();
+  </script>
+</body>
+</html>

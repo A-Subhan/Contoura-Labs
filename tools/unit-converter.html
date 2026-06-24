@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unit Converter — Contoura Labs</title>
+  <meta name="description" content="Convert length, weight, volume, temperature, time, speed, and digital storage units in real time.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 73 28 A 32 32 0 0 0 27 28' stroke='%23FF6B35' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 24 32 A 32 32 0 0 0 24 68' stroke='%23E8384F' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 27 72 A 32 32 0 0 0 73 72' stroke='%2300B8A9' stroke-width='9' fill='none' stroke-linecap='round'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: {
+        colors: {
+          brand: { orange: '#FF6B35', red: '#E8384F', teal: '#00B8A9' },
+          surface: { light: '#F8F9FA', dark: '#0A0A0A', card: '#1A1A1A', alt: '#111111' }
+        },
+        fontFamily: { sans: ['Inter', 'sans-serif'] }
+      }}
+    }
+  </script>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <style>
+    .cat-tab {
+      padding: 0.55rem 1rem; border-radius: 9999px; font-size: 0.8125rem; font-weight: 600;
+      cursor: pointer; border: 1px solid #e5e7eb; background:#fff; color:#6b7280; transition: all 0.2s ease;
+    }
+    .dark .cat-tab { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.1); color:#9ca3af; }
+    .cat-tab.active {
+      background: linear-gradient(135deg,#FF6B35,#E8384F); color:#fff; border-color: transparent;
+      box-shadow: 0 4px 12px rgba(255,107,53,0.25);
+    }
+    .conv-output {
+      font-family: 'Sarasa Mono SC', 'JetBrains Mono', 'Menlo', monospace;
+      font-size: 1.125rem; font-weight: 600; color: var(--brand-teal);
+    }
+    .unit-row { display:flex; align-items:center; gap:0.75rem; padding:0.5rem 0.75rem; border-radius:0.5rem; }
+    .unit-row:hover { background: rgba(255,107,53,0.05); }
+    .unit-row input { width:100%; }
+  </style>
+</head>
+<body class="font-sans bg-white text-gray-900 dark:bg-surface-dark dark:text-gray-100 antialiased">
+
+  <div id="navbar-mount"></div>
+
+  <main class="tool-page">
+    <div class="tool-container">
+      <header class="tool-header">
+        <span class="badge mb-3">Converters</span>
+        <h1 class="tool-title">Unit <span class="gradient-text">Converter</span></h1>
+        <p class="tool-subtitle">Convert length, weight, volume, temperature, time, speed, and digital storage — in real time as you type.</p>
+      </header>
+
+      <div class="tool-card">
+        <!-- Category tabs -->
+        <div id="cat-tabs" class="flex flex-wrap justify-center gap-2 mb-6"></div>
+
+        <!-- From/To quick panel -->
+        <div class="grid-2 mb-5">
+          <div>
+            <label class="field-label" for="from-unit">From</label>
+            <div class="flex gap-2">
+              <input type="number" id="from-value" value="1" step="any" style="flex:1; min-width:0;">
+              <select id="from-unit" style="min-width:10rem; flex-shrink:0;"></select>
+            </div>
+          </div>
+          <div>
+            <label class="field-label" for="to-unit">To</label>
+            <div class="flex gap-2">
+              <input type="text" id="to-value" readonly style="flex:1; min-width:0;">
+              <select id="to-unit" style="min-width:10rem; flex-shrink:0;"></select>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex justify-center gap-2 mb-6">
+          <button class="btn-secondary" id="swap-btn" style="padding:0.5rem 1rem;">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/></svg>
+            Swap units
+          </button>
+        </div>
+
+        <!-- Full conversion table -->
+        <div>
+          <h3 class="font-semibold mb-2 text-sm text-gray-500 dark:text-gray-400">All units (live)</h3>
+          <div id="all-units" class="space-y-1"></div>
+        </div>
+
+        <p class="text-xs text-gray-400 mt-4 text-center">Conversion factors are standard SI values. Temperature uses formulas instead of fixed ratios.</p>
+      </div>
+    </div>
+  </main>
+
+  <footer class="py-8 border-t border-gray-100 dark:border-white/5 mt-12">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p class="text-xs text-gray-400">© 2025 Contoura Labs</p>
+      <a href="index.html" class="text-xs text-brand-orange hover:text-brand-red transition-colors">← Back to all tools</a>
+    </div>
+  </footer>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+  (function () {
+    'use strict';
+
+    // Each category: units keyed by abbreviation with { name, factor } where factor converts to base unit.
+    // For temperature, we use toBase/fromBase functions instead of factors.
+    const CATEGORIES = {
+      Length: {
+        base: 'm',
+        units: {
+          m:    { name: 'Meter',      factor: 1 },
+          km:   { name: 'Kilometer',  factor: 1000 },
+          cm:   { name: 'Centimeter', factor: 0.01 },
+          mm:   { name: 'Millimeter', factor: 0.001 },
+          mi:   { name: 'Mile',       factor: 1609.344 },
+          yd:   { name: 'Yard',       factor: 0.9144 },
+          ft:   { name: 'Foot',       factor: 0.3048 },
+          'in': { name: 'Inch',       factor: 0.0254 }
+        }
+      },
+      Weight: {
+        base: 'kg',
+        units: {
+          kg:  { name: 'Kilogram',   factor: 1 },
+          g:   { name: 'Gram',       factor: 0.001 },
+          mg:  { name: 'Milligram',  factor: 0.000001 },
+          t:   { name: 'Metric Ton', factor: 1000 },
+          lb:  { name: 'Pound',      factor: 0.45359237 },
+          oz:  { name: 'Ounce',      factor: 0.028349523125 }
+        }
+      },
+      Volume: {
+        base: 'L',
+        units: {
+          L:   { name: 'Liter',     factor: 1 },
+          mL:  { name: 'Milliliter',factor: 0.001 },
+          gal: { name: 'Gallon',    factor: 3.785411784 },
+          qt:  { name: 'Quart',     factor: 0.946352946 },
+          pt:  { name: 'Pint',      factor: 0.473176473 },
+          cup: { name: 'Cup',       factor: 0.2365882365 }
+        }
+      },
+      Temperature: {
+        base: 'C',
+        custom: true,
+        units: {
+          C: { name: 'Celsius',    symbol: '°C' },
+          F: { name: 'Fahrenheit', symbol: '°F' },
+          K: { name: 'Kelvin',     symbol: 'K' }
+        },
+        toBase: { C: v=>v, F: v=>(v-32)*5/9, K: v=>v-273.15 },
+        fromBase: { C: v=>v, F: v=>v*9/5+32, K: v=>v+273.15 }
+      },
+      Time: {
+        base: 's',
+        units: {
+          s:    { name: 'Second', factor: 1 },
+          min:  { name: 'Minute', factor: 60 },
+          hr:   { name: 'Hour',   factor: 3600 },
+          day:  { name: 'Day',    factor: 86400 },
+          wk:   { name: 'Week',   factor: 604800 }
+        }
+      },
+      Speed: {
+        base: 'm/s',
+        units: {
+          'm/s':  { name: 'Meter/sec',    factor: 1 },
+          'km/h': { name: 'Kilometer/hr', factor: 0.2777777777777778 },
+          mph:    { name: 'Mile/hr',      factor: 0.44704 },
+          kn:     { name: 'Knot',         factor: 0.5144444444444445 }
+        }
+      },
+      Digital: {
+        base: 'B',
+        units: {
+          B:  { name: 'Byte',     factor: 1 },
+          KB: { name: 'Kilobyte', factor: 1024 },
+          MB: { name: 'Megabyte', factor: 1048576 },
+          GB: { name: 'Gigabyte', factor: 1073741824 },
+          TB: { name: 'Terabyte', factor: 1099511627776 }
+        }
+      }
+    };
+
+    // Helper: return display label for a unit key (e.g. "Meter (m)", "Celsius (°C)", "Cup")
+    function unitLabel(cat, key) {
+      const u = cat.units[key];
+      if (cat.custom) {
+        // Temperature: use symbol
+        return u.symbol ? `${u.name} (${u.symbol})` : u.name;
+      }
+      // For units with no real abbreviation (e.g. Cup), just show name
+      // We treat the key as the abbreviation; for 'cup' show just "Cup"
+      if (key === 'cup') return 'Cup';
+      if (key === 'day') return 'Day';
+      return `${u.name} (${key})`;
+    }
+
+    const catTabsEl = document.getElementById('cat-tabs');
+    const fromUnitSel = document.getElementById('from-unit');
+    const toUnitSel = document.getElementById('to-unit');
+    const fromValEl = document.getElementById('from-value');
+    const toValEl = document.getElementById('to-value');
+    const allUnitsEl = document.getElementById('all-units');
+
+    let currentCat = 'Length';
+
+    function buildTabs() {
+      catTabsEl.innerHTML = '';
+      Object.keys(CATEGORIES).forEach(cat => {
+        const b = document.createElement('button');
+        b.className = 'cat-tab' + (cat === currentCat ? ' active' : '');
+        b.textContent = cat;
+        b.addEventListener('click', () => { currentCat = cat; buildTabs(); buildUnitSelects(); render(); });
+        catTabsEl.appendChild(b);
+      });
+    }
+
+    function buildUnitSelects() {
+      const cat = CATEGORIES[currentCat];
+      const keys = Object.keys(cat.units);
+      fromUnitSel.innerHTML = '';
+      toUnitSel.innerHTML = '';
+      keys.forEach(k => {
+        const label = unitLabel(cat, k);
+        fromUnitSel.add(new Option(label, k));
+        toUnitSel.add(new Option(label, k));
+      });
+      fromUnitSel.value = keys[0];
+      toUnitSel.value = keys[Math.min(1, keys.length - 1)];
+    }
+
+    function convert(value, fromU, toU) {
+      const cat = CATEGORIES[currentCat];
+      if (cat.custom) {
+        const base = cat.toBase[fromU](value);
+        return cat.fromBase[toU](base);
+      }
+      const inBase = value * cat.units[fromU].factor;
+      return inBase / cat.units[toU].factor;
+    }
+
+    function fmt(n) {
+      if (!isFinite(n)) return '—';
+      const abs = Math.abs(n);
+      if (abs === 0) return '0';
+      if (abs < 0.000001) return n.toExponential(4);
+      if (abs < 1) return parseFloat(n.toPrecision(6)).toString();
+      if (abs < 1000) return parseFloat(n.toPrecision(8)).toString();
+      if (abs < 1e15) return n.toLocaleString(undefined, { maximumFractionDigits: 4 });
+      return n.toExponential(4);
+    }
+
+    function render() {
+      const v = parseFloat(fromValEl.value);
+      const fromU = fromUnitSel.value;
+      const toU = toUnitSel.value;
+      if (isNaN(v)) { toValEl.value = ''; allUnitsEl.innerHTML = ''; return; }
+
+      const out = convert(v, fromU, toU);
+      toValEl.value = fmt(out);
+
+      // Build all-units table
+      const cat = CATEGORIES[currentCat];
+      allUnitsEl.innerHTML = '';
+      Object.keys(cat.units).forEach(u => {
+        const conv = convert(v, fromU, u);
+        const label = unitLabel(cat, u);
+        const row = document.createElement('div');
+        row.className = 'unit-row';
+        row.innerHTML = `
+          <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 shrink-0" style="min-width:11rem;">${label}</span>
+          <input type="text" readonly value="${fmt(conv)}" class="conv-output" style="background:transparent;border:none;padding:0.25rem 0;">
+        `;
+        allUnitsEl.appendChild(row);
+      });
+    }
+
+    fromValEl.addEventListener('input', render);
+    fromUnitSel.addEventListener('change', render);
+    toUnitSel.addEventListener('change', render);
+    document.getElementById('swap-btn').addEventListener('click', () => {
+      const a = fromUnitSel.value;
+      fromUnitSel.value = toUnitSel.value;
+      toUnitSel.value = a;
+      // also swap visible value into from
+      const t = toValEl.value;
+      if (t && t !== '—') fromValEl.value = t;
+      render();
+      CL.toast('Swapped');
+    });
+
+    buildTabs();
+    buildUnitSelects();
+    render();
+  })();
+  </script>
+</body>
+</html>

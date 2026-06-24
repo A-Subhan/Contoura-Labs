@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hashtag Generator — Contoura Labs</title>
+  <meta name="description" content="Generate relevant hashtags from any keyword. Combine with popular suffixes, related words, and trending tags. Click any chip to copy.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 73 28 A 32 32 0 0 0 27 28' stroke='%23FF6B35' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 24 32 A 32 32 0 0 0 24 68' stroke='%23E8384F' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 27 72 A 32 32 0 0 0 73 72' stroke='%2300B8A9' stroke-width='9' fill='none' stroke-linecap='round'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: {
+        colors: {
+          brand: { orange: '#FF6B35', red: '#E8384F', teal: '#00B8A9' },
+          surface: { light: '#F8F9FA', dark: '#0A0A0A', card: '#1A1A1A', alt: '#111111' }
+        },
+        fontFamily: { sans: ['Inter', 'sans-serif'] }
+      }}
+    }
+  </script>
+  <link rel="stylesheet" href="../assets/css/common.css">
+</head>
+<body class="font-sans bg-white text-gray-900 dark:bg-surface-dark dark:text-gray-100 antialiased">
+
+  <div id="navbar-mount"></div>
+
+  <main class="tool-page">
+    <div class="tool-container" style="max-width:56rem;">
+      <header class="tool-header">
+        <span class="badge mb-3">Generators</span>
+        <h1 class="tool-title">Hashtag <span class="gradient-text">Generator</span></h1>
+        <p class="tool-subtitle">Turn a keyword or topic into 30+ ready-to-use hashtags. Click any chip to copy, or copy the whole block.</p>
+      </header>
+
+      <div class="tool-card">
+        <label class="field-label" for="kw">Keyword or topic</label>
+        <input type="text" id="kw" placeholder="e.g. coffee, travel, fitness" value="coffee">
+
+        <div class="grid-2 mt-4">
+          <div>
+            <label class="field-label" for="case-style">Case style</label>
+            <select id="case-style">
+              <option value="lower" selected>lowercase</option>
+              <option value="camel">camelCase</option>
+            </select>
+          </div>
+          <div class="flex items-end">
+            <label class="flex items-center gap-3 p-3 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5" style="border:1px solid #e5e7eb;width:100%;">
+              <input type="checkbox" id="trending" class="w-4 h-4 accent-brand-orange">
+              <span class="text-sm font-medium">Include trending generics (#viral #fyp #explore)</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap gap-3 mt-5">
+          <button class="btn-primary" id="gen-btn">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>
+            Generate hashtags
+          </button>
+          <button class="btn-secondary" id="copy-all">Copy all</button>
+        </div>
+
+        <!-- Result block -->
+        <div id="result" class="mt-6 hidden">
+          <h3 class="font-semibold mb-3">Copyable block</h3>
+          <pre class="code-output" id="block-out" style="white-space:pre-wrap;"></pre>
+
+          <h3 class="font-semibold mt-6 mb-3">Click-to-copy chips</h3>
+          <div id="chips" class="flex flex-wrap gap-2"></div>
+
+          <p class="text-xs text-gray-400 mt-4">Tip: Instagram allows up to 30 hashtags per post. Twitter recommends 1–2 for engagement.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="py-8 border-t border-gray-100 dark:border-white/5 mt-12">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p class="text-xs text-gray-400">© 2025 Contoura Labs</p>
+      <a href="index.html" class="text-xs text-brand-orange hover:text-brand-red transition-colors">← Back to all tools</a>
+    </div>
+  </footer>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    // Embedded word lists
+    const SUFFIXES = ['life','love','instagood','gram','daily','vibes','mood','addict','lover','community',
+                       'world','nation','time','goals','art','photography','pic','pics','oftheday','photooftheday',
+                       'best','top','spotlight','feed','post','share','explore','discover'];
+    const TRENDING = ['viral','fyp','foryou','explore','trending','viralpost','contentcreator','creator',
+                       'reels','instadaily','instamood','like4like','follow','followme'];
+    // Lightweight topic → related-words lookup
+    const RELATED = {
+      coffee: ['espresso','latte','cappuccino','barista','caffeine','mug','brew','roast','beans','mornings'],
+      travel: ['wanderlust','adventure','explore','vacation','trip','journey','tourism','destination','backpacking','roadtrip'],
+      fitness: ['gym','workout','training','health','strong','muscle','cardio','yoga','run','motivation'],
+      food: ['foodie','recipe','cooking','delicious','yummy','tasty','foodporn','homemade','chef','kitchen'],
+      fashion: ['style','outfit','ootd','trend','model','look','designer','clothing','wardrobe','aesthetic'],
+      photography: ['photo','camera','shoot','lens','portrait','landscape','nature','light','composition','artist'],
+      music: ['song','beat','producer','singer','artist','album','playlist','rap','rock','pop'],
+      business: ['entrepreneur','startup','marketing','success','hustle','leadership','growth','sales','brand','networking'],
+      art: ['artist','painting','drawing','creative','design','illustration','sketch','gallery','studio','handmade'],
+      nature: ['outdoors','wilderness','hiking','mountains','forest','ocean','sunset','wildlife','landscape','explore']
+    };
+
+    function relatedFor(kw) {
+      const k = kw.toLowerCase();
+      return RELATED[k] || [];
+    }
+
+    function formatTag(raw, style) {
+      // raw may be a phrase; strip non-alphanumeric
+      const cleaned = raw.replace(/[^a-zA-Z0-9 ]/g, '').trim();
+      if (!cleaned) return '';
+      if (style === 'camel') {
+        return cleaned.split(/\s+/).map((w, i) =>
+          i === 0 ? w.toLowerCase() : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()
+        ).join('');
+      }
+      return cleaned.replace(/\s+/g, '').toLowerCase();
+    }
+
+    function unique(arr) {
+      const seen = new Set(), out = [];
+      for (const t of arr) {
+        const tag = t.startsWith('#') ? t : '#' + t;
+        const key = tag.toLowerCase();
+        if (!seen.has(key) && tag.length > 1) { seen.add(key); out.push(tag); }
+      }
+      return out;
+    }
+
+    function generate() {
+      const kw = $('kw').value.trim();
+      if (!kw) { CL.toast('Enter a keyword first', false); return; }
+      const style = $('case-style').value;
+      const withTrending = $('trending').checked;
+
+      const tags = [];
+      // 1. Keyword itself (multiple phrasings)
+      tags.push(kw);
+      // 2. Related words from lookup (if any) + keyword+related
+      const rel = relatedFor(kw);
+      rel.forEach(r => tags.push(r));
+      rel.forEach(r => tags.push(kw + ' ' + r));
+      // 3. Keyword + popular suffixes
+      SUFFIXES.forEach(s => tags.push(kw + ' ' + s));
+      // 4. Just popular suffixes (instagram-style generic hashtags)
+      SUFFIXES.slice(0, 14).forEach(s => tags.push(s));
+      // 5. Trending generics
+      if (withTrending) TRENDING.forEach(t => tags.push(t));
+
+      const formatted = unique(tags.map(t => formatTag(t, style)));
+      // Cap at 60 for sanity
+      const finalTags = formatted.slice(0, 60);
+
+      $('block-out').textContent = finalTags.join(' ');
+
+      const chips = $('chips');
+      chips.innerHTML = '';
+      finalTags.forEach(tag => {
+        const b = document.createElement('button');
+        b.className = 'chip px-3 py-1.5 rounded-full text-sm font-medium transition-all hover:scale-105';
+        b.style.background = 'linear-gradient(135deg, rgba(255,107,53,0.08), rgba(0,184,169,0.08))';
+        b.style.border = '1px solid rgba(255,107,53,0.2)';
+        b.style.color = '#FF6B35';
+        b.textContent = tag;
+        b.addEventListener('click', () => {
+          navigator.clipboard.writeText(tag).then(() => CL.toast('Copied ' + tag));
+        });
+        chips.appendChild(b);
+      });
+
+      $('result').classList.remove('hidden');
+      CL.toast(`Generated ${finalTags.length} hashtags`);
+    }
+
+    $('gen-btn').addEventListener('click', generate);
+    $('kw').addEventListener('keydown', (e) => { if (e.key === 'Enter') generate(); });
+    $('copy-all').addEventListener('click', () => {
+      const text = $('block-out').textContent;
+      if (!text) { CL.toast('Generate hashtags first', false); return; }
+      navigator.clipboard.writeText(text).then(() => CL.toast('All hashtags copied'));
+    });
+
+    generate();
+  </script>
+</body>
+</html>

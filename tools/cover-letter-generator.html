@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cover Letter Generator — Contoura Labs</title>
+  <meta name="description" content="Generate a polished, customizable cover letter in seconds. Pick a tone, edit live, then download as PDF, .doc, or .txt. Includes application email generator.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 73 28 A 32 32 0 0 0 27 28' stroke='%23FF6B35' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 24 32 A 32 32 0 0 0 24 68' stroke='%23E8384F' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 27 72 A 32 32 0 0 0 73 72' stroke='%2300B8A9' stroke-width='9' fill='none' stroke-linecap='round'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: {
+        colors: {
+          brand: { orange: '#FF6B35', red: '#E8384F', teal: '#00B8A9' },
+          surface: { light: '#F8F9FA', dark: '#0A0A0A', card: '#1A1A1A', alt: '#111111' }
+        },
+        fontFamily: { sans: ['Inter', 'sans-serif'] }
+      }}
+    }
+  </script>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
+  <style>
+    .cl-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 1.5rem; align-items: start; }
+    @media (max-width: 1024px) { .cl-layout { grid-template-columns: 1fr; } }
+    .cl-preview-col { position: sticky; top: 5.5rem; }
+    @media (max-width: 1024px) { .cl-preview-col { position: static; } }
+
+    /* ===== Accordion form ===== */
+    .cl-section { border: 1px solid #f3f4f6; border-radius: 0.75rem; margin-bottom: 0.6rem; background: #fafafa; overflow: hidden; }
+    .dark .cl-section { background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.06); }
+    .cl-section > summary { list-style: none; cursor: pointer; padding: 0.65rem 0.95rem; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+    .cl-section > summary::-webkit-details-marker { display: none; }
+    .cl-section-title { font-size: 0.78rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--brand-orange); display: flex; align-items: center; gap: 0.5rem; }
+    .cl-section-title .chev { width: 1rem; height: 1rem; transition: transform .2s ease; color: #9ca3af; }
+    .cl-section[open] > summary .chev { transform: rotate(180deg); }
+    .cl-section-body { padding: 0 0.95rem 0.9rem 0.95rem; }
+    .cl-section-count { font-size: 0.7rem; font-weight: 600; color: #9ca3af; background: rgba(0,0,0,0.04); padding: 0.1rem 0.5rem; border-radius: 999px; }
+    .dark .cl-section-count { background: rgba(255,255,255,0.08); }
+    .input-sm { padding: 0.5rem 0.7rem !important; font-size: 0.8125rem !important; min-height: 0 !important; }
+
+    /* ===== Tone selector ===== */
+    .tone-radio { display: none; }
+    .tone-label {
+      flex: 1; padding: 0.55rem 0.4rem; border: 1.5px solid #e5e7eb; border-radius: 0.55rem;
+      text-align: center; cursor: pointer; font-size: 0.78rem; font-weight: 600;
+      transition: all .2s ease; background: #fff; color: #6b7280;
+      display: flex; flex-direction: column; align-items: center; gap: 0.2rem;
+    }
+    .dark .tone-label { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.1); color: #9ca3af; }
+    .tone-label svg { width: 16px; height: 16px; }
+    .tone-radio:checked + .tone-label { border-color: var(--brand-orange); color: var(--brand-orange); background: rgba(255,107,53,0.06); }
+
+    /* ===== Letter output (textarea) ===== */
+    .letter-output {
+      width: 100%; min-height: 480px; padding: 2rem 2.25rem;
+      background: #fff; color: #1a1a1a; border-radius: 0.5rem;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+      font-family: 'Georgia', serif; font-size: 0.92rem; line-height: 1.65;
+      border: 1px solid #e5e7eb; resize: vertical;
+      white-space: pre-wrap; outline: none;
+    }
+    .dark .letter-output { background: #fff; color: #1a1a1a; }
+    .letter-output:focus { border-color: var(--brand-orange); box-shadow: 0 0 0 3px rgba(255,107,53,0.1); }
+
+    .stat-pill {
+      display: inline-flex; align-items: center; gap: 0.35rem;
+      padding: 0.22rem 0.6rem; border-radius: 9999px;
+      font-size: 0.68rem; font-weight: 600;
+      background: rgba(255,107,53,0.1); color: var(--brand-orange);
+    }
+
+    /* ===== Email section ===== */
+    .email-section { margin-top: 2rem; border: 1px solid #f3f4f6; border-radius: 1rem; padding: 1.5rem; background: #fafafa; }
+    .dark .email-section { background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.06); }
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 100; display: none; align-items: center; justify-content: center; padding: 1rem; }
+    .modal-backdrop.open { display: flex; }
+    .modal-card { background: #fff; color: #1a1a1a; border-radius: 1rem; max-width: 520px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 1.5rem; box-shadow: 0 24px 60px rgba(0,0,0,0.3); }
+    .dark .modal-card { background: #1A1A1A; color: #f3f4f6; }
+    .modal-close { background: none; border: none; color: #9ca3af; cursor: pointer; font-size: 1.5rem; line-height: 1; }
+  </style>
+</head>
+<body class="font-sans bg-white text-gray-900 dark:bg-surface-dark dark:text-gray-100 antialiased">
+
+  <div id="navbar-mount"></div>
+
+  <main class="tool-page">
+    <div class="tool-container" style="max-width: 80rem;">
+      <header class="tool-header">
+        <span class="badge mb-3">Career</span>
+        <h1 class="tool-title">Cover Letter <span class="gradient-text">Generator</span></h1>
+        <p class="tool-subtitle">Fill in a few fields and instantly generate a polished cover letter. Pick a tone, edit live, then export to PDF, .doc, or .txt — plus a built-in application email generator.</p>
+      </header>
+
+      <!-- Top action bar -->
+      <div class="flex flex-wrap items-center justify-center gap-3 mb-6">
+        <a href="resume-builder.html" class="btn-primary" style="padding: 0.7rem 1.4rem; text-decoration:none;">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+          Build Resume →
+        </a>
+      </div>
+
+      <div class="cl-layout">
+
+        <!-- ===== FORM (left) ===== -->
+        <div>
+
+          <details class="cl-section" open>
+            <summary>
+              <span class="cl-section-title">Your Info</span>
+              <svg class="chev" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+            </summary>
+            <div class="cl-section-body">
+              <div class="grid-2">
+                <div><label class="field-label">Your name</label><input class="input-sm" type="text" id="f-name" placeholder="Jane Doe"></div>
+                <div><label class="field-label">Your role</label><input class="input-sm" type="text" id="f-role" placeholder="Frontend Engineer"></div>
+                <div><label class="field-label">Years of experience</label><input class="input-sm" type="number" id="f-years" placeholder="5" min="0" max="50"></div>
+                <div><label class="field-label">Your email</label><input class="input-sm" type="email" id="f-email" placeholder="jane@email.com"></div>
+              </div>
+              <div class="mt-2">
+                <label class="field-label">Your phone (optional)</label>
+                <input class="input-sm" type="text" id="f-phone" placeholder="(555) 123-4567">
+              </div>
+            </div>
+          </details>
+
+          <details class="cl-section" open>
+            <summary>
+              <span class="cl-section-title">Job Info</span>
+              <svg class="chev" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+            </summary>
+            <div class="cl-section-body">
+              <div class="grid-2">
+                <div><label class="field-label">Company name</label><input class="input-sm" type="text" id="f-company" placeholder="Acme Corp"></div>
+                <div><label class="field-label">Job title</label><input class="input-sm" type="text" id="f-jobtitle" placeholder="Senior Frontend Engineer"></div>
+              </div>
+              <div class="mt-2">
+                <label class="field-label">Hiring manager (optional)</label>
+                <input class="input-sm" type="text" id="f-hm" placeholder="Ms. Alex Rivera">
+              </div>
+            </div>
+          </details>
+
+          <details class="cl-section" open>
+            <summary>
+              <span class="cl-section-title">Content</span>
+              <svg class="chev" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+            </summary>
+            <div class="cl-section-body">
+              <label class="field-label">Your skills (comma-separated)</label>
+              <input class="input-sm" type="text" id="f-skills" placeholder="React, TypeScript, Node.js, accessibility">
+              <label class="field-label mt-2">Why this company? (1-2 sentences)</label>
+              <textarea class="input-sm" rows="2" id="f-why" placeholder="I admire Acme's mission to make data accessible to non-technical teams, and I'd love to bring my design-systems experience to your product."></textarea>
+
+              <div class="cl-section-title mt-3" style="margin-bottom: 0.5rem;">Tone</div>
+              <div class="flex gap-2">
+                <input type="radio" name="tone" id="tone-pro" class="tone-radio" value="professional" checked>
+                <label for="tone-pro" class="tone-label">
+                  <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  Professional
+                </label>
+                <input type="radio" name="tone" id="tone-enth" class="tone-radio" value="enthusiastic">
+                <label for="tone-enth" class="tone-label">
+                  <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 006.16-12.12A14.98 14.98 0 009.631 8.41m5.96 5.96a14.926 14.926 0 01-5.841 2.58m-.119-8.54a6 6 0 00-7.381 5.84h4.8m2.581-5.84a14.927 14.927 0 00-2.58 5.84m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 01-2.448-2.448 14.9 14.9 0 01.06-.312m-2.24 2.39a4.493 4.493 0 00-1.757 4.306 4.493 4.493 0 004.306-1.758M16.5 9a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/></svg>
+                  Enthusiastic
+                </label>
+                <input type="radio" name="tone" id="tone-con" class="tone-radio" value="concise">
+                <label for="tone-con" class="tone-label">
+                  <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12"/></svg>
+                  Concise
+                </label>
+              </div>
+            </div>
+          </details>
+
+          <div class="flex flex-wrap gap-2 mt-3">
+            <button id="generate-btn" class="btn-primary" style="flex:1; padding: 0.7rem 1.2rem;">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>
+              Generate
+            </button>
+            <button id="sample-btn" class="btn-secondary" style="padding:0.6rem 1.1rem;">Sample</button>
+            <button id="clear-btn" class="btn-secondary" style="padding:0.6rem 1.1rem;">Clear</button>
+          </div>
+        </div>
+
+        <!-- ===== OUTPUT (right) ===== -->
+        <div class="cl-preview-col">
+          <div class="flex items-center justify-between mb-3">
+            <div class="cl-section-title" style="margin: 0;">Your Cover Letter</div>
+            <div class="flex gap-2">
+              <span class="stat-pill" id="word-count">0 words</span>
+              <span class="stat-pill" id="char-count">0 chars</span>
+            </div>
+          </div>
+
+          <textarea id="letter-output" class="letter-output" placeholder="Your generated cover letter will appear here. You can edit it directly before exporting."></textarea>
+
+          <div class="flex flex-wrap gap-2 mt-4">
+            <button id="pdf-btn" class="btn-primary" style="padding: 0.65rem 1.1rem;">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>
+              Download PDF
+            </button>
+            <button id="copy-btn" class="btn-secondary" style="padding: 0.65rem 1.1rem;">Copy</button>
+            <button id="download-doc-btn" class="btn-secondary" style="padding: 0.65rem 1.1rem;">.doc</button>
+            <button id="download-txt-btn" class="btn-secondary" style="padding: 0.65rem 1.1rem;">.txt</button>
+          </div>
+
+          <p class="text-xs text-gray-400 mt-3">
+            Tip: Edit the letter directly in the textarea to personalize it before exporting. PDF preserves the serif styling on a single A4 page.
+          </p>
+        </div>
+      </div>
+
+      <!-- ===== Email Generator ===== -->
+      <div class="email-section">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-2">
+          <div>
+            <h2 class="text-xl font-bold">Generate Application Email</h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Wrap your cover letter into a ready-to-send email with subject line and greeting.</p>
+          </div>
+          <button id="open-email-modal" class="btn-primary" style="padding:0.7rem 1.3rem;">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
+            Compose Email
+          </button>
+        </div>
+        <div id="email-result" class="hidden mt-4">
+          <textarea id="email-output" rows="14" class="input-sm" style="font-family: 'Sarasa Mono SC', 'JetBrains Mono', monospace; min-height: 280px;" placeholder="Your generated application email will appear here."></textarea>
+          <div class="flex flex-wrap gap-2 mt-3">
+            <button id="email-copy" class="btn-primary" style="padding:0.6rem 1.1rem;">Copy to Clipboard</button>
+            <button id="email-download" class="btn-secondary" style="padding:0.6rem 1.1rem;">Download as .txt</button>
+            <button id="email-clear" class="btn-secondary" style="padding:0.6rem 1.1rem;">Clear</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ===== Email Modal ===== -->
+  <div class="modal-backdrop" id="email-modal">
+    <div class="modal-card">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-bold">Compose Application Email</h3>
+        <button class="modal-close" id="email-modal-close" aria-label="Close">×</button>
+      </div>
+      <div class="grid-2">
+        <div><label class="field-label">Sender name (auto-filled)</label><input class="input-sm" type="text" id="em-sender-name" placeholder="Jane Doe"></div>
+        <div><label class="field-label">Sender email</label><input class="input-sm" type="email" id="em-sender-email" placeholder="jane@email.com"></div>
+        <div><label class="field-label">Receiver name</label><input class="input-sm" type="text" id="em-receiver-name" placeholder="Hiring Manager"></div>
+        <div><label class="field-label">Receiver email</label><input class="input-sm" type="email" id="em-receiver-email" placeholder="hiring@company.com"></div>
+        <div><label class="field-label">Company (auto-filled)</label><input class="input-sm" type="text" id="em-company" placeholder="Acme Corp"></div>
+        <div><label class="field-label">Job title (auto-filled)</label><input class="input-sm" type="text" id="em-jobtitle" placeholder="Senior Frontend Engineer"></div>
+      </div>
+      <p class="text-xs text-gray-400 mt-3">The cover letter you generated will be used as the email body, with a subject line and greeting added automatically.</p>
+      <button id="em-generate" class="btn-primary w-full mt-3" style="padding:0.7rem 1.2rem;">Generate Email</button>
+    </div>
+  </div>
+
+  <footer class="py-8 border-t border-gray-100 dark:border-white/5 mt-12">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p class="text-xs text-gray-400">© 2025 Contoura Labs</p>
+      <a href="index.html" class="text-xs text-brand-orange hover:text-brand-red transition-colors">← Back to all tools</a>
+    </div>
+  </footer>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+  (function () {
+    'use strict';
+
+    const $ = (id) => document.getElementById(id);
+    const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+    function escapeHtml(s) {
+      if (!s) return '';
+      return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+    }
+
+    function getTone() {
+      const el = document.querySelector('input[name="tone"]:checked');
+      return el ? el.value : 'professional';
+    }
+
+    function getFields() {
+      return {
+        name:     $('f-name').value.trim(),
+        role:     $('f-role').value.trim(),
+        years:    $('f-years').value.trim(),
+        email:    $('f-email').value.trim(),
+        phone:    $('f-phone').value.trim(),
+        skills:   $('f-skills').value.split(',').map(s => s.trim()).filter(Boolean),
+        company:  $('f-company').value.trim(),
+        jobtitle: $('f-jobtitle').value.trim(),
+        hm:       $('f-hm').value.trim(),
+        why:      $('f-why').value.trim(),
+        tone:     getTone()
+      };
+    }
+
+    function listSkills(arr) {
+      if (arr.length === 0) return 'relevant skills';
+      if (arr.length === 1) return arr[0];
+      if (arr.length === 2) return arr[0] + ' and ' + arr[1];
+      return arr.slice(0, -1).join(', ') + ', and ' + arr[arr.length - 1];
+    }
+
+    // ===== Letter builder =====
+    function buildLetter(f) {
+      const name = f.name || 'Your Name';
+      const role = f.role || 'the role';
+      const years = f.years || 'several';
+      const company = f.company || 'your company';
+      const jobtitle = f.jobtitle || 'the open position';
+      const skills = listSkills(f.skills);
+      const why = f.why || `I am drawn to ${company}'s work and would be excited to contribute.`;
+      const greeting = f.hm ? `Dear ${f.hm},` : `Dear Hiring Manager,`;
+      const contactLine = [f.email, f.phone].filter(Boolean).join(' · ');
+      const signoff = `\n\nSincerely,\n${name}${contactLine ? '\n' + contactLine : ''}`;
+
+      let body = '';
+      if (f.tone === 'professional') {
+        body = `${greeting}\n\nI am writing to express my interest in the ${jobtitle} position at ${company}. With ${years} years of experience as a ${role}, I have developed deep expertise in ${skills}, and I am confident that my background aligns well with the needs of your team.\n\n${why} ${company}'s reputation for thoughtful, high-impact work is well known, and I would welcome the opportunity to contribute to that tradition.\n\nThroughout my career, I have focused on shipping reliable, well-tested solutions and collaborating closely with cross-functional partners. I am particularly excited about the chance to bring this experience to ${company} and to help your team continue to deliver excellent results.\n\nI would be delighted to discuss how my skills and experience can support ${company}'s goals. Thank you for your time and consideration — I look forward to hearing from you.${signoff}`;
+      } else if (f.tone === 'enthusiastic') {
+        body = `${greeting}\n\nI was thrilled to see the ${jobtitle} opening at ${company} — this is exactly the kind of role I have been hoping to find! As a ${role} with ${years} years of hands-on experience, I have built up strong skills in ${skills}, and I cannot think of a team I would rather bring that energy to.\n\n${why} Every time I read about what ${company} is building, I get genuinely excited — the work you are doing is exactly the kind I want to be part of.\n\nWhat I bring beyond the technical skills is a deep enthusiasm for collaboration, a habit of going the extra mile, and a genuine love for the craft. I would bring that same energy to ${company} every single day.\n\nI would love the chance to chat about how I can contribute. Thank you so much for considering me — I am excited about the possibility of joining the team!${signoff}`;
+      } else { // concise
+        body = `${greeting}\n\nI am applying for the ${jobtitle} position at ${company}. As a ${role} with ${years} years of experience, I specialize in ${skills}.\n\n${why}\n\nI would welcome the opportunity to discuss how I can contribute to your team. Thank you for your consideration.${signoff}`;
+      }
+
+      return `${today}\n\n${body}`;
+    }
+
+    function generate() {
+      const f = getFields();
+      if (!f.company && !f.jobtitle && !f.name) {
+        CL.toast('Please fill in at least your name, company, and job title', false);
+        return;
+      }
+      $('letter-output').value = buildLetter(f);
+      updateCounts();
+      CL.toast('Cover letter generated');
+    }
+
+    function updateCounts() {
+      const txt = $('letter-output').value;
+      const words = txt.trim() ? txt.trim().split(/\s+/).length : 0;
+      $('word-count').textContent = words + ' word' + (words === 1 ? '' : 's');
+      $('char-count').textContent = txt.length + ' char' + (txt.length === 1 ? '' : 's');
+    }
+
+    // ===== Generate / Sample / Clear =====
+    $('generate-btn').addEventListener('click', generate);
+
+    document.querySelectorAll('input[name="tone"]').forEach(r => {
+      r.addEventListener('change', () => { if ($('letter-output').value.trim()) generate(); });
+    });
+
+    $('sample-btn').addEventListener('click', () => {
+      $('f-name').value = 'Jane Doe';
+      $('f-role').value = 'Frontend Engineer';
+      $('f-years').value = '6';
+      $('f-email').value = 'jane.doe@email.com';
+      $('f-phone').value = '(415) 555-0182';
+      $('f-skills').value = 'React, TypeScript, accessibility, design systems, performance optimization';
+      $('f-company').value = 'Acme Corp';
+      $('f-jobtitle').value = 'Senior Frontend Engineer';
+      $('f-hm').value = 'Ms. Alex Rivera';
+      $('f-why').value = "I have followed Acme's work making data accessible to non-technical teams for years, and I would be thrilled to bring my design-systems experience to your product.";
+      $('tone-pro').checked = true;
+      generate();
+      CL.toast('Sample data loaded');
+    });
+
+    $('clear-btn').addEventListener('click', () => {
+      ['f-name','f-role','f-years','f-email','f-phone','f-skills','f-company','f-jobtitle','f-hm','f-why'].forEach(id => $(id).value = '');
+      $('letter-output').value = '';
+      updateCounts();
+      CL.toast('Form cleared');
+    });
+
+    // ===== Copy / .txt / .doc =====
+    $('copy-btn').addEventListener('click', async () => {
+      const txt = $('letter-output').value;
+      if (!txt) { CL.toast('Nothing to copy yet', false); return; }
+      try { await navigator.clipboard.writeText(txt); CL.toast('Copied to clipboard'); }
+      catch (e) { const ta = $('letter-output'); ta.select(); document.execCommand('copy'); CL.toast('Copied to clipboard'); }
+    });
+
+    $('download-txt-btn').addEventListener('click', () => {
+      const txt = $('letter-output').value;
+      if (!txt) { CL.toast('Generate a letter first', false); return; }
+      const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+      const name = (getFields().name || 'cover-letter').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      CL.download(blob, name + '-cover-letter.txt');
+      CL.toast('TXT downloaded');
+    });
+
+    $('download-doc-btn').addEventListener('click', () => {
+      const txt = $('letter-output').value;
+      if (!txt) { CL.toast('Generate a letter first', false); return; }
+      const f = getFields();
+      const safeText = escapeHtml(txt).replace(/\n/g, '<br>');
+      const html = `<!DOCTYPE html><html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>Cover Letter</title><style>
+        body { font-family: Georgia, serif; font-size: 12pt; line-height: 1.65; color: #1a1a1a; margin: 1in; }
+      </style></head><body>${safeText}</body></html>`;
+      const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
+      const name = (f.name || 'cover-letter').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      CL.download(blob, name + '-cover-letter.doc');
+      CL.toast('Word .doc downloaded');
+    });
+
+    // ===== PDF download =====
+    $('pdf-btn').addEventListener('click', () => {
+      const txt = $('letter-output').value;
+      if (!txt) { CL.toast('Generate a letter first', false); return; }
+      const f = getFields();
+
+      // Build a styled HTML page for the PDF
+      const lines = escapeHtml(txt).split('\n').map(l => l === '' ? '<br>' : l);
+      const bodyHtml = lines.join('\n');
+
+      const container = document.createElement('div');
+      container.style.position = 'fixed';
+      container.style.left = '-9999px';
+      container.style.top = '0';
+      container.style.width = '680px';
+      container.style.padding = '64px 64px';
+      container.style.background = '#ffffff';
+      container.style.color = '#1a1a1a';
+      container.style.fontFamily = 'Georgia, "Times New Roman", serif';
+      container.style.fontSize = '13px';
+      container.style.lineHeight = '1.65';
+      container.style.whiteSpace = 'pre-wrap';
+      container.innerHTML = bodyHtml;
+      document.body.appendChild(container);
+
+      const filename = (f.name || 'cover-letter').toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-cover-letter.pdf';
+      const opt = {
+        margin: [40, 40, 40, 40],
+        filename: filename,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+        jsPDF: { unit: 'pt', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+      };
+      CL.toast('Generating PDF…');
+      html2pdf().set(opt).from(container).save().then(() => {
+        document.body.removeChild(container);
+        CL.toast('PDF downloaded');
+      }).catch(err => {
+        console.error(err);
+        document.body.removeChild(container);
+        CL.toast('PDF generation failed', false);
+      });
+    });
+
+    // ===== Email Generator =====
+    const modal = $('email-modal');
+    $('open-email-modal').addEventListener('click', () => {
+      const f = getFields();
+      $('em-sender-name').value = f.name || '';
+      $('em-sender-email').value = f.email || '';
+      $('em-company').value = f.company || '';
+      $('em-jobtitle').value = f.jobtitle || '';
+      $('em-receiver-name').value = f.hm || 'Hiring Manager';
+      modal.classList.add('open');
+    });
+    $('email-modal-close').addEventListener('click', () => modal.classList.remove('open'));
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('open'); });
+
+    $('em-generate').addEventListener('click', () => {
+      const letter = $('letter-output').value.trim();
+      if (!letter) { CL.toast('Generate a cover letter first', false); return; }
+
+      const senderName = $('em-sender-name').value.trim() || 'Your Name';
+      const senderEmail = $('em-sender-email').value.trim() || 'your@email.com';
+      const receiverName = $('em-receiver-name').value.trim() || 'Hiring Manager';
+      const receiverEmail = $('em-receiver-email').value.trim() || 'hiring@company.com';
+      const company = $('em-company').value.trim() || 'your company';
+      const jobtitle = $('em-jobtitle').value.trim() || 'the open position';
+
+      const subject = `Application: ${jobtitle} — ${senderName}`;
+
+      const fullEmail = `To: ${receiverEmail}\nSubject: ${subject}\n\nDear ${receiverName},\n\nPlease find my cover letter below. I have also attached my resume for your review.\n\n— BEGIN COVER LETTER —\n\n${letter}\n\n— END COVER LETTER —\n\nI would welcome the opportunity to discuss this role further. Thank you for your time and consideration.\n\nBest regards,\n${senderName}\n${senderEmail}`;
+
+      $('email-output').value = fullEmail;
+      $('email-result').classList.remove('hidden');
+      modal.classList.remove('open');
+      $('email-result').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      CL.toast('Application email generated');
+    });
+
+    $('email-copy').addEventListener('click', async () => {
+      const txt = $('email-output').value;
+      if (!txt) { CL.toast('Nothing to copy yet', false); return; }
+      try { await navigator.clipboard.writeText(txt); CL.toast('Copied to clipboard'); }
+      catch (e) { const ta = $('email-output'); ta.select(); document.execCommand('copy'); CL.toast('Copied to clipboard'); }
+    });
+    $('email-download').addEventListener('click', () => {
+      const txt = $('email-output').value;
+      if (!txt) { CL.toast('Nothing to download yet', false); return; }
+      const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+      const name = (getFields().name || 'application-email').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      CL.download(blob, name + '-email.txt');
+      CL.toast('Email .txt downloaded');
+    });
+    $('email-clear').addEventListener('click', () => {
+      $('email-output').value = '';
+      $('email-result').classList.add('hidden');
+      CL.toast('Email cleared');
+    });
+
+    // ===== Init =====
+    $('letter-output').addEventListener('input', updateCounts);
+    updateCounts();
+  })();
+  </script>
+</body>
+</html>

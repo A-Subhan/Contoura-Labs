@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Color Picker & Palette Generator — Contoura Labs</title>
+  <meta name="description" content="Pick a color and instantly generate complementary, analogous, triadic, tetradic, and monochromatic palettes. Click any swatch to copy its HEX.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 73 28 A 32 32 0 0 0 27 28' stroke='%23FF6B35' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 24 32 A 32 32 0 0 0 24 68' stroke='%23E8384F' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 27 72 A 32 32 0 0 0 73 72' stroke='%2300B8A9' stroke-width='9' fill='none' stroke-linecap='round'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: {
+        colors: {
+          brand: { orange: '#FF6B35', red: '#E8384F', teal: '#00B8A9' },
+          surface: { light: '#F8F9FA', dark: '#0A0A0A', card: '#1A1A1A', alt: '#111111' }
+        },
+        fontFamily: { sans: ['Inter', 'sans-serif'] }
+      }}
+    }
+  </script>
+  <link rel="stylesheet" href="../assets/css/common.css">
+</head>
+<body class="font-sans bg-white text-gray-900 dark:bg-surface-dark dark:text-gray-100 antialiased">
+
+  <div id="navbar-mount"></div>
+
+  <main class="tool-page">
+    <div class="tool-container" style="max-width:56rem;">
+      <header class="tool-header">
+        <span class="badge mb-3">Generators</span>
+        <h1 class="tool-title">Color Picker & <span class="gradient-text">Palette Generator</span></h1>
+        <p class="tool-subtitle">Pick a base color and instantly generate five harmony-based palettes. Click any swatch to copy its HEX.</p>
+      </header>
+
+      <div class="tool-card">
+        <!-- Picker row -->
+        <div class="grid-2 mb-6">
+          <div>
+            <label class="field-label" for="picker">Pick a color</label>
+            <input type="color" id="picker" value="#FF6B35" style="height:60px;width:100%;padding:6px;border-radius:0.75rem;border:1px solid #e5e7eb;background:#f9fafb;">
+          </div>
+          <div>
+            <label class="field-label">HEX</label>
+            <input type="text" id="hex" value="#FF6B35" maxlength="7" style="text-transform:uppercase;font-family:monospace;">
+          </div>
+        </div>
+
+        <div class="grid-3 mb-6">
+          <div>
+            <label class="field-label">RGB</label>
+            <input type="text" id="rgb" readonly style="font-family:monospace;font-size:0.8rem;">
+          </div>
+          <div>
+            <label class="field-label">HSL</label>
+            <input type="text" id="hsl" readonly style="font-family:monospace;font-size:0.8rem;">
+          </div>
+          <div>
+            <label class="field-label">Contrast</label>
+            <div id="contrast-wrap" class="rounded-lg overflow-hidden flex" style="height:46px;border:1px solid #e5e7eb;">
+              <div id="cw-white" class="flex-1 flex items-center justify-center text-xs font-semibold" style="background:#fff;color:#000;">Aa White</div>
+              <div id="cw-black" class="flex-1 flex items-center justify-center text-xs font-semibold" style="background:#000;color:#fff;">Aa Black</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Palettes -->
+        <div id="palettes" class="space-y-5"></div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="py-8 border-t border-gray-100 dark:border-white/5 mt-12">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p class="text-xs text-gray-400">© 2025 Contoura Labs</p>
+      <a href="index.html" class="text-xs text-brand-orange hover:text-brand-red transition-colors">← Back to all tools</a>
+    </div>
+  </footer>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    // ----- Color conversion math -----
+    function hexToRgb(hex) {
+      hex = hex.replace('#', '');
+      if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+      if (hex.length !== 6 || /[^0-9a-fA-F]/.test(hex)) return null;
+      const n = parseInt(hex, 16);
+      return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+    }
+    function rgbToHex(r, g, b) {
+      const h = (v) => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0');
+      return ('#' + h(r) + h(g) + h(b)).toUpperCase();
+    }
+    function rgbToHsl(r, g, b) {
+      r /= 255; g /= 255; b /= 255;
+      const max = Math.max(r, g, b), min = Math.min(r, g, b);
+      let h = 0, s = 0; const l = (max + min) / 2;
+      if (max !== min) {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+          case r: h = ((g - b) / d + (g < b ? 6 : 0)); break;
+          case g: h = ((b - r) / d + 2); break;
+          case b: h = ((r - g) / d + 4); break;
+        }
+        h *= 60;
+      }
+      return { h: Math.round(h), s: Math.round(s * 100), l: Math.round(l * 100) };
+    }
+    function hslToRgb(h, s, l) {
+      h /= 360; s /= 100; l /= 100;
+      let r, g, b;
+      if (s === 0) { r = g = b = l; }
+      else {
+        const hue2rgb = (p, q, t) => {
+          if (t < 0) t += 1; if (t > 1) t -= 1;
+          if (t < 1/6) return p + (q - p) * 6 * t;
+          if (t < 1/2) return q;
+          if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+          return p;
+        };
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        const p = 2 * l - q;
+        r = hue2rgb(p, q, h + 1/3);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1/3);
+      }
+      return { r: Math.round(r * 255), g: Math.round(g * 255), b: Math.round(b * 255) };
+    }
+    // Relative luminance per WCAG
+    function luminance(r, g, b) {
+      const a = [r, g, b].map(v => {
+        v /= 255;
+        return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+      });
+      return 0.2126 * a[0] + 0.7152 * a[1] + 0.0722 * a[2];
+    }
+    function contrastRatio(rgb1, rgb2) {
+      const l1 = luminance(rgb1.r, rgb1.g, rgb1.b);
+      const l2 = luminance(rgb2.r, rgb2.g, rgb2.b);
+      const hi = Math.max(l1, l2), lo = Math.min(l1, l2);
+      return (hi + 0.05) / (lo + 0.05);
+    }
+
+    // ----- Palette generators (work in HSL) -----
+    function palettesFor(hex) {
+      const rgb = hexToRgb(hex); if (!rgb) return null;
+      const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+      const make = (h, s = hsl.s, l = hsl.l) => {
+        const r = hslToRgb(((h % 360) + 360) % 360, s, l);
+        return rgbToHex(r.r, r.g, r.b);
+      };
+      return [
+        { name: 'Complementary', colors: [hex, make(hsl.h + 180)] },
+        { name: 'Analogous',     colors: [make(hsl.h - 60), make(hsl.h - 30), hex, make(hsl.h + 30), make(hsl.h + 60)] },
+        { name: 'Triadic',       colors: [hex, make(hsl.h + 120), make(hsl.h + 240)] },
+        { name: 'Tetradic',      colors: [hex, make(hsl.h + 90), make(hsl.h + 180), make(hsl.h + 270)] },
+        { name: 'Monochromatic', colors: [make(hsl.h, hsl.s, 15), make(hsl.h, hsl.s, 35), hex, make(hsl.h, hsl.s, 65), make(hsl.h, hsl.s, 85)] }
+      ];
+    }
+
+    function render() {
+      const hex = $('hex').value.trim().toUpperCase();
+      const rgb = hexToRgb(hex);
+      if (!rgb) return;
+      $('picker').value = hex.toLowerCase();
+      $('rgb').value = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
+      const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+      $('hsl').value = `hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`;
+
+      // Contrast preview
+      const white = { r: 255, g: 255, b: 255 }, black = { r: 0, g: 0, b: 0 };
+      const cw = contrastRatio(rgb, white), cb = contrastRatio(rgb, black);
+      $('cw-white').style.background = hex;
+      $('cw-white').style.color = cw > cb ? '#fff' : '#000';
+      $('cw-white').textContent = `Aa White ${cw.toFixed(1)}:1`;
+      $('cw-black').style.background = hex;
+      $('cw-black').style.color = cb > cw ? '#fff' : '#000';
+      $('cw-black').textContent = `Aa Black ${cb.toFixed(1)}:1`;
+
+      // Palettes
+      const pals = palettesFor(hex);
+      const wrap = $('palettes');
+      wrap.innerHTML = '';
+      pals.forEach(p => {
+        const row = document.createElement('div');
+        const swatches = p.colors.map(c => `
+          <button class="palette-swatch flex-1 flex flex-col items-center justify-end p-3 transition-transform hover:scale-105"
+                  data-hex="${c}" title="Click to copy ${c}"
+                  style="background:${c};color:${contrastRatio(hexToRgb(c), white) > contrastRatio(hexToRgb(c), black) ? '#fff' : '#000'};min-height:96px;border:none;cursor:pointer;">
+            <span class="text-xs font-semibold font-mono" style="opacity:0.92;">${c}</span>
+          </button>
+        `).join('');
+        row.innerHTML = `
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="font-semibold text-sm">${p.name}</h3>
+            <button class="text-xs text-brand-orange hover:text-brand-red" data-copy-all="${p.colors.join(',')}">Copy all</button>
+          </div>
+          <div class="flex rounded-lg overflow-hidden" style="border:1px solid #e5e7eb;">${swatches}</div>
+        `;
+        wrap.appendChild(row);
+      });
+      wrap.querySelectorAll('.palette-swatch').forEach(b => {
+        b.addEventListener('click', () => {
+          navigator.clipboard.writeText(b.dataset.hex).then(() => CL.toast('Copied ' + b.dataset.hex));
+        });
+      });
+      wrap.querySelectorAll('[data-copy-all]').forEach(b => {
+        b.addEventListener('click', () => {
+          navigator.clipboard.writeText(b.dataset.copyAll).then(() => CL.toast('Palette copied'));
+        });
+      });
+    }
+
+    // Wire events
+    $('picker').addEventListener('input', (e) => { $('hex').value = e.target.value.toUpperCase(); render(); });
+    $('hex').addEventListener('input', (e) => {
+      let v = e.target.value.trim();
+      if (v && !v.startsWith('#')) v = '#' + v;
+      e.target.value = v.toUpperCase();
+      if (/^#[0-9a-fA-F]{6}$/.test(v) || /^#[0-9a-fA-F]{3}$/.test(v)) render();
+    });
+
+    render();
+  </script>
+</body>
+</html>

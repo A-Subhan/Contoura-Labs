@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Currency Converter — Contoura Labs</title>
+  <meta name="description" content="Convert between 30+ currencies using live exchange rates. Cached for 24 hours.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 73 28 A 32 32 0 0 0 27 28' stroke='%23FF6B35' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 24 32 A 32 32 0 0 0 24 68' stroke='%23E8384F' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 27 72 A 32 32 0 0 0 73 72' stroke='%2300B8A9' stroke-width='9' fill='none' stroke-linecap='round'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: {
+        colors: {
+          brand: { orange: '#FF6B35', red: '#E8384F', teal: '#00B8A9' },
+          surface: { light: '#F8F9FA', dark: '#0A0A0A', card: '#1A1A1A', alt: '#111111' }
+        },
+        fontFamily: { sans: ['Inter', 'sans-serif'] }
+      }}
+    }
+  </script>
+  <link rel="stylesheet" href="../assets/css/common.css">
+</head>
+<body class="font-sans bg-white text-gray-900 dark:bg-surface-dark dark:text-gray-100 antialiased">
+
+  <div id="navbar-mount"></div>
+
+  <main class="tool-page">
+    <div class="tool-container">
+      <header class="tool-header">
+        <span class="badge mb-3">Converters</span>
+        <h1 class="tool-title">Currency <span class="gradient-text">Converter</span></h1>
+        <p class="tool-subtitle">Live exchange rates for 30+ currencies. Rates are cached for 24 hours in your browser.</p>
+      </header>
+
+      <div class="tool-card">
+        <!-- Status -->
+        <div id="status-bar" class="flex items-center justify-between mb-5 text-xs text-gray-400">
+          <span id="rate-status">Loading rates…</span>
+          <button id="refresh-btn" class="text-brand-orange hover:text-brand-red font-semibold">Refresh now</button>
+        </div>
+
+        <div class="grid-2 mb-3">
+          <div>
+            <label class="field-label" for="amount">Amount</label>
+            <input type="number" id="amount" value="100" min="0" step="any">
+          </div>
+          <div></div>
+        </div>
+
+        <div class="grid-2 mb-4 items-end">
+          <div>
+            <label class="field-label" for="from-cur">From</label>
+            <select id="from-cur"></select>
+          </div>
+          <div>
+            <label class="field-label" for="to-cur">To</label>
+            <select id="to-cur"></select>
+          </div>
+        </div>
+
+        <div class="flex justify-center mb-5">
+          <button class="btn-secondary" id="swap-btn" style="padding:0.5rem 1rem;">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/></svg>
+            Swap currencies
+          </button>
+        </div>
+
+        <!-- Result -->
+        <div class="rounded-xl p-6 text-center mb-5" style="background: linear-gradient(135deg, rgba(255,107,53,0.08), rgba(0,184,169,0.08)); border:1px solid rgba(255,107,53,0.15);">
+          <p class="text-xs font-semibold tracking-widest text-gray-400 uppercase mb-2">Converted amount</p>
+          <p id="result-amount" class="text-3xl sm:text-4xl font-bold gradient-text">—</p>
+          <p id="result-rate" class="text-xs text-gray-500 dark:text-gray-400 mt-2">—</p>
+        </div>
+
+        <!-- Amount in words -->
+        <div class="grid-2 mb-5">
+          <div class="p-4 rounded-lg bg-gray-50 dark:bg-white/5">
+            <p class="text-xs text-gray-400 mb-1 uppercase tracking-wider">Source in words</p>
+            <p id="source-words" class="text-sm font-medium leading-snug">—</p>
+          </div>
+          <div class="p-4 rounded-lg bg-gray-50 dark:bg-white/5">
+            <p class="text-xs text-gray-400 mb-1 uppercase tracking-wider">Converted in words</p>
+            <p id="converted-words" class="text-sm font-medium leading-snug">—</p>
+          </div>
+        </div>
+
+        <!-- Inverse + last-updated -->
+        <div class="grid-2">
+          <div class="p-4 rounded-lg bg-gray-50 dark:bg-white/5">
+            <p class="text-xs text-gray-400 mb-1">Inverse rate</p>
+            <p id="inverse-rate" class="font-semibold text-sm">—</p>
+          </div>
+          <div class="p-4 rounded-lg bg-gray-50 dark:bg-white/5">
+            <p class="text-xs text-gray-400 mb-1">Last updated</p>
+            <p id="last-updated" class="font-semibold text-sm">—</p>
+          </div>
+        </div>
+
+        <p class="text-xs text-gray-400 mt-4 text-center">Rates from open.er-api.com (free, no API key). For reference only — actual rates may vary.</p>
+      </div>
+    </div>
+  </main>
+
+  <footer class="py-8 border-t border-gray-100 dark:border-white/5 mt-12">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p class="text-xs text-gray-400">© 2025 Contoura Labs</p>
+      <a href="index.html" class="text-xs text-brand-orange hover:text-brand-red transition-colors">← Back to all tools</a>
+    </div>
+  </footer>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+  (function () {
+    'use strict';
+
+    const CACHE_KEY = 'cl_currency_rates_v1';
+    const CACHE_TTL = 24 * 60 * 60 * 1000; // 24h
+
+    // ===== Number-to-words (0 to 999,999,999) =====
+    const ONES = ['zero','one','two','three','four','five','six','seven','eight','nine',
+                  'ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen'];
+    const TENS = ['','','twenty','thirty','forty','fifty','sixty','seventy','eighty','ninety'];
+
+    function twoDigitsToWords(n) {
+      if (n < 20) return ONES[n];
+      const t = Math.floor(n / 10), u = n % 10;
+      return u === 0 ? TENS[t] : TENS[t] + '-' + ONES[u];
+    }
+    function threeDigitsToWords(n) {
+      const h = Math.floor(n / 100), rest = n % 100;
+      let s = '';
+      if (h > 0) s += ONES[h] + ' hundred';
+      if (rest > 0) s += (s ? ' ' : '') + twoDigitsToWords(rest);
+      return s;
+    }
+    function intToWords(n) {
+      if (n === 0) return 'zero';
+      const millions = Math.floor(n / 1000000);
+      const thousands = Math.floor((n % 1000000) / 1000);
+      const ones = n % 1000;
+      let s = '';
+      if (millions > 0) s += threeDigitsToWords(millions) + ' million';
+      if (thousands > 0) s += (s ? ' ' : '') + threeDigitsToWords(thousands) + ' thousand';
+      if (ones > 0) s += (s ? ' ' : '') + threeDigitsToWords(ones);
+      return s;
+    }
+    function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+    // ===== Currency plural word forms =====
+    // major (singular), majorPlural (plural), minor (singular), minorPlural (plural). null minor = no fractional unit.
+    const CURRENCY_WORDS = {
+      USD: { major: 'dollar',  majorPlural: 'dollars',  minor: 'cent',    minorPlural: 'cents'    },
+      EUR: { major: 'euro',    majorPlural: 'euros',    minor: 'cent',    minorPlural: 'cents'    },
+      GBP: { major: 'pound',   majorPlural: 'pounds',   minor: 'penny',   minorPlural: 'pence'    },
+      JPY: { major: 'yen',     majorPlural: 'yen',      minor: null,      minorPlural: null       },
+      AUD: { major: 'Australian dollar', majorPlural: 'Australian dollars', minor: 'cent', minorPlural: 'cents' },
+      CAD: { major: 'Canadian dollar',   majorPlural: 'Canadian dollars',   minor: 'cent', minorPlural: 'cents' },
+      CHF: { major: 'Swiss franc', majorPlural: 'Swiss francs', minor: 'rappen', minorPlural: 'rappen' },
+      CNY: { major: 'yuan',     majorPlural: 'yuan',     minor: 'fen',     minorPlural: 'fen'      },
+      INR: { major: 'rupee',   majorPlural: 'rupees',   minor: 'paise',   minorPlural: 'paise'    },
+      KRW: { major: 'won',     majorPlural: 'won',      minor: null,      minorPlural: null       },
+      SGD: { major: 'Singapore dollar', majorPlural: 'Singapore dollars', minor: 'cent', minorPlural: 'cents' },
+      HKD: { major: 'Hong Kong dollar', majorPlural: 'Hong Kong dollars', minor: 'cent', minorPlural: 'cents' },
+      NZD: { major: 'New Zealand dollar', majorPlural: 'New Zealand dollars', minor: 'cent', minorPlural: 'cents' },
+      SEK: { major: 'krona',   majorPlural: 'kronor',   minor: 'öre',     minorPlural: 'öre'      },
+      NOK: { major: 'krone',   majorPlural: 'kroner',   minor: 'øre',     minorPlural: 'øre'      },
+      DKK: { major: 'krone',   majorPlural: 'kroner',   minor: 'øre',     minorPlural: 'øre'      },
+      MXN: { major: 'peso',    majorPlural: 'pesos',    minor: 'centavo', minorPlural: 'centavos' },
+      BRL: { major: 'real',    majorPlural: 'reais',    minor: 'centavo', minorPlural: 'centavos' },
+      RUB: { major: 'ruble',   majorPlural: 'rubles',   minor: 'kopek',   minorPlural: 'kopeks'   },
+      ZAR: { major: 'rand',    majorPlural: 'rand',     minor: 'cent',    minorPlural: 'cents'    },
+      TRY: { major: 'lira',    majorPlural: 'lira',     minor: 'kuruş',   minorPlural: 'kuruş'    },
+      AED: { major: 'dirham',  majorPlural: 'dirhams',  minor: 'fil',     minorPlural: 'fils'     },
+      SAR: { major: 'riyal',   majorPlural: 'riyals',   minor: 'halala',  minorPlural: 'halalas'  },
+      THB: { major: 'baht',    majorPlural: 'baht',     minor: 'satang',  minorPlural: 'satang'   },
+      IDR: { major: 'rupiah',  majorPlural: 'rupiah',   minor: 'sen',     minorPlural: 'sen'      },
+      MYR: { major: 'ringgit', majorPlural: 'ringgit',  minor: 'sen',     minorPlural: 'sen'      },
+      PHP: { major: 'peso',    majorPlural: 'pesos',    minor: 'centavo', minorPlural: 'centavos' },
+      PLN: { major: 'zloty',   majorPlural: 'zlotys',   minor: 'grosz',   minorPlural: 'groszy'   },
+      CZK: { major: 'koruna',  majorPlural: 'koruny',   minor: 'haléř',   minorPlural: 'haléřů'   },
+      HUF: { major: 'forint',  majorPlural: 'forint',   minor: 'fillér',  minorPlural: 'fillér'   },
+      ILS: { major: 'shekel',  majorPlural: 'shekels',  minor: 'agora',   minorPlural: 'agorot'   },
+      PKR: { major: 'rupee',   majorPlural: 'rupees',   minor: 'paisa',   minorPlural: 'paise'    },
+      BDT: { major: 'taka',    majorPlural: 'taka',     minor: 'poisha',  minorPlural: 'poisha'   },
+      VND: { major: 'dong',    majorPlural: 'dong',     minor: null,      minorPlural: null       },
+      EGP: { major: 'Egyptian pound', majorPlural: 'Egyptian pounds', minor: 'piastre', minorPlural: 'piastres' },
+      NGN: { major: 'naira',   majorPlural: 'naira',    minor: 'kobo',    minorPlural: 'kobo'     },
+      ARS: { major: 'peso',    majorPlural: 'pesos',    minor: 'centavo', minorPlural: 'centavos' },
+      CLP: { major: 'peso',    majorPlural: 'pesos',    minor: null,      minorPlural: null       },
+      COP: { major: 'peso',    majorPlural: 'pesos',    minor: 'centavo', minorPlural: 'centavos' },
+      TWD: { major: 'New Taiwan dollar', majorPlural: 'New Taiwan dollars', minor: 'cent', minorPlural: 'cents' }
+    };
+
+    // Convert a numeric amount + currency code to English words.
+    // Handles integers 0–999,999,999 plus up to 2 digits of cents.
+    function amountToWords(amount, code) {
+      if (!isFinite(amount)) return '—';
+      const meta = CURRENCY_WORDS[code] ||
+        { major: code.toLowerCase(), majorPlural: code.toLowerCase() + 's', minor: 'cent', minorPlural: 'cents' };
+      const negative = amount < 0;
+      const abs = Math.abs(amount);
+      let wholePart, centsPart;
+      if (!meta.minor) {
+        wholePart = Math.round(abs);
+        centsPart = 0;
+      } else {
+        const rounded = Math.round(abs * 100) / 100;
+        wholePart = Math.floor(rounded);
+        centsPart = Math.round((rounded - wholePart) * 100);
+        if (centsPart >= 100) { wholePart += 1; centsPart = 0; }
+      }
+      let words = '';
+      if (wholePart > 0) {
+        const majorWord = wholePart === 1 ? meta.major : meta.majorPlural;
+        words = intToWords(wholePart) + ' ' + majorWord;
+      }
+      if (centsPart > 0 && meta.minor) {
+        const minorWord = centsPart === 1 ? meta.minor : meta.minorPlural;
+        words += (words ? ' and ' : '') + intToWords(centsPart) + ' ' + minorWord;
+      }
+      if (!words) words = 'zero ' + meta.majorPlural;
+      if (negative) words = 'minus ' + words;
+      words = capitalize(words);
+      return words;
+    }
+
+    const CURRENCY_NAMES = {
+      USD:'US Dollar', EUR:'Euro', GBP:'British Pound', JPY:'Japanese Yen',
+      AUD:'Australian Dollar', CAD:'Canadian Dollar', CHF:'Swiss Franc',
+      CNY:'Chinese Yuan', INR:'Indian Rupee', KRW:'South Korean Won',
+      SGD:'Singapore Dollar', HKD:'Hong Kong Dollar', NZD:'New Zealand Dollar',
+      SEK:'Swedish Krona', NOK:'Norwegian Krone', DKK:'Danish Krone',
+      MXN:'Mexican Peso', BRL:'Brazilian Real', RUB:'Russian Ruble',
+      ZAR:'South African Rand', TRY:'Turkish Lira', AED:'UAE Dirham',
+      SAR:'Saudi Riyal', THB:'Thai Baht', IDR:'Indonesian Rupiah',
+      MYR:'Malaysian Ringgit', PHP:'Philippine Peso', PLN:'Polish Zloty',
+      CZK:'Czech Koruna', HUF:'Hungarian Forint', ILS:'Israeli Shekel',
+      PKR:'Pakistani Rupee', BDT:'Bangladeshi Taka', VND:'Vietnamese Dong',
+      EGP:'Egyptian Pound', NGN:'Nigerian Naira', ARS:'Argentine Peso',
+      CLP:'Chilean Peso', COP:'Colombian Peso', TWD:'Taiwan Dollar'
+    };
+
+    const amountEl = document.getElementById('amount');
+    const fromSel = document.getElementById('from-cur');
+    const toSel = document.getElementById('to-cur');
+    const statusEl = document.getElementById('rate-status');
+
+    let rates = null;     // { base, rates: {USD:1, EUR:0.9, ...}, time }
+    let isLive = false;
+
+    function populateCurrencies() {
+      const codes = Object.keys(CURRENCY_NAMES).sort();
+      fromSel.innerHTML = '';
+      toSel.innerHTML = '';
+      codes.forEach(c => {
+        fromSel.add(new Option(`${c} — ${CURRENCY_NAMES[c]}`, c));
+        toSel.add(new Option(`${c} — ${CURRENCY_NAMES[c]}`, c));
+      });
+      fromSel.value = 'USD';
+      toSel.value = 'EUR';
+    }
+
+    function readCache() {
+      try {
+        const raw = localStorage.getItem(CACHE_KEY);
+        if (!raw) return null;
+        const obj = JSON.parse(raw);
+        if (Date.now() - obj.ts > CACHE_TTL) return null;
+        return obj;
+      } catch (e) { return null; }
+    }
+
+    function writeCache(data) {
+      try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch (e) {}
+    }
+
+    async function fetchRates() {
+      statusEl.textContent = 'Fetching live rates…';
+      try {
+        const res = await fetch('https://open.er-api.com/v6/latest/USD');
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const json = await res.json();
+        if (json.result !== 'success') throw new Error('API error');
+        rates = { base: 'USD', rates: json.rates, time: json.time_last_update_unix * 1000 };
+        isLive = true;
+        writeCache({ ...rates, ts: Date.now() });
+        statusEl.textContent = 'Live rates · cached for 24h';
+        CL.toast('Live rates loaded');
+        render();
+      } catch (err) {
+        // Try cache even if stale
+        try {
+          const raw = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
+          if (raw && raw.rates) {
+            rates = { base: raw.base, rates: raw.rates, time: raw.time };
+            isLive = false;
+            statusEl.textContent = 'Offline · using last cached rates';
+            CL.toast('Offline — using cached rates');
+            render();
+            return;
+          }
+        } catch (e) {}
+        statusEl.textContent = 'Failed to load rates';
+        CL.toast('Could not fetch rates', false);
+      }
+    }
+
+    function fmtMoney(n, code) {
+      if (!isFinite(n)) return '—';
+      const abs = Math.abs(n);
+      let digits = 2;
+      if (abs < 1 && abs > 0) digits = 6;
+      else if (abs < 100) digits = 4;
+      else if (abs >= 100000) digits = 0;
+      return n.toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits }) + ' ' + code;
+    }
+
+    function render() {
+      if (!rates) return;
+      const amt = parseFloat(amountEl.value);
+      const from = fromSel.value;
+      const to = toSel.value;
+      if (isNaN(amt)) {
+        document.getElementById('result-amount').textContent = '—';
+        document.getElementById('result-rate').textContent = '—';
+        document.getElementById('inverse-rate').textContent = '—';
+        document.getElementById('source-words').textContent = '—';
+        document.getElementById('converted-words').textContent = '—';
+        return;
+      }
+      // rate: how many `to` per 1 `from`
+      // rates are vs USD. 1 from = (1/rates[from]) USD = (rates[to]/rates[from]) to
+      const rate = rates.rates[to] / rates.rates[from];
+      const converted = amt * rate;
+      const inverse = 1 / rate;
+
+      document.getElementById('result-amount').textContent = fmtMoney(converted, to);
+      document.getElementById('result-rate').textContent =
+        `1 ${from} = ${rate.toLocaleString(undefined,{maximumFractionDigits:6})} ${to}`;
+      document.getElementById('inverse-rate').textContent =
+        `1 ${to} = ${inverse.toLocaleString(undefined,{maximumFractionDigits:6})} ${from}`;
+
+      // Amount in words (both source and converted)
+      document.getElementById('source-words').textContent =
+        `${amountToWords(amt, from)}`;
+      document.getElementById('converted-words').textContent =
+        `${amountToWords(converted, to)}`;
+
+      const d = new Date(rates.time);
+      document.getElementById('last-updated').textContent =
+        d.toLocaleString(undefined, { dateStyle:'medium', timeStyle:'short' });
+    }
+
+    amountEl.addEventListener('input', render);
+    fromSel.addEventListener('change', render);
+    toSel.addEventListener('change', render);
+    document.getElementById('swap-btn').addEventListener('click', () => {
+      const a = fromSel.value; fromSel.value = toSel.value; toSel.value = a;
+      render();
+      CL.toast('Swapped');
+    });
+    document.getElementById('refresh-btn').addEventListener('click', fetchRates);
+
+    populateCurrencies();
+    const cached = readCache();
+    if (cached) {
+      rates = { base: cached.base, rates: cached.rates, time: cached.time };
+      isLive = false;
+      statusEl.textContent = 'Cached rates · refreshing in background';
+      render();
+    }
+    fetchRates();
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Code Editor — Contoura Labs</title>
+  <meta name="description" content="Free in-browser HTML/CSS/JS code editor with live preview. W3Schools-style side-by-side layout, 10 ready-to-load examples.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 73 28 A 32 32 0 0 0 27 28' stroke='%23FF6B35' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 24 32 A 32 32 0 0 0 24 68' stroke='%23E8384F' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 27 72 A 32 32 0 0 0 73 72' stroke='%2300B8A9' stroke-width='9' fill='none' stroke-linecap='round'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: {
+        colors: {
+          brand: { orange: '#FF6B35', red: '#E8384F', teal: '#00B8A9' },
+          surface: { light: '#F8F9FA', dark: '#0A0A0A', card: '#1A1A1A', alt: '#111111' }
+        },
+        fontFamily: { sans: ['Inter', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] }
+      }}
+    }
+  </script>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <style>
+    .editor-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      height: 500px;
+      border: 1px solid #e5e7eb;
+      border-radius: 0.75rem;
+      overflow: hidden;
+    }
+    .dark .editor-wrap { border-color: rgba(255,255,255,0.1); }
+    @media (max-width: 768px) {
+      .editor-wrap { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; height: 600px; }
+    }
+    .editor-pane {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      min-height: 0;
+    }
+    .editor-tabs {
+      display: flex;
+      background: #f9fafb;
+      border-bottom: 1px solid #e5e7eb;
+      padding: 0 0.5rem;
+    }
+    .dark .editor-tabs { background: #111; border-bottom-color: rgba(255,255,255,0.08); }
+    .editor-tab {
+      padding: 0.625rem 1rem;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: #6b7280;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s ease;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .dark .editor-tab { color: #9ca3af; }
+    .editor-tab:hover { color: #374151; }
+    .dark .editor-tab:hover { color: #e5e7eb; }
+    .editor-tab.active {
+      color: #FF6B35;
+      border-bottom-color: #FF6B35;
+    }
+    .editor-tab[data-tab="css"].active { color: #00B8A9; border-bottom-color: #00B8A9; }
+    .editor-tab[data-tab="js"].active { color: #E8384F; border-bottom-color: #E8384F; }
+
+    .editor-code-area {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      background: #fff;
+    }
+    .dark .editor-code-area { background: #0a0a0a; }
+
+    .line-numbers {
+      padding: 0.75rem 0.5rem;
+      text-align: right;
+      background: #f9fafb;
+      color: #9ca3af;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8125rem;
+      line-height: 1.6;
+      user-select: none;
+      border-right: 1px solid #e5e7eb;
+      min-width: 40px;
+      overflow: hidden;
+    }
+    .dark .line-numbers { background: #111; border-right-color: rgba(255,255,255,0.08); color: #4b5563; }
+
+    .code-textarea {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      border: none;
+      outline: none;
+      resize: none;
+      background: transparent;
+      color: #111;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8125rem;
+      line-height: 1.6;
+      white-space: pre;
+      overflow: auto;
+      tab-size: 2;
+    }
+    .dark .code-textarea { color: #e5e7eb; }
+
+    .preview-pane {
+      border-left: 1px solid #e5e7eb;
+      display: flex;
+      flex-direction: column;
+    }
+    .dark .preview-pane { border-left-color: rgba(255,255,255,0.08); }
+    @media (max-width: 768px) {
+      .preview-pane { border-left: none; border-top: 1px solid #e5e7eb; }
+      .dark .preview-pane { border-top-color: rgba(255,255,255,0.08); }
+    }
+    .preview-header {
+      padding: 0.625rem 1rem;
+      background: #f9fafb;
+      border-bottom: 1px solid #e5e7eb;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #6b7280;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .dark .preview-header { background: #111; border-bottom-color: rgba(255,255,255,0.08); color: #9ca3af; }
+    .preview-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .preview-iframe {
+      flex: 1;
+      border: none;
+      background: #fff;
+      width: 100%;
+    }
+
+    .example-card {
+      flex: 0 0 200px;
+      padding: 1rem;
+      border: 1px solid #e5e7eb;
+      border-radius: 0.625rem;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      background: #fff;
+    }
+    .dark .example-card { background: #1A1A1A; border-color: rgba(255,255,255,0.08); }
+    .example-card:hover {
+      border-color: #FF6B35;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(255,107,53,0.1);
+    }
+    .example-card-title { font-size: 0.875rem; font-weight: 600; margin-bottom: 0.25rem; }
+    .example-card-desc { font-size: 0.75rem; color: #6b7280; line-height: 1.4; }
+    .dark .example-card-desc { color: #9ca3af; }
+  </style>
+</head>
+<body class="font-sans bg-white text-gray-900 dark:bg-surface-dark dark:text-gray-100 antialiased">
+
+  <div id="navbar-mount"></div>
+
+  <main class="tool-page">
+    <div class="tool-container" style="max-width: 90rem;">
+      <header class="tool-header">
+        <span class="badge mb-3">Developer Tools</span>
+        <h1 class="tool-title">Code <span class="gradient-text">Editor</span></h1>
+        <p class="tool-subtitle">Write HTML, CSS, and JS side-by-side with live preview. Load an example to get started instantly.</p>
+      </header>
+
+      <!-- EDITOR + PREVIEW -->
+      <div class="editor-wrap">
+        <!-- LEFT: Code Editor with tabs -->
+        <div class="editor-pane">
+          <div class="editor-tabs">
+            <div class="editor-tab active" data-tab="html">HTML</div>
+            <div class="editor-tab" data-tab="css">CSS</div>
+            <div class="editor-tab" data-tab="js">JS</div>
+          </div>
+          <div class="editor-code-area">
+            <div class="line-numbers" id="line-numbers">1</div>
+            <textarea class="code-textarea" id="code-textarea" spellcheck="false" placeholder="Write your HTML here..."></textarea>
+          </div>
+        </div>
+
+        <!-- RIGHT: Live Preview -->
+        <div class="preview-pane">
+          <div class="preview-header">
+            <span class="preview-dot" style="background:#FF6B35;"></span>
+            <span class="preview-dot" style="background:#E8384F;"></span>
+            <span class="preview-dot" style="background:#00B8A9;"></span>
+            <span style="margin-left:0.5rem;">Live Preview</span>
+          </div>
+          <iframe class="preview-iframe" id="preview-iframe" sandbox="allow-scripts allow-modals"></iframe>
+        </div>
+      </div>
+
+      <!-- BOTTOM BUTTONS -->
+      <div class="flex gap-3 mt-4" style="flex-wrap:wrap;">
+        <button class="btn-primary" id="run-btn">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          Run
+        </button>
+        <button class="btn-secondary" id="download-btn">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+          Download HTML
+        </button>
+        <button class="btn-secondary" id="clear-btn">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>
+          Clear
+        </button>
+      </div>
+
+      <!-- EXAMPLES -->
+      <div class="mt-8">
+        <h3 class="font-semibold mb-1">Load an example</h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Click any card to load it into the editor. Tweak the code and see live results.</p>
+        <div class="flex gap-3 overflow-x-auto pb-3" id="examples-row" style="scrollbar-width: thin;"></div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="py-8 border-t border-gray-100 dark:border-white/5 mt-12">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p class="text-xs text-gray-400">© 2025 Contoura Labs</p>
+      <a href="index.html" class="text-xs text-brand-orange hover:text-brand-red transition-colors">← Back to all tools</a>
+    </div>
+  </footer>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const textarea = $('code-textarea');
+    const lineNumbers = $('line-numbers');
+    const iframe = $('preview-iframe');
+    const tabs = document.querySelectorAll('.editor-tab');
+
+    // Store code per tab
+    const codeStore = { html: '', css: '', js: '' };
+    let activeTab = 'html';
+
+    // ===== EXAMPLES =====
+    const examples = [
+      {
+        title: 'Gradient Button',
+        desc: 'A colorful animated button to start with.',
+        html: `<button class="btn">Click Me</button>`,
+        css: `.btn {\n  padding: 14px 36px;\n  font-size: 18px;\n  font-weight: 700;\n  color: white;\n  border: none;\n  border-radius: 12px;\n  cursor: pointer;\n  background: linear-gradient(135deg, #FF6B35, #E8384F, #00B8A9);\n  background-size: 200% 200%;\n  animation: shift 3s ease infinite;\n  transition: transform 0.2s;\n}\n.btn:hover { transform: translateY(-3px) scale(1.05); }\n@keyframes shift {\n  0%,100% { background-position: 0% 50%; }\n  50% { background-position: 100% 50%; }\n}`,
+        js: `document.querySelector('.btn').addEventListener('click', () => {\n  alert('Hello from Contoura Labs!');\n});`
+      },
+      {
+        title: 'Card Hover Effect',
+        desc: 'A card that lifts and glows on hover.',
+        html: `<div class="card">\n  <h3>My Card</h3>\n  <p>Hover over me to see the effect.</p>\n</div>`,
+        css: `body { display: flex; justify-content: center; padding: 40px; font-family: sans-serif; }\n.card {\n  background: white;\n  padding: 32px;\n  border-radius: 16px;\n  box-shadow: 0 4px 12px rgba(0,0,0,0.08);\n  transition: all 0.3s ease;\n  border: 2px solid transparent;\n  max-width: 280px;\n}\n.card:hover {\n  transform: translateY(-8px);\n  box-shadow: 0 20px 40px rgba(255,107,53,0.2);\n  border-color: #FF6B35;\n}\n.card h3 { margin: 0 0 8px; color: #FF6B35; }\n.card p { margin: 0; color: #666; }`,
+        js: ``
+      },
+      {
+        title: 'Animated Counter',
+        desc: 'Numbers that count up smoothly.',
+        html: `<div class="counter" data-target="2025">\n  <span class="num">0</span>\n</div>`,
+        css: `body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; font-family: sans-serif; }\n.counter { text-align: center; }\n.num {\n  font-size: 72px;\n  font-weight: 800;\n  background: linear-gradient(135deg, #FF6B35, #00B8A9);\n  -webkit-background-clip: text;\n  -webkit-text-fill-color: transparent;\n}`,
+        js: `const el = document.querySelector('.num');\nconst target = parseInt(document.querySelector('.counter').dataset.target);\nlet current = 0;\nconst step = target / 60;\nconst tick = () => {\n  current += step;\n  if (current < target) {\n    el.textContent = Math.floor(current);\n    requestAnimationFrame(tick);\n  } else {\n    el.textContent = target;\n  }\n};\ntick();`
+      },
+      {
+        title: 'Simple Calculator',
+        desc: 'A basic calculator with加减乘除.',
+        html: `<div class="calc">\n  <input id="display" readonly>\n  <div class="keys">\n    <button onclick="press('7')">7</button><button onclick="press('8')">8</button><button onclick="press('9')">9</button><button onclick="press('/')">/</button>\n    <button onclick="press('4')">4</button><button onclick="press('5')">5</button><button onclick="press('6')">6</button><button onclick="press('*')">*</button>\n    <button onclick="press('1')">1</button><button onclick="press('2')">2</button><button onclick="press('3')">3</button><button onclick="press('-')">-</button>\n    <button onclick="press('0')">0</button><button onclick="press('.')">.</button><button onclick="calc()">=</button><button onclick="press('+')">+</button>\n    <button onclick="clearAll()" class="clear">C</button>\n  </div>\n</div>`,
+        css: `body { font-family: sans-serif; display: flex; justify-content: center; padding: 30px; }\n.calc { background: #1a1a1a; padding: 20px; border-radius: 16px; width: 260px; }\n#display { width: 100%; box-sizing: border-box; padding: 16px; font-size: 24px; text-align: right; border: none; border-radius: 8px; margin-bottom: 12px; background: #2a2a2a; color: #fff; }\n.keys { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }\n.keys button { padding: 16px; font-size: 18px; border: none; border-radius: 8px; background: #333; color: #fff; cursor: pointer; transition: background 0.15s; }\n.keys button:hover { background: #444; }\n.keys button.clear { grid-column: span 4; background: #E8384F; }`,
+        js: `function press(val) {\n  document.getElementById('display').value += val;\n}\nfunction calc() {\n  try {\n    const r = eval(document.getElementById('display').value);\n    document.getElementById('display').value = r;\n  } catch(e) {\n    document.getElementById('display').value = 'Error';\n  }\n}\nfunction clearAll() {\n  document.getElementById('display').value = '';\n}`
+      },
+      {
+        title: 'Todo List',
+        desc: 'Add, complete, and delete tasks.',
+        html: `<div class="todo-app">\n  <h2>My Tasks</h2>\n  <div class="input-row">\n    <input id="task-input" placeholder="Add a task...">\n    <button onclick="addTask()">Add</button>\n  </div>\n  <ul id="task-list"></ul>\n</div>`,
+        css: `body { font-family: sans-serif; padding: 30px; background: #f8f9fa; }\n.todo-app { max-width: 400px; margin: 0 auto; background: white; padding: 24px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }\nh2 { margin: 0 0 16px; color: #FF6B35; }\n.input-row { display: flex; gap: 8px; margin-bottom: 16px; }\n#task-input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }\nbutton { padding: 10px 16px; background: #FF6B35; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; }\nul { list-style: none; padding: 0; margin: 0; }\nli { display: flex; align-items: center; padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; }\nli.done span { text-decoration: line-through; color: #999; }\nli span { flex: 1; }\nli button { background: #E8384F; padding: 4px 10px; font-size: 12px; }`,
+        js: `function addTask() {\n  const input = document.getElementById('task-input');\n  const text = input.value.trim();\n  if (!text) return;\n  const li = document.createElement('li');\n  li.innerHTML = '<span>' + text + '</span><button onclick="this.parentElement.remove()">X</button>';\n  li.addEventListener('click', e => {\n    if (e.target.tagName !== 'BUTTON') li.classList.toggle('done');\n  });\n  document.getElementById('task-list').appendChild(li);\n  input.value = '';\n}`
+      },
+      {
+        title: 'Digital Clock',
+        desc: 'A real-time clock that updates every second.',
+        html: `<div class="clock" id="clock">00:00:00</div>`,
+        css: `body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; font-family: 'Courier New', monospace; background: linear-gradient(135deg, #0a0a0a, #1a1a1a); }\n.clock {\n  font-size: 80px;\n  font-weight: 700;\n  color: #00B8A9;\n  text-shadow: 0 0 30px rgba(0,184,169,0.5);\n  letter-spacing: 4px;\n}`,
+        js: `function updateClock() {\n  const now = new Date();\n  const h = String(now.getHours()).padStart(2, '0');\n  const m = String(now.getMinutes()).padStart(2, '0');\n  const s = String(now.getSeconds()).padStart(2, '0');\n  document.getElementById('clock').textContent = h + ':' + m + ':' + s;\n}\nupdateClock();\nsetInterval(updateClock, 1000);`
+      },
+      {
+        title: 'Progress Bar',
+        desc: 'An animated progress bar from 0 to 100%.',
+        html: `<div class="progress-wrap">\n  <div class="progress-bar" id="bar"></div>\n  <span class="progress-text" id="text">0%</span>\n</div>`,
+        css: `body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; font-family: sans-serif; }\n.progress-wrap { width: 400px; max-width: 80vw; }\n.progress-bar {\n  height: 30px;\n  background: linear-gradient(90deg, #FF6B35, #E8384F, #00B8A9);\n  border-radius: 15px;\n  width: 0%;\n  transition: width 0.1s ease;\n  box-shadow: 0 4px 12px rgba(255,107,53,0.3);\n}\n.progress-text {\n  display: block;\n  text-align: center;\n  margin-top: 12px;\n  font-size: 20px;\n  font-weight: 700;\n  color: #333;\n}`,
+        js: `let progress = 0;\nconst bar = document.getElementById('bar');\nconst text = document.getElementById('text');\nconst interval = setInterval(() => {\n  progress += 1;\n  bar.style.width = progress + '%';\n  text.textContent = progress + '%';\n  if (progress >= 100) clearInterval(interval);\n}, 30);`
+      },
+      {
+        title: 'Accordion / FAQ',
+        desc: 'Expandable Q&A sections.',
+        html: `<div class="faq">\n  <div class="item">\n    <button class="q">What is Contoura Labs? <span>+</span></button>\n    <div class="a"><p>A digital agency building tools and games.</p></div>\n  </div>\n  <div class="item">\n    <button class="q">Are the tools free? <span>+</span></button>\n    <div class="a"><p>Yes, 100% free with no signup required.</p></div>\n  </div>\n  <div class="item">\n    <button class="q">Do you store my data? <span>+</span></button>\n    <div class="a"><p>No, everything runs in your browser.</p></div>\n  </div>\n</div>`,
+        css: `body { font-family: sans-serif; padding: 30px; max-width: 500px; margin: 0 auto; }\n.faq { border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; }\n.item { border-bottom: 1px solid #e5e7eb; }\n.item:last-child { border-bottom: none; }\n.q { width: 100%; padding: 16px 20px; text-align: left; border: none; background: #f9fafb; cursor: pointer; font-size: 15px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }\n.q:hover { background: #fff3eb; }\n.q span { font-size: 20px; color: #FF6B35; transition: transform 0.3s; }\n.item.open .q span { transform: rotate(45deg); }\n.a { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }\n.a p { padding: 16px 20px; margin: 0; color: #666; }`,
+        js: `document.querySelectorAll('.q').forEach(btn => {\n  btn.addEventListener('click', () => {\n    const item = btn.parentElement;\n    const answer = item.querySelector('.a');\n    const isOpen = item.classList.contains('open');\n    document.querySelectorAll('.item').forEach(i => {\n      i.classList.remove('open');\n      i.querySelector('.a').style.maxHeight = null;\n    });\n    if (!isOpen) {\n      item.classList.add('open');\n      answer.style.maxHeight = answer.scrollHeight + 'px';\n    }\n  });\n});`
+      },
+      {
+        title: 'Image Gallery',
+        desc: 'A responsive grid of colorful cards.',
+        html: `<div class="gallery">\n  <div class="card" style="background:linear-gradient(135deg,#FF6B35,#E8384F);">Sunset</div>\n  <div class="card" style="background:linear-gradient(135deg,#00B8A9,#FF6B35);">Ocean</div>\n  <div class="card" style="background:linear-gradient(135deg,#E8384F,#00B8A9);">Forest</div>\n  <div class="card" style="background:linear-gradient(135deg,#FF6B35,#00B8A9);">Desert</div>\n  <div class="card" style="background:linear-gradient(135deg,#00B8A9,#E8384F);">Mountain</div>\n  <div class="card" style="background:linear-gradient(135deg,#E8384F,#FF6B35);">City</div>\n</div>`,
+        css: `body { font-family: sans-serif; padding: 20px; margin: 0; }\n.gallery {\n  display: grid;\n  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));\n  gap: 16px;\n}\n.card {\n  height: 160px;\n  border-radius: 12px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  color: white;\n  font-size: 22px;\n  font-weight: 700;\n  cursor: pointer;\n  transition: transform 0.3s, box-shadow 0.3s;\n}\n.card:hover {\n  transform: scale(1.05);\n  box-shadow: 0 12px 24px rgba(0,0,0,0.2);\n}`,
+        js: `document.querySelectorAll('.card').forEach(card => {\n  card.addEventListener('click', () => {\n    alert('You clicked: ' + card.textContent);\n  });\n});`
+      },
+      {
+        title: 'Login Form',
+        desc: 'A clean login form with validation.',
+        html: `<form class="login" id="login-form">\n  <h2>Welcome Back</h2>\n  <div class="field">\n    <label>Email</label>\n    <input type="email" id="email" placeholder="you@example.com" required>\n  </div>\n  <div class="field">\n    <label>Password</label>\n    <input type="password" id="password" placeholder="••••••••" required>\n  </div>\n  <button type="submit">Sign In</button>\n  <p class="msg" id="msg"></p>\n</form>`,
+        css: `body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; background: #f8f9fa; }\n.login {\n  background: white;\n  padding: 32px;\n  border-radius: 16px;\n  box-shadow: 0 4px 20px rgba(0,0,0,0.08);\n  width: 320px;\n}\nh2 { margin: 0 0 24px; color: #FF6B35; text-align: center; }\n.field { margin-bottom: 16px; }\nlabel { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #374151; }\ninput { width: 100%; box-sizing: border-box; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; outline: none; transition: border 0.2s; }\ninput:focus { border-color: #FF6B35; }\nbutton { width: 100%; padding: 12px; background: linear-gradient(135deg, #FF6B35, #E8384F); color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; }\n.msg { text-align: center; margin: 16px 0 0; font-size: 13px; min-height: 18px; }\n.msg.ok { color: #00B8A9; }\n.msg.err { color: #E8384F; }`,
+        js: `document.getElementById('login-form').addEventListener('submit', e => {\n  e.preventDefault();\n  const email = document.getElementById('email').value;\n  const pass = document.getElementById('password').value;\n  const msg = document.getElementById('msg');\n  if (pass.length < 6) {\n    msg.textContent = 'Password must be at least 6 characters';\n    msg.className = 'msg err';\n  } else {\n    msg.textContent = 'Welcome back, ' + email + '!';\n    msg.className = 'msg ok';\n  }\n});`
+      }
+    ];
+
+    // ===== TAB SWITCHING =====
+    function switchTab(tab) {
+      // Save current
+      codeStore[activeTab] = textarea.value;
+      // Switch
+      activeTab = tab;
+      textarea.value = codeStore[tab] || '';
+      // Update tab UI
+      tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+      // Update placeholder
+      const placeholders = { html: '<!-- Write HTML here -->', css: '/* Write CSS here */', js: '// Write JavaScript here' };
+      textarea.placeholder = placeholders[tab];
+      updateLineNumbers();
+    }
+    tabs.forEach(tab => tab.addEventListener('click', () => switchTab(tab.dataset.tab)));
+
+    // ===== LINE NUMBERS =====
+    function updateLineNumbers() {
+      const lines = textarea.value.split('\n').length;
+      let nums = '';
+      for (let i = 1; i <= lines; i++) nums += i + '\n';
+      lineNumbers.textContent = nums;
+    }
+    textarea.addEventListener('input', () => {
+      codeStore[activeTab] = textarea.value;
+      updateLineNumbers();
+      schedulePreview();
+    });
+    textarea.addEventListener('scroll', () => {
+      lineNumbers.scrollTop = textarea.scrollTop;
+    });
+
+    // ===== TAB KEY inserts 2 spaces =====
+    textarea.addEventListener('keydown', e => {
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        textarea.value = textarea.value.substring(0, start) + '  ' + textarea.value.substring(end);
+        textarea.selectionStart = textarea.selectionEnd = start + 2;
+        codeStore[activeTab] = textarea.value;
+        updateLineNumbers();
+        schedulePreview();
+      }
+    });
+
+    // ===== LIVE PREVIEW =====
+    let previewTimer;
+    function schedulePreview() {
+      clearTimeout(previewTimer);
+      previewTimer = setTimeout(updatePreview, 500);
+    }
+    function updatePreview() {
+      codeStore[activeTab] = textarea.value;
+      const html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>' +
+        codeStore.css + '</style></head><body>' + codeStore.html + '<' + 'script>' +
+        codeStore.js + '<\/script></body></html>';
+      iframe.srcdoc = html;
+    }
+
+    // ===== BUTTONS =====
+    $('run-btn').addEventListener('click', () => {
+      updatePreview();
+      CL.toast('Preview updated');
+    });
+
+    $('clear-btn').addEventListener('click', () => {
+      if (confirm('Clear all code?')) {
+        codeStore.html = '';
+        codeStore.css = '';
+        codeStore.js = '';
+        textarea.value = '';
+        updateLineNumbers();
+        updatePreview();
+        CL.toast('Editor cleared');
+      }
+    });
+
+    $('download-btn').addEventListener('click', () => {
+      codeStore[activeTab] = textarea.value;
+      const full = '<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <title>My Code</title>\n  <style>\n' + codeStore.css + '\n  </style>\n</head>\n<body>\n' + codeStore.html + '\n\n  <script>\n' + codeStore.js + '\n  <\/script>\n</body>\n</html>';
+      const blob = new Blob([full], { type: 'text/html' });
+      CL.download(blob, 'code-' + Date.now() + '.html');
+      CL.toast('HTML file downloaded');
+    });
+
+    // ===== EXAMPLES =====
+    const examplesRow = $('examples-row');
+    examples.forEach((ex, i) => {
+      const card = document.createElement('div');
+      card.className = 'example-card';
+      card.innerHTML = '<div class="example-card-title">' + ex.title + '</div><div class="example-card-desc">' + ex.desc + '</div>';
+      card.addEventListener('click', () => {
+        codeStore.html = ex.html;
+        codeStore.css = ex.css;
+        codeStore.js = ex.js;
+        if (activeTab === 'html') textarea.value = ex.html;
+        else if (activeTab === 'css') textarea.value = ex.css;
+        else textarea.value = ex.js;
+        updateLineNumbers();
+        updatePreview();
+        CL.toast('Loaded: ' + ex.title);
+      });
+      examplesRow.appendChild(card);
+    });
+
+    // ===== INIT: Load first example =====
+    codeStore.html = examples[0].html;
+    codeStore.css = examples[0].css;
+    codeStore.js = examples[0].js;
+    textarea.value = examples[0].html;
+    updateLineNumbers();
+    updatePreview();
+  </script>
+</body>
+</html>

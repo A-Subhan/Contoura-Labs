@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trivia Quiz — Contoura Labs</title>
+  <meta name="description" content="10-question trivia quiz across six categories. Pick a category from the carousel and test your knowledge with multiple-choice questions.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 73 28 A 32 32 0 0 0 27 28' stroke='%23FF6B35' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 24 32 A 32 32 0 0 0 24 68' stroke='%23E8384F' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 27 72 A 32 32 0 0 0 73 72' stroke='%2300B8A9' stroke-width='9' fill='none' stroke-linecap='round'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: {
+        colors: {
+          brand: { orange: '#FF6B35', red: '#E8384F', teal: '#00B8A9' },
+          surface: { light: '#F8F9FA', dark: '#0A0A0A', card: '#1A1A1A', alt: '#111111' }
+        },
+        fontFamily: { sans: ['Inter', 'sans-serif'] }
+      }}
+    }
+  </script>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <style>
+    /* ===== Carousel ===== */
+    .carousel-wrap { position: relative; }
+    .carousel-track {
+      display: flex;
+      gap: 1rem;
+      overflow-x: auto;
+      scroll-behavior: smooth;
+      scroll-snap-type: x mandatory;
+      padding: 0.5rem 0.25rem 1rem;
+      scrollbar-width: thin;
+    }
+    .carousel-track::-webkit-scrollbar { height: 6px; }
+    .carousel-track::-webkit-scrollbar-thumb { background: rgba(255,107,53,0.4); border-radius: 3px; }
+    .carousel-track::-webkit-scrollbar-track { background: transparent; }
+    .cat-card {
+      flex: 0 0 auto;
+      width: 220px;
+      padding: 1.25rem 1.1rem;
+      border-radius: 0.9rem;
+      border: 2px solid #e5e7eb;
+      background: #fff;
+      cursor: pointer;
+      transition: transform 0.22s cubic-bezier(0.16,1,0.3,1),
+                  border-color 0.22s ease,
+                  box-shadow 0.22s ease;
+      scroll-snap-align: center;
+      display: flex; flex-direction: column; align-items: flex-start; gap: 0.5rem;
+      text-align: left;
+    }
+    .dark .cat-card { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.1); }
+    .cat-card:hover {
+      transform: translateY(-4px);
+      border-color: #FF6B35;
+      box-shadow: 0 12px 30px rgba(255,107,53,0.15);
+    }
+    .cat-card.selected {
+      border-color: #FF6B35;
+      transform: scale(1.05);
+      box-shadow: 0 14px 32px rgba(255,107,53,0.3);
+      background: linear-gradient(135deg, rgba(255,107,53,0.08), rgba(232,56,79,0.06), rgba(0,184,169,0.06));
+    }
+    .cat-card .cat-icon {
+      width: 48px; height: 48px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 0.75rem;
+      background: linear-gradient(135deg, #FF6B35, #E8384F, #00B8A9);
+      color: #fff; font-size: 1.5rem;
+      box-shadow: 0 6px 14px rgba(255,107,53,0.2);
+    }
+    .cat-card .cat-name { font-weight: 700; font-size: 1.05rem; }
+    .cat-card .cat-desc { font-size: 0.8rem; color: #6b7280; line-height: 1.4; }
+    .dark .cat-card .cat-desc { color: #9ca3af; }
+    .cat-card .cat-meta { font-size: 0.7rem; color: #9ca3af; font-weight: 600; margin-top: auto; }
+
+    .carousel-btn {
+      position: absolute;
+      top: 50%; transform: translateY(-50%);
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      transition: all 0.2s ease;
+      z-index: 5;
+    }
+    .dark .carousel-btn { background: #1A1A1A; border-color: rgba(255,255,255,0.1); color: #fff; }
+    .carousel-btn:hover { background: #FF6B35; color: #fff; border-color: transparent; }
+    .carousel-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .carousel-btn.prev { left: -8px; }
+    .carousel-btn.next { right: -8px; }
+    @media (max-width: 640px) {
+      .carousel-btn { display: none; }
+    }
+
+    .hidden-screen { display: none !important; }
+
+    /* ===== Quiz UI ===== */
+    .trivia-option {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 1rem 1.25rem;
+      border-radius: 0.75rem;
+      border: 2px solid #e5e7eb;
+      background: #fff;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-weight: 500;
+      text-align: left;
+      width: 100%;
+    }
+    .dark .trivia-option { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.08); }
+    .trivia-option:hover:not(.disabled) {
+      border-color: #FF6B35;
+      transform: translateX(4px);
+      background: rgba(255,107,53,0.05);
+    }
+    .trivia-option .opt-letter {
+      width: 32px; height: 32px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 50%;
+      background: #f3f4f6;
+      color: #6b7280;
+      font-weight: 700; font-size: 0.875rem;
+      flex-shrink: 0;
+    }
+    .dark .trivia-option .opt-letter { background: rgba(255,255,255,0.1); color: #d1d5db; }
+    .trivia-option.correct {
+      border-color: #00B8A9;
+      background: rgba(0,184,169,0.12);
+    }
+    .trivia-option.correct .opt-letter { background: #00B8A9; color: #fff; }
+    .trivia-option.incorrect {
+      border-color: #E8384F;
+      background: rgba(232,56,79,0.12);
+    }
+    .trivia-option.incorrect .opt-letter { background: #E8384F; color: #fff; }
+    .trivia-option.disabled { cursor: not-allowed; }
+    .progress-track {
+      width: 100%; height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden;
+    }
+    .dark .progress-track { background: #374151; }
+    .progress-fill {
+      height: 100%; background: linear-gradient(90deg, #FF6B35, #E8384F, #00B8A9);
+      background-size: 200% 200%;
+      animation: gradientShift 2s ease infinite;
+      transition: width 0.4s ease;
+    }
+    @keyframes gradientShift { 0%,100%{background-position:0% 50%} 50%{background-position:100% 50%} }
+    .qnum-pill {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.4rem 0.9rem; border-radius: 9999px;
+      font-size: 0.75rem; font-weight: 600;
+      background: rgba(255,107,53,0.1); color: #FF6B35;
+    }
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid rgba(255,107,53,0.2);
+      border-top-color: #FF6B35;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .result-circle {
+      width: 120px; height: 120px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem; font-weight: 800;
+      background: linear-gradient(135deg, #FF6B35, #E8384F, #00B8A9);
+      color: #fff;
+      margin: 0 auto 1rem;
+      box-shadow: 0 12px 30px rgba(255,107,53,0.3);
+    }
+  </style>
+</head>
+<body class="font-sans bg-white text-gray-900 dark:bg-surface-dark dark:text-gray-100 antialiased">
+
+  <div id="navbar-mount"></div>
+
+  <main class="tool-page">
+    <div class="tool-container">
+      <header class="tool-header">
+        <span class="badge mb-3">Games</span>
+        <h1 class="tool-title">Trivia Quiz</h1>
+        <p class="tool-subtitle">Ten questions, six categories. Pick one from the carousel and test your knowledge against the Open Trivia DB.</p>
+      </header>
+
+      <div class="tool-card">
+
+        <!-- ===== Setup screen with carousel ===== -->
+        <div id="setup-screen">
+          <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3 text-center">Choose a category — scroll or use the arrows</h3>
+
+          <div class="carousel-wrap">
+            <button class="carousel-btn prev" id="carousel-prev" aria-label="Scroll left">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            </button>
+            <div class="carousel-track" id="carousel-track"></div>
+            <button class="carousel-btn next" id="carousel-next" aria-label="Scroll right">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+
+          <div class="flex justify-center mt-5">
+            <button class="btn-primary hidden" id="start-quiz-btn" style="min-width:14rem;">Start Quiz →</button>
+          </div>
+          <p id="select-hint" class="text-xs text-gray-400 text-center mt-3">Select a category to begin</p>
+
+          <div class="mt-5 p-4 rounded-lg bg-gray-50 dark:bg-white/5 text-xs text-gray-500 leading-relaxed">
+            <p><strong>How it works:</strong> 10 multiple-choice questions per round. You'll get instant feedback after each answer. Uses the free Open Trivia Database — if the API is unreachable, a built-in question bank is used instead.</p>
+          </div>
+        </div>
+
+        <!-- Loading -->
+        <div id="loading-screen" class="hidden-screen text-center py-12">
+          <div class="spinner mx-auto mb-4"></div>
+          <p class="text-sm text-gray-500">Loading questions…</p>
+        </div>
+
+        <!-- Quiz screen -->
+        <div id="quiz-screen" class="hidden-screen">
+          <div class="flex items-center justify-between mb-4">
+            <span class="qnum-pill">Question <span id="qnum">1</span> / 10</span>
+            <span class="qnum-pill" style="background:rgba(0,184,169,0.1);color:#00B8A9;">Score: <span id="score-display">0</span></span>
+          </div>
+          <div class="progress-track mb-6">
+            <div class="progress-fill" id="quiz-progress" style="width:10%;"></div>
+          </div>
+
+          <div id="question-text" class="text-lg font-semibold mb-6 leading-relaxed"></div>
+
+          <div id="options-container" class="flex flex-col gap-3"></div>
+
+          <div id="feedback" class="mt-5 hidden text-sm font-medium p-3 rounded-lg"></div>
+
+          <button class="btn-primary w-full mt-5 hidden" id="next-btn">Next Question →</button>
+        </div>
+
+        <!-- Final screen -->
+        <div id="final-screen" class="hidden-screen text-center">
+          <div class="result-circle" id="final-score-circle">0/10</div>
+          <h3 class="text-xl font-bold mb-1" id="final-message">Nice try!</h3>
+          <p class="text-sm text-gray-500 mb-6" id="final-stats"></p>
+
+          <div class="flex flex-col gap-3 max-w-xs mx-auto">
+            <button class="btn-primary" id="play-again-btn">Play Again (Same Category)</button>
+            <button class="btn-secondary" id="change-category-btn">Change Category</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <footer class="py-8 border-t border-gray-100 dark:border-white/5 mt-12">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p class="text-xs text-gray-400">© 2025 Contoura Labs</p>
+      <a href="index.html" class="text-xs text-brand-orange hover:text-brand-red transition-colors">← Back to all games</a>
+    </div>
+  </footer>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+  (function () {
+    'use strict';
+
+    // ---- Category metadata ----
+    const CATEGORIES = [
+      { id: 9,  name: 'General',  emoji: '🧠', desc: 'A bit of everything — mixed general knowledge for all-rounders.' },
+      { id: 17, name: 'Science',  emoji: '🔬', desc: 'Biology, chemistry, physics and nature. Lab coats optional.' },
+      { id: 23, name: 'History',  emoji: '📜', desc: 'Ancient empires, world wars, and the people who shaped our world.' },
+      { id: 22, name: 'Geography',emoji: '🌍', desc: 'Capitals, rivers, mountains and borders across every continent.' },
+      { id: 11, name: 'Movies',   emoji: '🎬', desc: 'Blockbusters, Oscar winners, directors, and unforgettable lines.' },
+      { id: 21, name: 'Sports',   emoji: '⚽', desc: 'Football, basketball, Olympics, records and the legends who set them.' }
+    ];
+    const CATEGORY_NAMES = {};
+    CATEGORIES.forEach(c => CATEGORY_NAMES[c.id] = c.name);
+
+    // ---- Fallback question bank (10 per category = 60 total) ----
+    const FALLBACK = {
+      9: [
+        { q: "What is the capital of France?", correct: "Paris", wrong: ["London","Berlin","Madrid"] },
+        { q: "How many sides does a hexagon have?", correct: "6", wrong: ["5","7","8"] },
+        { q: "What is the largest planet in our solar system?", correct: "Jupiter", wrong: ["Saturn","Earth","Mars"] },
+        { q: "Which language has the most native speakers worldwide?", correct: "Mandarin Chinese", wrong: ["English","Spanish","Hindi"] },
+        { q: "What does 'WWW' stand for?", correct: "World Wide Web", wrong: ["World Web Wide","Web World Wide","Wide World Web"] },
+        { q: "What is the chemical symbol for gold?", correct: "Au", wrong: ["Gd","Go","Ag"] },
+        { q: "How many continents are there?", correct: "7", wrong: ["5","6","8"] },
+        { q: "Which ocean is the largest?", correct: "Pacific Ocean", wrong: ["Atlantic Ocean","Indian Ocean","Arctic Ocean"] },
+        { q: "What is the tallest mountain in the world?", correct: "Mount Everest", wrong: ["K2","Mount Kilimanjaro","Denali"] },
+        { q: "Who painted the Mona Lisa?", correct: "Leonardo da Vinci", wrong: ["Michelangelo","Raphael","Caravaggio"] }
+      ],
+      17: [
+        { q: "What gas do plants absorb from the atmosphere?", correct: "Carbon dioxide", wrong: ["Oxygen","Nitrogen","Hydrogen"] },
+        { q: "What is the powerhouse of the cell?", correct: "Mitochondria", wrong: ["Nucleus","Ribosome","Golgi apparatus"] },
+        { q: "What is the speed of light approximately?", correct: "300,000 km/s", wrong: ["150,000 km/s","1,000 km/s","3,000 km/s"] },
+        { q: "Which planet is known as the Red Planet?", correct: "Mars", wrong: ["Venus","Jupiter","Mercury"] },
+        { q: "What is H2O commonly known as?", correct: "Water", wrong: ["Hydrogen peroxide","Salt","Acid"] },
+        { q: "How many bones are in the adult human body?", correct: "206", wrong: ["180","250","320"] },
+        { q: "What force keeps planets in orbit around the sun?", correct: "Gravity", wrong: ["Magnetism","Friction","Inertia"] },
+        { q: "What is the most abundant gas in Earth's atmosphere?", correct: "Nitrogen", wrong: ["Oxygen","Carbon dioxide","Argon"] },
+        { q: "What is the chemical symbol for sodium?", correct: "Na", wrong: ["So","S","Sd"] },
+        { q: "Which scientist proposed the theory of relativity?", correct: "Albert Einstein", wrong: ["Isaac Newton","Stephen Hawking","Niels Bohr"] }
+      ],
+      23: [
+        { q: "In which year did World War II end?", correct: "1945", wrong: ["1944","1946","1939"] },
+        { q: "Who was the first President of the United States?", correct: "George Washington", wrong: ["Thomas Jefferson","John Adams","Abraham Lincoln"] },
+        { q: "The Great Wall of China was primarily built to defend against which group?", correct: "Mongols", wrong: ["Romans","Japanese","Russians"] },
+        { q: "Which ancient civilization built the pyramids of Giza?", correct: "Egyptians", wrong: ["Romans","Greeks","Persians"] },
+        { q: "In which year did the Berlin Wall fall?", correct: "1989", wrong: ["1987","1991","1985"] },
+        { q: "Who was the British Prime Minister during most of World War II?", correct: "Winston Churchill", wrong: ["Neville Chamberlain","Clement Attlee","Anthony Eden"] },
+        { q: "The Renaissance began in which country?", correct: "Italy", wrong: ["France","Spain","England"] },
+        { q: "Who discovered America in 1492?", correct: "Christopher Columbus", wrong: ["Vasco da Gama","Ferdinand Magellan","Leif Erikson"] },
+        { q: "The French Revolution began in which year?", correct: "1789", wrong: ["1799","1776","1804"] },
+        { q: "Which empire was ruled by Julius Caesar?", correct: "Roman Empire", wrong: ["Greek Empire","Persian Empire","Byzantine Empire"] }
+      ],
+      22: [
+        { q: "What is the longest river in the world?", correct: "The Nile", wrong: ["Amazon","Yangtze","Mississippi"] },
+        { q: "Which country has the largest population?", correct: "India", wrong: ["China","United States","Indonesia"] },
+        { q: "What is the smallest country in the world?", correct: "Vatican City", wrong: ["Monaco","Malta","Liechtenstein"] },
+        { q: "Mount Everest is located on the border of Nepal and which other country?", correct: "China", wrong: ["India","Bhutan","Pakistan"] },
+        { q: "Which is the largest desert in the world?", correct: "Antarctic Desert", wrong: ["Sahara","Gobi","Arabian"] },
+        { q: "What is the capital of Australia?", correct: "Canberra", wrong: ["Sydney","Melbourne","Perth"] },
+        { q: "Which African country has the most pyramids?", correct: "Sudan", wrong: ["Egypt","Libya","Ethiopia"] },
+        { q: "Lake Baikal, the world's deepest lake, is in which country?", correct: "Russia", wrong: ["Mongolia","China","Kazakhstan"] },
+        { q: "Which country is home to the Amazon Rainforest's largest portion?", correct: "Brazil", wrong: ["Peru","Colombia","Venezuela"] },
+        { q: "What is the capital of Canada?", correct: "Ottawa", wrong: ["Toronto","Montreal","Vancouver"] }
+      ],
+      11: [
+        { q: "Which movie won the first Academy Award for Best Picture?", correct: "Wings", wrong: ["Sunrise","The Jazz Singer","Metropolis"] },
+        { q: "Who directed the movie 'Jaws'?", correct: "Steven Spielberg", wrong: ["George Lucas","Martin Scorsese","Francis Ford Coppola"] },
+        { q: "In 'The Matrix', what color pill does Neo take?", correct: "Red", wrong: ["Blue","Green","Yellow"] },
+        { q: "Which actor played Jack in Titanic?", correct: "Leonardo DiCaprio", wrong: ["Brad Pitt","Matt Damon","Johnny Depp"] },
+        { q: "What is the highest-grossing film of all time (as of 2023)?", correct: "Avatar", wrong: ["Avengers: Endgame","Titanic","Star Wars: The Force Awakens"] },
+        { q: "Which animated movie features the song 'Let It Go'?", correct: "Frozen", wrong: ["Moana","Tangled","Brave"] },
+        { q: "Who played the Joker in 'The Dark Knight'?", correct: "Heath Ledger", wrong: ["Joaquin Phoenix","Jared Leto","Jack Nicholson"] },
+        { q: "In which movie would you find the character 'Forrest Gump'?", correct: "Forrest Gump", wrong: ["The Green Mile","Cast Away","Big"] },
+        { q: "Which film features the quote 'May the Force be with you'?", correct: "Star Wars", wrong: ["Star Trek","Guardians of the Galaxy","The Matrix"] },
+        { q: "Who directed 'Pulp Fiction'?", correct: "Quentin Tarantino", wrong: ["Robert Rodriguez","Martin Scorsese","David Fincher"] }
+      ],
+      21: [
+        { q: "How many players are on a soccer team on the field?", correct: "11", wrong: ["10","9","12"] },
+        { q: "In which sport would you perform a slam dunk?", correct: "Basketball", wrong: ["Volleyball","Tennis","Hockey"] },
+        { q: "How often are the Summer Olympic Games held?", correct: "Every 4 years", wrong: ["Every 2 years","Every 3 years","Every 5 years"] },
+        { q: "What sport is known as 'the king of sports'?", correct: "Soccer (Football)", wrong: ["Basketball","Cricket","Tennis"] },
+        { q: "In golf, what is a score of one under par on a hole called?", correct: "Birdie", wrong: ["Eagle","Bogey","Albatross"] },
+        { q: "Which country has won the most FIFA World Cups?", correct: "Brazil", wrong: ["Germany","Italy","Argentina"] },
+        { q: "How many points is a touchdown worth in American football?", correct: "6", wrong: ["7","3","5"] },
+        { q: "In which sport is the 'Wimbledon' championship played?", correct: "Tennis", wrong: ["Golf","Cricket","Badminton"] },
+        { q: "What is the maximum score possible in a single frame of ten-pin bowling?", correct: "30", wrong: ["10","20","300"] },
+        { q: "Which boxer was famously known as 'The Greatest'?", correct: "Muhammad Ali", wrong: ["Mike Tyson","Joe Frazier","George Foreman"] }
+      ]
+    };
+
+    // ---- State ----
+    let selectedCatId = null;
+    let questions = [];
+    let currentIdx = 0;
+    let score = 0;
+    let answeredLocked = false;
+
+    // ---- DOM refs ----
+    const setupScreen = document.getElementById('setup-screen');
+    const loadingScreen = document.getElementById('loading-screen');
+    const quizScreen = document.getElementById('quiz-screen');
+    const finalScreen = document.getElementById('final-screen');
+    const carouselTrack = document.getElementById('carousel-track');
+    const carouselPrev = document.getElementById('carousel-prev');
+    const carouselNext = document.getElementById('carousel-next');
+    const startQuizBtn = document.getElementById('start-quiz-btn');
+    const selectHint = document.getElementById('select-hint');
+
+    function show(screen) {
+      [setupScreen, loadingScreen, quizScreen, finalScreen].forEach(s => s.classList.add('hidden-screen'));
+      screen.classList.remove('hidden-screen');
+    }
+
+    function shuffle(arr) {
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function decodeHtml(html) {
+      const txt = document.createElement('textarea');
+      txt.innerHTML = html;
+      return txt.value;
+    }
+
+    // ---- Build carousel ----
+    function buildCarousel() {
+      carouselTrack.innerHTML = '';
+      CATEGORIES.forEach(cat => {
+        const card = document.createElement('button');
+        card.className = 'cat-card';
+        card.dataset.id = cat.id;
+        card.innerHTML = `
+          <div class="cat-icon">${cat.emoji}</div>
+          <div class="cat-name">${cat.name}</div>
+          <div class="cat-desc">${cat.desc}</div>
+          <div class="cat-meta">10 questions · OpenTDB</div>
+        `;
+        card.addEventListener('click', () => selectCategory(cat.id));
+        carouselTrack.appendChild(card);
+      });
+    }
+
+    function selectCategory(id) {
+      selectedCatId = id;
+      document.querySelectorAll('.cat-card').forEach(c => {
+        c.classList.toggle('selected', parseInt(c.dataset.id, 10) === id);
+      });
+      startQuizBtn.classList.remove('hidden');
+      selectHint.textContent = `Selected: ${CATEGORY_NAMES[id]} — ready when you are`;
+      // Scroll selected card into view smoothly
+      const sel = carouselTrack.querySelector('.cat-card.selected');
+      if (sel) sel.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      updateCarouselBtns();
+    }
+
+    function updateCarouselBtns() {
+      const max = carouselTrack.scrollWidth - carouselTrack.clientWidth - 2;
+      carouselPrev.disabled = carouselTrack.scrollLeft <= 2;
+      carouselNext.disabled = carouselTrack.scrollLeft >= max;
+    }
+
+    carouselPrev.addEventListener('click', () => {
+      carouselTrack.scrollBy({ left: -240, behavior: 'smooth' });
+    });
+    carouselNext.addEventListener('click', () => {
+      carouselTrack.scrollBy({ left: 240, behavior: 'smooth' });
+    });
+    carouselTrack.addEventListener('scroll', updateCarouselBtns);
+
+    // ---- Quiz flow ----
+    async function fetchQuestions(category) {
+      try {
+        const url = `https://opentdb.com/api.php?amount=10&category=${category}&type=multiple`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        if (data.response_code !== 0 || !data.results || data.results.length === 0) {
+          throw new Error('No questions returned');
+        }
+        return data.results.map(r => ({
+          q: decodeHtml(r.question),
+          correct: decodeHtml(r.correct_answer),
+          wrong: r.incorrect_answers.map(decodeHtml)
+        }));
+      } catch (e) {
+        console.warn('OpenTDB fetch failed, using fallback:', e);
+        const bank = FALLBACK[category] || FALLBACK[9];
+        return shuffle(bank).slice(0, 10).map(q => ({ ...q }));
+      }
+    }
+
+    async function startQuiz(category) {
+      show(loadingScreen);
+      const fetched = await fetchQuestions(category);
+      questions = fetched.slice(0, 10);
+      currentIdx = 0;
+      score = 0;
+      show(quizScreen);
+      renderQuestion();
+    }
+
+    function renderQuestion() {
+      answeredLocked = false;
+      const q = questions[currentIdx];
+      document.getElementById('qnum').textContent = currentIdx + 1;
+      document.getElementById('score-display').textContent = score;
+      document.getElementById('quiz-progress').style.width = ((currentIdx + 1) / 10 * 100) + '%';
+      document.getElementById('question-text').textContent = q.q;
+
+      const options = shuffle([
+        { text: q.correct, correct: true },
+        ...q.wrong.map(w => ({ text: w, correct: false }))
+      ]);
+
+      const container = document.getElementById('options-container');
+      container.innerHTML = '';
+      const letters = ['A','B','C','D'];
+      options.forEach((opt, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'trivia-option';
+        btn.innerHTML = `<span class="opt-letter">${letters[i]}</span><span>${opt.text}</span>`;
+        btn.addEventListener('click', () => answerQuestion(btn, opt, options, q));
+        container.appendChild(btn);
+      });
+
+      document.getElementById('feedback').classList.add('hidden');
+      document.getElementById('next-btn').classList.add('hidden');
+    }
+
+    function answerQuestion(btn, opt, allOptions, q) {
+      if (answeredLocked) return;
+      answeredLocked = true;
+      const allBtns = document.querySelectorAll('.trivia-option');
+      allBtns.forEach(b => b.classList.add('disabled'));
+
+      const feedback = document.getElementById('feedback');
+      feedback.classList.remove('hidden');
+
+      if (opt.correct) {
+        btn.classList.add('correct');
+        score++;
+        document.getElementById('score-display').textContent = score;
+        feedback.style.background = 'rgba(0,184,169,0.12)';
+        feedback.style.color = '#00B8A9';
+        feedback.textContent = '✓ Correct!';
+      } else {
+        btn.classList.add('incorrect');
+        allBtns.forEach((b, i) => {
+          if (allOptions[i].correct) b.classList.add('correct');
+        });
+        feedback.style.background = 'rgba(232,56,79,0.12)';
+        feedback.style.color = '#E8384F';
+        feedback.textContent = `✗ Wrong. The correct answer was: ${q.correct}`;
+      }
+
+      const nextBtn = document.getElementById('next-btn');
+      nextBtn.classList.remove('hidden');
+      nextBtn.textContent = currentIdx === 9 ? 'See Results →' : 'Next Question →';
+    }
+
+    function showFinal() {
+      show(finalScreen);
+      document.getElementById('final-score-circle').textContent = `${score}/10`;
+      let msg, stats;
+      const pct = score / 10;
+      if (pct === 1) msg = 'Perfect score! 🏆';
+      else if (pct >= 0.8) msg = 'Excellent work! 🌟';
+      else if (pct >= 0.6) msg = 'Good job! 👍';
+      else if (pct >= 0.4) msg = 'Not bad — try again!';
+      else msg = 'Keep practicing!';
+      stats = `Category: ${CATEGORY_NAMES[selectedCatId]} · ${score} correct out of 10`;
+      document.getElementById('final-message').textContent = msg;
+      document.getElementById('final-stats').textContent = stats;
+      CL.toast(`Quiz complete: ${score}/10`, score >= 6);
+    }
+
+    // ---- Wire UI ----
+    startQuizBtn.addEventListener('click', () => {
+      if (selectedCatId == null) {
+        CL.toast('Pick a category first!', false);
+        return;
+      }
+      startQuiz(selectedCatId);
+    });
+
+    document.getElementById('next-btn').addEventListener('click', () => {
+      if (currentIdx < 9) {
+        currentIdx++;
+        renderQuestion();
+      } else {
+        showFinal();
+      }
+    });
+
+    document.getElementById('play-again-btn').addEventListener('click', () => {
+      startQuiz(selectedCatId);
+    });
+
+    document.getElementById('change-category-btn').addEventListener('click', () => {
+      show(setupScreen);
+    });
+
+    // Init
+    buildCarousel();
+    show(setupScreen);
+    setTimeout(updateCarouselBtns, 50);
+  })();
+  </script>
+</body>
+</html>

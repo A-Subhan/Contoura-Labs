@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flappy Dot — Contoura Labs</title>
+  <meta name="description" content="Tap, click, or press space to fly the orange dot through teal pipes. Score points and beat your high score.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 73 28 A 32 32 0 0 0 27 28' stroke='%23FF6B35' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 24 32 A 32 32 0 0 0 24 68' stroke='%23E8384F' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 27 72 A 32 32 0 0 0 73 72' stroke='%2300B8A9' stroke-width='9' fill='none' stroke-linecap='round'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: {
+        colors: {
+          brand: { orange: '#FF6B35', red: '#E8384F', teal: '#00B8A9' },
+          surface: { light: '#F8F9FA', dark: '#0A0A0A', card: '#1A1A1A', alt: '#111111' }
+        },
+        fontFamily: { sans: ['Inter', 'sans-serif'] }
+      }}
+    }
+  </script>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <style>
+    .canvas-wrap { display: flex; justify-content: center; }
+    #game-canvas {
+      width: 400px; height: 600px;
+      max-width: 100%;
+      border-radius: 1rem;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.18);
+      touch-action: none;
+      cursor: pointer;
+    }
+    .stat-pill {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      padding: 0.4rem 0.9rem; border-radius: 9999px; font-size: 0.8125rem; font-weight: 600;
+      background: rgba(255,107,53,0.1); color: #FF6B35;
+    }
+    .stat-pill.teal { background: rgba(0,184,169,0.1); color: #00B8A9; }
+    .stat-pill.red { background: rgba(232,56,79,0.1); color: #E8384F; }
+    .key-cap {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 1.6rem; padding: 0.15rem 0.5rem;
+      border-radius: 0.35rem; font-size: 0.7rem; font-weight: 600;
+      background: #f3f4f6; border: 1px solid #d1d5db; color: #374151;
+      box-shadow: 0 2px 0 #d1d5db;
+    }
+    .dark .key-cap { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.15); color: #e5e7eb; box-shadow: 0 2px 0 rgba(0,0,0,0.4); }
+  </style>
+</head>
+<body class="font-sans bg-white text-gray-900 dark:bg-surface-dark dark:text-gray-100 antialiased">
+
+  <div id="navbar-mount"></div>
+
+  <main class="tool-page">
+    <div class="tool-container">
+      <header class="tool-header">
+        <span class="badge mb-3">Games</span>
+        <h1 class="tool-title">Flappy Dot</h1>
+        <p class="tool-subtitle">Tap, click, or press space to flap. Fly through the gaps and don't touch the pipes.</p>
+      </header>
+
+      <div class="tool-card">
+
+        <!-- Stats -->
+        <div class="flex flex-wrap justify-center gap-3 mb-5">
+          <span class="stat-pill">Score: <span id="stat-score" class="text-lg">0</span></span>
+          <span class="stat-pill teal">Best: <span id="stat-best" class="text-lg">0</span></span>
+        </div>
+
+        <!-- Canvas -->
+        <div class="canvas-wrap">
+          <canvas id="game-canvas" width="400" height="600" class="game-canvas"></canvas>
+        </div>
+
+        <!-- Instructions -->
+        <div class="text-center mt-5">
+          <p class="text-xs text-gray-400">
+            <span class="key-cap">SPACE</span> or <span class="key-cap">CLICK</span> or <span class="key-cap">TAP</span> to flap
+          </p>
+        </div>
+
+        <div class="flex justify-center gap-3 mt-5">
+          <button class="btn-primary" id="start-btn">Start Game</button>
+          <button class="btn-secondary" id="reset-best-btn">Reset Best</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="py-8 border-t border-gray-100 dark:border-white/5 mt-12">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p class="text-xs text-gray-400">© 2025 Contoura Labs</p>
+      <a href="index.html" class="text-xs text-brand-orange hover:text-brand-red transition-colors">← Back to all games</a>
+    </div>
+  </footer>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+  (function () {
+    'use strict';
+
+    const canvas = document.getElementById('game-canvas');
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width;
+    const H = canvas.height;
+
+    // Constants
+    const GRAVITY = 0.42;
+    const FLAP_V = -7.5;
+    const PIPE_W = 60;
+    const PIPE_GAP = 160;
+    const PIPE_SPACING = 220;
+    const PIPE_SPEED = 2.4;
+    const DOT_R = 13;
+    const GROUND_H = 60;
+
+    let dot, pipes, score, best, frames, state, particles;
+
+    best = parseInt(localStorage.getItem('flappy-best') || '0', 10);
+    document.getElementById('stat-best').textContent = best;
+
+    function resetGame() {
+      dot = { x: 90, y: H / 2, vy: 0, rot: 0 };
+      pipes = [];
+      score = 0;
+      frames = 0;
+      particles = [];
+      document.getElementById('stat-score').textContent = '0';
+      // pre-spawn first pipe a bit further so player has time
+      pipes.push(makePipe(W + 80));
+    }
+
+    function makePipe(x) {
+      const minTop = 60;
+      const maxTop = H - GROUND_H - PIPE_GAP - 60;
+      const topH = Math.floor(minTop + Math.random() * (maxTop - minTop));
+      return { x, topH, scored: false };
+    }
+
+    function flap() {
+      if (state === 'ready') {
+        state = 'playing';
+        dot.vy = FLAP_V;
+        spawnFlapParticles();
+      } else if (state === 'playing') {
+        dot.vy = FLAP_V;
+        spawnFlapParticles();
+      } else if (state === 'gameover') {
+        resetGame();
+        state = 'playing';
+        dot.vy = FLAP_V;
+        spawnFlapParticles();
+      }
+    }
+
+    function spawnFlapParticles() {
+      for (let i = 0; i < 5; i++) {
+        particles.push({
+          x: dot.x - 6, y: dot.y + 2,
+          vx: -1 - Math.random() * 1.5,
+          vy: 0.5 + Math.random() * 1.5,
+          life: 30, r: 2 + Math.random() * 2,
+          color: i % 2 === 0 ? '#FF6B35' : '#E8384F'
+        });
+      }
+    }
+
+    function update() {
+      if (state !== 'playing') return;
+      frames++;
+
+      // Physics
+      dot.vy += GRAVITY;
+      dot.y += dot.vy;
+      dot.rot = Math.max(-0.4, Math.min(1.2, dot.vy * 0.08));
+
+      // Spawn pipes
+      if (frames % Math.round(PIPE_SPACING / PIPE_SPEED) === 0) {
+        pipes.push(makePipe(W + 40));
+      }
+
+      // Move pipes
+      pipes.forEach(p => p.x -= PIPE_SPEED);
+      pipes = pipes.filter(p => p.x + PIPE_W > -10);
+
+      // Score
+      pipes.forEach(p => {
+        if (!p.scored && p.x + PIPE_W < dot.x) {
+          p.scored = true;
+          score++;
+          document.getElementById('stat-score').textContent = score;
+          if (score > best) {
+            best = score;
+            localStorage.setItem('flappy-best', best);
+            document.getElementById('stat-best').textContent = best;
+          }
+        }
+      });
+
+      // Particles
+      particles.forEach(pt => {
+        pt.x += pt.vx; pt.y += pt.vy;
+        pt.vy += 0.1;
+        pt.life--;
+      });
+      particles = particles.filter(pt => pt.life > 0);
+
+      // Collision: ground
+      if (dot.y + DOT_R > H - GROUND_H) {
+        dot.y = H - GROUND_H - DOT_R;
+        return endGame();
+      }
+      // Collision: ceiling
+      if (dot.y - DOT_R < 0) {
+        dot.y = DOT_R;
+        dot.vy = 0;
+      }
+      // Collision: pipes
+      for (const p of pipes) {
+        if (dot.x + DOT_R > p.x && dot.x - DOT_R < p.x + PIPE_W) {
+          if (dot.y - DOT_R < p.topH || dot.y + DOT_R > p.topH + PIPE_GAP) {
+            return endGame();
+          }
+        }
+      }
+    }
+
+    function endGame() {
+      state = 'gameover';
+      CL.toast(`Game over! Score: ${score}`, score >= best && score > 0);
+    }
+
+    function drawBackground() {
+      // Gradient sky orange -> teal
+      const g = ctx.createLinearGradient(0, 0, 0, H);
+      g.addColorStop(0, '#FF6B35');
+      g.addColorStop(0.45, '#E8384F');
+      g.addColorStop(1, '#00B8A9');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, W, H);
+
+      // Soft clouds
+      ctx.fillStyle = 'rgba(255,255,255,0.12)';
+      const t = frames * 0.3;
+      for (let i = 0; i < 3; i++) {
+        const cx = ((i * 180 + 60 - t) % (W + 120)) - 60;
+        const cy = 80 + i * 70;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 22, 0, Math.PI * 2);
+        ctx.arc(cx + 22, cy + 4, 26, 0, Math.PI * 2);
+        ctx.arc(cx + 50, cy, 20, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function drawPipes() {
+      pipes.forEach(p => {
+        // Top pipe
+        const gradT = ctx.createLinearGradient(p.x, 0, p.x + PIPE_W, 0);
+        gradT.addColorStop(0, '#00857c');
+        gradT.addColorStop(0.5, '#00B8A9');
+        gradT.addColorStop(1, '#00857c');
+        ctx.fillStyle = gradT;
+        ctx.fillRect(p.x, 0, PIPE_W, p.topH);
+        // Top lip
+        ctx.fillStyle = '#00d4c4';
+        ctx.fillRect(p.x - 4, p.topH - 18, PIPE_W + 8, 18);
+
+        // Bottom pipe
+        const by = p.topH + PIPE_GAP;
+        ctx.fillStyle = gradT;
+        ctx.fillRect(p.x, by, PIPE_W, H - GROUND_H - by);
+        ctx.fillStyle = '#00d4c4';
+        ctx.fillRect(p.x - 4, by, PIPE_W + 8, 18);
+      });
+    }
+
+    function drawGround() {
+      ctx.fillStyle = '#0a0a0a';
+      ctx.fillRect(0, H - GROUND_H, W, GROUND_H);
+      // Stripes
+      ctx.fillStyle = 'rgba(255,107,53,0.4)';
+      const off = (frames * PIPE_SPEED) % 30;
+      for (let x = -30 + off; x < W; x += 30) {
+        ctx.fillRect(x, H - GROUND_H, 15, 6);
+      }
+    }
+
+    function drawDot() {
+      ctx.save();
+      ctx.translate(dot.x, dot.y);
+      ctx.rotate(dot.rot);
+      // Shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.25)';
+      ctx.beginPath(); ctx.arc(2, 3, DOT_R, 0, Math.PI * 2); ctx.fill();
+      // Body gradient
+      const g = ctx.createRadialGradient(-4, -4, 2, 0, 0, DOT_R);
+      g.addColorStop(0, '#ffae8a');
+      g.addColorStop(0.5, '#FF6B35');
+      g.addColorStop(1, '#E8384F');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(0, 0, DOT_R, 0, Math.PI * 2); ctx.fill();
+      // Eye
+      ctx.fillStyle = '#fff';
+      ctx.beginPath(); ctx.arc(5, -3, 4, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#0a0a0a';
+      ctx.beginPath(); ctx.arc(6, -3, 2, 0, Math.PI * 2); ctx.fill();
+      // Beak
+      ctx.fillStyle = '#FFB100';
+      ctx.beginPath();
+      ctx.moveTo(DOT_R - 2, 0);
+      ctx.lineTo(DOT_R + 7, 2);
+      ctx.lineTo(DOT_R - 2, 5);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawParticles() {
+      particles.forEach(pt => {
+        ctx.globalAlpha = Math.max(0, pt.life / 30);
+        ctx.fillStyle = pt.color;
+        ctx.beginPath(); ctx.arc(pt.x, pt.y, pt.r, 0, Math.PI * 2); ctx.fill();
+      });
+      ctx.globalAlpha = 1;
+    }
+
+    function drawOverlay() {
+      if (state === 'ready') {
+        ctx.fillStyle = 'rgba(0,0,0,0.45)';
+        ctx.fillRect(0, 0, W, H);
+        ctx.fillStyle = '#fff';
+        ctx.font = '700 28px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Flappy Dot', W / 2, H / 2 - 40);
+        ctx.font = '500 14px Inter, sans-serif';
+        ctx.fillStyle = 'rgba(255,255,255,0.9)';
+        ctx.fillText('Tap / Click / Space to flap', W / 2, H / 2 - 8);
+        // Pulsing prompt
+        const pulse = 0.6 + 0.4 * Math.sin(frames * 0.1);
+        ctx.globalAlpha = pulse;
+        ctx.fillStyle = '#FF6B35';
+        ctx.font = '700 16px Inter, sans-serif';
+        ctx.fillText('▶ TAP TO START', W / 2, H / 2 + 30);
+        ctx.globalAlpha = 1;
+      } else if (state === 'gameover') {
+        ctx.fillStyle = 'rgba(0,0,0,0.55)';
+        ctx.fillRect(0, 0, W, H);
+        // Panel
+        ctx.fillStyle = '#fff';
+        roundRect(ctx, W / 2 - 130, H / 2 - 100, 260, 200, 16, true);
+        ctx.fillStyle = '#E8384F';
+        ctx.font = '700 26px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Game Over', W / 2, H / 2 - 60);
+        ctx.fillStyle = '#6b7280';
+        ctx.font = '500 13px Inter, sans-serif';
+        ctx.fillText('SCORE', W / 2 - 50, H / 2 - 20);
+        ctx.fillText('BEST', W / 2 + 50, H / 2 - 20);
+        ctx.fillStyle = '#0a0a0a';
+        ctx.font = '800 30px Inter, sans-serif';
+        ctx.fillText(String(score), W / 2 - 50, H / 2 + 14);
+        ctx.fillText(String(best), W / 2 + 50, H / 2 + 14);
+        // Button hint
+        ctx.fillStyle = '#FF6B35';
+        ctx.font = '700 14px Inter, sans-serif';
+        const pulse = 0.6 + 0.4 * Math.sin(frames * 0.1);
+        ctx.globalAlpha = pulse;
+        ctx.fillText('TAP TO PLAY AGAIN', W / 2, H / 2 + 70);
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    function roundRect(ctx, x, y, w, h, r, fill) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+      if (fill) ctx.fill();
+    }
+
+    function drawScoreBig() {
+      if (state !== 'playing') return;
+      ctx.fillStyle = 'rgba(0,0,0,0.4)';
+      ctx.font = '800 48px Inter, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(String(score), W / 2 + 2, 70);
+      ctx.fillStyle = '#fff';
+      ctx.fillText(String(score), W / 2, 68);
+    }
+
+    function render() {
+      drawBackground();
+      drawPipes();
+      drawGround();
+      drawParticles();
+      drawDot();
+      drawScoreBig();
+      drawOverlay();
+    }
+
+    function loop() {
+      update();
+      render();
+      requestAnimationFrame(loop);
+    }
+
+    // ---- Input ----
+    function onInput(e) {
+      if (e && e.type === 'keydown' && e.code !== 'Space') return;
+      if (e) e.preventDefault();
+      flap();
+    }
+    canvas.addEventListener('click', onInput);
+    canvas.addEventListener('touchstart', onInput, { passive: false });
+    window.addEventListener('keydown', onInput);
+
+    document.getElementById('start-btn').addEventListener('click', () => {
+      if (state === 'playing') {
+        // restart mid-game
+        resetGame();
+        state = 'playing';
+        dot.vy = FLAP_V;
+      } else {
+        flap();
+      }
+    });
+
+    document.getElementById('reset-best-btn').addEventListener('click', () => {
+      best = 0;
+      localStorage.setItem('flappy-best', 0);
+      document.getElementById('stat-best').textContent = 0;
+      CL.toast('Best score reset.', true);
+    });
+
+    // ---- Init ----
+    state = 'ready';
+    resetGame();
+    loop();
+  })();
+  </script>
+</body>
+</html>

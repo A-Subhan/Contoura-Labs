@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resume Builder — Contoura Labs</title>
+  <meta name="description" content="Build a polished resume with 15 professional templates, live preview, optional languages/references/socials, and one-click PDF export. 100% in-browser.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 73 28 A 32 32 0 0 0 27 28' stroke='%23FF6B35' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 24 32 A 32 32 0 0 0 24 68' stroke='%23E8384F' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 27 72 A 32 32 0 0 0 73 72' stroke='%2300B8A9' stroke-width='9' fill='none' stroke-linecap='round'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: {
+        colors: {
+          brand: { orange: '#FF6B35', red: '#E8384F', teal: '#00B8A9' },
+          surface: { light: '#F8F9FA', dark: '#0A0A0A', card: '#1A1A1A', alt: '#111111' }
+        },
+        fontFamily: { sans: ['Inter', 'sans-serif'] }
+      }}
+    }
+  </script>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
+  <style>
+    /* ===== Layout ===== */
+    .rb-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1.5rem; align-items: start; }
+    @media (max-width: 1024px) { .rb-layout { grid-template-columns: 1fr; } }
+    .rb-preview-col { position: sticky; top: 5.5rem; }
+    @media (max-width: 1024px) { .rb-preview-col { position: static; } }
+
+    /* ===== Collapsible sections ===== */
+    .rb-section { border: 1px solid #f3f4f6; border-radius: 0.75rem; margin-bottom: 0.75rem; background: #fafafa; overflow: hidden; }
+    .dark .rb-section { background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.06); }
+    .rb-section > summary { list-style: none; cursor: pointer; padding: 0.75rem 1rem; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+    .rb-section > summary::-webkit-details-marker { display: none; }
+    .rb-section-title { font-size: 0.8rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--brand-orange); display: flex; align-items: center; gap: 0.5rem; }
+    .rb-section-title .chev { width: 1rem; height: 1rem; transition: transform .2s ease; color: #9ca3af; }
+    .rb-section[open] > summary .chev { transform: rotate(180deg); }
+    .rb-section-body { padding: 0 1rem 1rem 1rem; }
+    .rb-section-count { font-size: 0.7rem; font-weight: 600; color: #9ca3af; background: rgba(0,0,0,0.04); padding: 0.1rem 0.5rem; border-radius: 999px; }
+    .dark .rb-section-count { background: rgba(255,255,255,0.08); color: #9ca3af; }
+
+    /* ===== Repeatable entries ===== */
+    .rb-entry { border: 1px dashed #e5e7eb; border-radius: 0.5rem; padding: 0.75rem; margin-bottom: 0.5rem; position: relative; }
+    .dark .rb-entry { border-color: rgba(255,255,255,0.1); }
+    .rb-entry-remove {
+      position: absolute; top: 0.4rem; right: 0.4rem;
+      width: 1.5rem; height: 1.5rem; border-radius: 9999px;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(232,56,79,0.1); color: #E8384F; border: none; cursor: pointer; font-size: 0.8rem; line-height: 1;
+    }
+    .rb-entry-remove:hover { background: rgba(232,56,79,0.2); }
+    .rb-add-btn {
+      width: 100%; padding: 0.5rem; border: 1px dashed #d1d5db; border-radius: 0.5rem;
+      background: transparent; color: #6b7280; font-size: 0.8rem; font-weight: 500;
+      cursor: pointer; transition: all .2s ease; margin-top: 0.25rem;
+    }
+    .rb-add-btn:hover { border-color: var(--brand-orange); color: var(--brand-orange); }
+    .dark .rb-add-btn { color: #9ca3af; border-color: #374151; }
+    .input-sm { padding: 0.5rem 0.7rem !important; font-size: 0.8125rem !important; min-height: 0 !important; }
+
+    /* ===== Template selector ===== */
+    .tpl-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.5rem; }
+    @media (max-width: 640px) { .tpl-grid { grid-template-columns: repeat(3, 1fr); } }
+    .tpl-card { cursor: pointer; border-radius: 0.55rem; overflow: hidden; border: 2px solid #e5e7eb; transition: all .2s ease; background: #fff; position: relative; }
+    .dark .tpl-card { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.1); }
+    .tpl-card input { position: absolute; opacity: 0; pointer-events: none; }
+    .tpl-card:hover { transform: translateY(-2px); border-color: #c0c0c0; }
+    .tpl-card.sel { border-color: var(--brand-orange); box-shadow: 0 0 0 3px rgba(255,107,53,0.15); }
+    .tpl-thumb { height: 52px; display: flex; flex-direction: column; padding: 0.4rem; gap: 0.2rem; background: #f9fafb; }
+    .dark .tpl-thumb { background: rgba(255,255,255,0.05); }
+    .tpl-thumb-line { height: 4px; border-radius: 2px; background: #d1d5db; }
+    .tpl-thumb-line.accent { background: var(--accent); }
+    .tpl-thumb-line.short { width: 50%; }
+    .tpl-thumb-line.long { width: 100%; }
+    .tpl-thumb-line.med { width: 75%; }
+    .tpl-name { font-size: 0.7rem; font-weight: 600; padding: 0.35rem 0.4rem; text-align: center; color: #374151; border-top: 1px solid #f3f4f6; }
+    .dark .tpl-name { color: #d1d5db; border-top-color: rgba(255,255,255,0.06); }
+    .tpl-card.sel .tpl-name { color: var(--brand-orange); }
+    .tpl-family-label { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #9ca3af; margin: 0.6rem 0 0.35rem 0.05rem; }
+
+    /* ===== Resume preview ===== */
+    .resume-frame {
+      background: #fff; color: #1a1a1a; padding: 2.25rem 2rem;
+      font-family: 'Inter', sans-serif; line-height: 1.45; min-height: 600px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.12); border-radius: 0.5rem;
+      font-size: 0.85rem; --accent: #FF6B35;
+    }
+    .resume-frame a { color: inherit; text-decoration: none; }
+    /* Modern family */
+    .tpl-modern .r-name { font-size: 1.85rem; font-weight: 800; color: #1a1a1a; margin: 0; line-height:1.1; }
+    .tpl-modern .r-role { color: var(--accent); font-weight: 600; font-size: 0.95rem; margin-top: 0.2rem; }
+    .tpl-modern .r-contact { color: #555; font-size: 0.78rem; margin-top: 0.5rem; display: flex; flex-wrap: wrap; gap: 0.4rem 0.9rem; }
+    .tpl-modern .r-contact span::before { content: '·'; margin-right: 0.5rem; color: var(--accent); font-weight: 700; }
+    .tpl-modern .r-contact span:first-child::before { content: ''; margin: 0; }
+    .tpl-modern .r-divider { height: 3px; background: var(--accent); margin: 1rem 0; border-radius: 2px; }
+    .tpl-modern h3 { font-size: 0.78rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin: 1rem 0 0.5rem; }
+    .tpl-modern .r-summary { color: #444; font-size: 0.83rem; }
+    .tpl-modern .r-exp-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.15rem; gap: 0.5rem; }
+    .tpl-modern .r-exp-title { font-weight: 700; font-size: 0.92rem; color: #1a1a1a; }
+    .tpl-modern .r-exp-co { color: var(--accent); font-weight: 600; font-size: 0.83rem; }
+    .tpl-modern .r-exp-dates { color: #777; font-size: 0.75rem; white-space: nowrap; }
+    .tpl-modern .r-exp-desc { color: #444; font-size: 0.8rem; margin-top: 0.25rem; white-space: pre-line; }
+    .tpl-modern .r-edu-head { display: flex; justify-content: space-between; gap: 0.5rem; }
+    .tpl-modern .r-edu-degree { font-weight: 700; font-size: 0.88rem; }
+    .tpl-modern .r-edu-school { color: var(--accent); font-size: 0.8rem; }
+    .tpl-modern .r-edu-dates { color: #777; font-size: 0.75rem; white-space: nowrap; }
+    .tpl-modern .r-skills { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+    .tpl-modern .r-skill { background: color-mix(in srgb, var(--accent) 12%, white); color: var(--accent); padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.75rem; font-weight: 500; }
+    .tpl-modern .r-proj-title { font-weight: 700; font-size: 0.85rem; }
+    .tpl-modern .r-proj-desc { color: #444; font-size: 0.8rem; }
+    .tpl-modern .r-proj-link { color: var(--accent); font-size: 0.75rem; margin-left: 0.4rem; }
+    .tpl-modern .r-lang-list, .tpl-modern .r-ref-list { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem 1rem; font-size: 0.78rem; color: #444; }
+    .tpl-modern .r-lang-name { font-weight: 600; color: #1a1a1a; }
+    .tpl-modern .r-lang-prof { color: var(--accent); font-size: 0.72rem; }
+    .tpl-modern .r-ref-name { font-weight: 700; color: #1a1a1a; font-size: 0.82rem; }
+    .tpl-modern .r-ref-meta { color: #666; font-size: 0.72rem; }
+
+    /* Classic family — uses --serif font variable */
+    .tpl-classic { font-family: var(--serif, 'Georgia, serif'); }
+    .tpl-classic .r-name { font-size: 1.75rem; font-weight: 700; text-align: center; margin: 0; letter-spacing: 0.02em; }
+    .tpl-classic .r-role { text-align: center; color: #333; font-size: 0.9rem; font-style: italic; margin-top: 0.2rem; }
+    .tpl-classic .r-contact { text-align: center; color: #555; font-size: 0.75rem; margin-top: 0.4rem; }
+    .tpl-classic .r-contact span:not(:last-child)::after { content: ' | '; color: #aaa; }
+    .tpl-classic .r-divider { height: 1px; background: #1a1a1a; margin: 0.85rem 0; }
+    .tpl-classic h3 { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.15em;
+      border-bottom: 1px solid #1a1a1a; padding-bottom: 0.2rem; margin: 1rem 0 0.5rem; }
+    .tpl-classic .r-summary { color: #333; font-size: 0.83rem; text-align: justify; }
+    .tpl-classic .r-exp-head { display: flex; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.15rem; }
+    .tpl-classic .r-exp-title { font-weight: 700; font-size: 0.92rem; }
+    .tpl-classic .r-exp-co { font-style: italic; font-size: 0.83rem; color: #333; }
+    .tpl-classic .r-exp-dates { color: #555; font-size: 0.75rem; white-space: nowrap; }
+    .tpl-classic .r-exp-desc { color: #333; font-size: 0.8rem; margin-top: 0.25rem; white-space: pre-line; }
+    .tpl-classic .r-edu-degree { font-weight: 700; font-size: 0.88rem; }
+    .tpl-classic .r-edu-school { font-style: italic; font-size: 0.8rem; }
+    .tpl-classic .r-edu-dates { color: #555; font-size: 0.75rem; white-space: nowrap; }
+    .tpl-classic .r-skills { font-size: 0.8rem; color: #333; }
+    .tpl-classic .r-skill { background: transparent; padding: 0; color: #333; display: inline; }
+    .tpl-classic .r-skill:not(:last-child)::after { content: ', '; }
+    .tpl-classic .r-proj-title { font-weight: 700; font-size: 0.85rem; }
+    .tpl-classic .r-proj-desc { color: #333; font-size: 0.8rem; }
+    .tpl-classic .r-proj-link { color: #555; font-size: 0.75rem; font-style: italic; margin-left: 0.4rem; }
+    .tpl-classic .r-lang-list { font-size: 0.8rem; color: #333; }
+    .tpl-classic .r-lang-list .row { display: inline; }
+    .tpl-classic .r-lang-list .row:not(:last-child)::after { content: '  ·  '; color: #aaa; }
+    .tpl-classic .r-lang-name { font-weight: 700; }
+    .tpl-classic .r-lang-prof { font-style: italic; color: #555; }
+    .tpl-classic .r-ref-list { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem 1rem; font-size: 0.78rem; color: #333; }
+    .tpl-classic .r-ref-name { font-weight: 700; }
+    .tpl-classic .r-ref-meta { font-style: italic; color: #555; font-size: 0.72rem; }
+
+    /* Minimal family */
+    .tpl-minimal { --space: 1.25rem; }
+    .tpl-minimal .r-name { font-size: 1.85rem; font-weight: 600; letter-spacing: -0.02em; margin: 0; }
+    .tpl-minimal .r-role { color: #6b7280; font-weight: 400; font-size: 0.95rem; margin-top: 0.15rem; }
+    .tpl-minimal .r-contact { color: #6b7280; font-size: 0.78rem; margin-top: 0.6rem; }
+    .tpl-minimal .r-contact span:not(:last-child)::after { content: '  ·  '; color: #d1d5db; }
+    .tpl-minimal .r-divider { height: 1px; background: #e5e7eb; margin: var(--space) 0; }
+    .tpl-minimal h3 { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin: var(--space) 0 0.5rem; }
+    .tpl-minimal .r-summary { color: #374151; font-size: 0.85rem; }
+    .tpl-minimal .r-exp-head { display: flex; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.15rem; }
+    .tpl-minimal .r-exp-title { font-weight: 600; font-size: 0.92rem; color: #111; }
+    .tpl-minimal .r-exp-co { color: #6b7280; font-size: 0.83rem; }
+    .tpl-minimal .r-exp-dates { color: #9ca3af; font-size: 0.75rem; white-space: nowrap; }
+    .tpl-minimal .r-exp-desc { color: #374151; font-size: 0.82rem; margin-top: 0.2rem; white-space: pre-line; }
+    .tpl-minimal .r-edu-degree { font-weight: 600; font-size: 0.88rem; color: #111; }
+    .tpl-minimal .r-edu-school { color: #6b7280; font-size: 0.8rem; }
+    .tpl-minimal .r-edu-dates { color: #9ca3af; font-size: 0.75rem; white-space: nowrap; }
+    .tpl-minimal .r-skills { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .tpl-minimal .r-skill { border: 1px solid #e5e7eb; padding: 0.25rem 0.65rem; border-radius: 0.3rem; font-size: 0.75rem; color: #374151; }
+    .tpl-minimal .r-proj-title { font-weight: 600; font-size: 0.85rem; color: #111; }
+    .tpl-minimal .r-proj-desc { color: #374151; font-size: 0.82rem; }
+    .tpl-minimal .r-proj-link { color: var(--accent); font-size: 0.75rem; margin-left: 0.4rem; }
+    .tpl-minimal .r-lang-list, .tpl-minimal .r-ref-list { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem 1rem; font-size: 0.78rem; color: #374151; }
+    .tpl-minimal .r-lang-name { font-weight: 600; color: #111; }
+    .tpl-minimal .r-lang-prof { color: var(--accent); font-size: 0.72rem; }
+    .tpl-minimal .r-ref-name { font-weight: 600; color: #111; font-size: 0.82rem; }
+    .tpl-minimal .r-ref-meta { color: #6b7280; font-size: 0.72rem; }
+
+    .rb-empty { color: #9ca3af; font-style: italic; font-size: 0.85rem; }
+
+    /* ===== Email generator ===== */
+    .email-section { margin-top: 2rem; border: 1px solid #f3f4f6; border-radius: 1rem; padding: 1.5rem; background: #fafafa; }
+    .dark .email-section { background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.06); }
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 100; display: none; align-items: center; justify-content: center; padding: 1rem; }
+    .modal-backdrop.open { display: flex; }
+    .modal-card { background: #fff; color: #1a1a1a; border-radius: 1rem; max-width: 540px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 1.5rem; box-shadow: 0 24px 60px rgba(0,0,0,0.3); }
+    .dark .modal-card { background: #1A1A1A; color: #f3f4f6; }
+    .modal-close { background: none; border: none; color: #9ca3af; cursor: pointer; font-size: 1.5rem; line-height: 1; }
+  </style>
+</head>
+<body class="font-sans bg-white text-gray-900 dark:bg-surface-dark dark:text-gray-100 antialiased">
+
+  <div id="navbar-mount"></div>
+
+  <main class="tool-page">
+    <div class="tool-container" style="max-width: 80rem;">
+      <header class="tool-header">
+        <span class="badge mb-3">Career</span>
+        <h1 class="tool-title">Resume <span class="gradient-text">Builder</span></h1>
+        <p class="tool-subtitle">15 professional templates, live preview, optional languages/references/socials, PDF export, and a built-in application email generator — all in your browser.</p>
+      </header>
+
+      <!-- Top action bar -->
+      <div class="flex flex-wrap items-center justify-center gap-3 mb-6">
+        <a href="cover-letter-generator.html" class="btn-primary" style="padding: 0.7rem 1.4rem; text-decoration:none;">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
+          Create Cover Letter →
+        </a>
+      </div>
+
+      <div class="rb-layout">
+
+        <!-- ===== FORM (left) ===== -->
+        <div>
+
+          <!-- Template selector -->
+          <div class="rb-section" style="padding: 1rem 1.1rem;">
+            <div class="rb-section-title">Template</div>
+            <div id="tpl-grid" class="tpl-grid"></div>
+          </div>
+
+          <!-- Personal Info -->
+          <details class="rb-section" open>
+            <summary>
+              <span class="rb-section-title">Personal Info</span>
+              <span class="flex items-center gap-2">
+                <span class="rb-section-count" id="cnt-personal">0/8</span>
+                <svg class="chev" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+              </span>
+            </summary>
+            <div class="rb-section-body">
+              <div class="grid-2">
+                <div><label class="field-label">Full name</label><input class="input-sm" type="text" id="f-name" placeholder="Jane Doe"></div>
+                <div><label class="field-label">Job title</label><input class="input-sm" type="text" id="f-role" placeholder="Senior Frontend Engineer"></div>
+                <div><label class="field-label">Email</label><input class="input-sm" type="email" id="f-email" placeholder="jane@email.com"></div>
+                <div><label class="field-label">Phone</label><input class="input-sm" type="text" id="f-phone" placeholder="(555) 123-4567"></div>
+                <div><label class="field-label">Location</label><input class="input-sm" type="text" id="f-location" placeholder="San Francisco, CA"></div>
+                <div><label class="field-label">Website</label><input class="input-sm" type="text" id="f-website" placeholder="janedoe.dev"></div>
+                <div><label class="field-label">LinkedIn</label><input class="input-sm" type="text" id="f-linkedin" placeholder="linkedin.com/in/janedoe"></div>
+                <div><label class="field-label">GitHub</label><input class="input-sm" type="text" id="f-github" placeholder="github.com/janedoe"></div>
+              </div>
+            </div>
+          </details>
+
+          <!-- Summary -->
+          <details class="rb-section" open>
+            <summary>
+              <span class="rb-section-title">Professional Summary</span>
+              <svg class="chev" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+            </summary>
+            <div class="rb-section-body">
+              <textarea id="f-summary" class="input-sm" rows="3" placeholder="2-3 sentences describing your background, strengths, and what you're looking for."></textarea>
+            </div>
+          </details>
+
+          <!-- Work Experience -->
+          <details class="rb-section" open>
+            <summary>
+              <span class="rb-section-title">Work Experience</span>
+              <span class="flex items-center gap-2">
+                <span class="rb-section-count" id="cnt-exp">0</span>
+                <svg class="chev" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+              </span>
+            </summary>
+            <div class="rb-section-body">
+              <div id="exp-list"></div>
+              <button class="rb-add-btn" id="exp-add">+ Add work experience</button>
+            </div>
+          </details>
+
+          <!-- Education -->
+          <details class="rb-section">
+            <summary>
+              <span class="rb-section-title">Education</span>
+              <span class="flex items-center gap-2">
+                <span class="rb-section-count" id="cnt-edu">0</span>
+                <svg class="chev" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+              </span>
+            </summary>
+            <div class="rb-section-body">
+              <div id="edu-list"></div>
+              <button class="rb-add-btn" id="edu-add">+ Add education</button>
+            </div>
+          </details>
+
+          <!-- Skills (General / Technical / Soft) -->
+          <details class="rb-section" open>
+            <summary>
+              <span class="rb-section-title">Skills</span>
+              <svg class="chev" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+            </summary>
+            <div class="rb-section-body">
+              <label class="field-label">General Skills <span class="text-xs text-gray-400">(comma-separated)</span></label>
+              <input class="input-sm" type="text" id="f-skills" placeholder="Communication, Problem Solving, Project Management">
+              <label class="field-label mt-2">Technical Skills <span class="text-xs text-gray-400">(comma-separated)</span></label>
+              <input class="input-sm" type="text" id="f-techskills" placeholder="JavaScript, Python, AWS, Figma">
+              <label class="field-label mt-2">Soft Skills <span class="text-xs text-gray-400">(comma-separated)</span></label>
+              <input class="input-sm" type="text" id="f-softskills" placeholder="Leadership, Communication, Time Management">
+            </div>
+          </details>
+
+          <!-- Languages -->
+          <details class="rb-section">
+            <summary>
+              <span class="rb-section-title">Languages</span>
+              <span class="flex items-center gap-2">
+                <span class="rb-section-count" id="cnt-lang">0</span>
+                <svg class="chev" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+              </span>
+            </summary>
+            <div class="rb-section-body">
+              <div id="lang-list"></div>
+              <button class="rb-add-btn" id="lang-add">+ Add language</button>
+            </div>
+          </details>
+
+          <!-- References -->
+          <details class="rb-section">
+            <summary>
+              <span class="rb-section-title">References</span>
+              <span class="flex items-center gap-2">
+                <span class="rb-section-count" id="cnt-ref">0</span>
+                <svg class="chev" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+              </span>
+            </summary>
+            <div class="rb-section-body">
+              <div id="ref-list"></div>
+              <button class="rb-add-btn" id="ref-add">+ Add reference</button>
+            </div>
+          </details>
+
+          <!-- Socials -->
+          <details class="rb-section">
+            <summary>
+              <span class="rb-section-title">Socials</span>
+              <span class="flex items-center gap-2">
+                <span class="rb-section-count" id="cnt-social">0</span>
+                <svg class="chev" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+              </span>
+            </summary>
+            <div class="rb-section-body">
+              <div id="social-list"></div>
+              <button class="rb-add-btn" id="social-add">+ Add social profile</button>
+            </div>
+          </details>
+
+          <!-- Projects (with websites) -->
+          <details class="rb-section">
+            <summary>
+              <span class="rb-section-title">Projects</span>
+              <span class="flex items-center gap-2">
+                <span class="rb-section-count" id="cnt-proj">0</span>
+                <svg class="chev" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+              </span>
+            </summary>
+            <div class="rb-section-body">
+              <div id="proj-list"></div>
+              <button class="rb-add-btn" id="proj-add">+ Add project</button>
+            </div>
+          </details>
+
+          <!-- Actions -->
+          <div class="flex flex-wrap gap-3 mt-4">
+            <button id="download-btn" class="btn-primary" style="flex:1; padding:0.7rem 1.2rem;">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>
+              Download PDF
+            </button>
+            <button id="sample-btn" class="btn-secondary" style="padding:0.7rem 1.2rem;">Load sample</button>
+            <button id="clear-btn" class="btn-secondary" style="padding:0.7rem 1.2rem;">Clear</button>
+          </div>
+        </div>
+
+        <!-- ===== PREVIEW (right) ===== -->
+        <div class="rb-preview-col">
+          <div class="rb-section-title mb-2">Live Preview</div>
+          <div id="resume-preview" class="resume-frame tpl-modern">
+            <!-- Rendered by JS -->
+          </div>
+          <p class="text-xs text-gray-400 mt-3 text-center">Preview updates as you type. PDF export preserves the selected template's styling.</p>
+        </div>
+      </div>
+
+      <!-- ===== Email Generator ===== -->
+      <div class="email-section">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-2">
+          <div>
+            <h2 class="text-xl font-bold">Generate Application Email</h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Turn your resume into a ready-to-send application email in one click.</p>
+          </div>
+          <button id="open-email-modal" class="btn-primary" style="padding:0.7rem 1.3rem;">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
+            Compose Email
+          </button>
+        </div>
+        <div id="email-result" class="hidden mt-4">
+          <textarea id="email-output" rows="14" class="input-sm" style="font-family: 'Sarasa Mono SC', 'JetBrains Mono', monospace; min-height: 280px;" placeholder="Your generated application email will appear here."></textarea>
+          <div class="flex flex-wrap gap-2 mt-3">
+            <button id="email-copy" class="btn-primary" style="padding:0.6rem 1.1rem;">Copy to Clipboard</button>
+            <button id="email-download" class="btn-secondary" style="padding:0.6rem 1.1rem;">Download as .txt</button>
+            <button id="email-clear" class="btn-secondary" style="padding:0.6rem 1.1rem;">Clear</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ===== Email Modal ===== -->
+  <div class="modal-backdrop" id="email-modal">
+    <div class="modal-card">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-bold">Compose Application Email</h3>
+        <button class="modal-close" id="email-modal-close" aria-label="Close">×</button>
+      </div>
+      <div class="grid-2">
+        <div><label class="field-label">Sender name</label><input class="input-sm" type="text" id="em-sender-name" placeholder="Jane Doe"></div>
+        <div><label class="field-label">Sender email</label><input class="input-sm" type="email" id="em-sender-email" placeholder="jane@email.com"></div>
+        <div><label class="field-label">Receiver name</label><input class="input-sm" type="text" id="em-receiver-name" placeholder="Hiring Manager"></div>
+        <div><label class="field-label">Receiver email</label><input class="input-sm" type="email" id="em-receiver-email" placeholder="hiring@company.com"></div>
+        <div><label class="field-label">Company name</label><input class="input-sm" type="text" id="em-company" placeholder="Acme Corp"></div>
+        <div><label class="field-label">Job title</label><input class="input-sm" type="text" id="em-jobtitle" placeholder="Senior Frontend Engineer"></div>
+      </div>
+      <label class="field-label mt-2">Include cover letter reference? <span class="text-xs text-gray-400">(attached separately)</span></label>
+      <select id="em-mention-cover" class="input-sm">
+        <option value="yes" selected>Yes — mention a separate cover letter</option>
+        <option value="no">No — resume only</option>
+      </select>
+      <button id="em-generate" class="btn-primary w-full mt-4" style="padding:0.7rem 1.2rem;">Generate Email</button>
+    </div>
+  </div>
+
+  <footer class="py-8 border-t border-gray-100 dark:border-white/5 mt-12">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p class="text-xs text-gray-400">© 2025 Contoura Labs</p>
+      <a href="index.html" class="text-xs text-brand-orange hover:text-brand-red transition-colors">← Back to all tools</a>
+    </div>
+  </footer>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+  (function () {
+    'use strict';
+
+    const $ = (id) => document.getElementById(id);
+    const PREVIEW = $('resume-preview');
+
+    // ===== Templates (15 total) =====
+    const TEMPLATES = {
+      // Modern — accent color varies
+      'M1': { family: 'modern', name: 'Aurora', accent: '#FF6B35' },
+      'M2': { family: 'modern', name: 'Sunset', accent: '#E8384F' },
+      'M3': { family: 'modern', name: 'Ocean',  accent: '#00B8A9' },
+      'M4': { family: 'modern', name: 'Forest', accent: '#2D7D5A' },
+      'M5': { family: 'modern', name: 'Royal',  accent: '#6B46C1' },
+      // Classic — serif font varies
+      'C1': { family: 'classic', name: 'Serif',   serif: 'Georgia, serif' },
+      'C2': { family: 'classic', name: 'Times',   serif: '"Times New Roman", Times, serif' },
+      'C3': { family: 'classic', name: 'Georgia', serif: 'Georgia, "Times New Roman", serif' },
+      'C4': { family: 'classic', name: 'Elegant', serif: '"Palatino Linotype", "Book Antiqua", Palatino, serif' },
+      'C5': { family: 'classic', name: 'Formal',  serif: '"Cambria", "Hoefler Text", serif' },
+      // Minimal — accent + spacing varies
+      'P1': { family: 'minimal', name: 'Clean', accent: '#1a1a1a', space: '1rem' },
+      'P2': { family: 'minimal', name: 'Air',   accent: '#FF6B35', space: '1.75rem' },
+      'P3': { family: 'minimal', name: 'Lite',  accent: '#00B8A9', space: '0.85rem' },
+      'P4': { family: 'minimal', name: 'Crisp', accent: '#E8384F', space: '1.25rem' },
+      'P5': { family: 'minimal', name: 'Pure',  accent: '#6b7280', space: '1.5rem' }
+    };
+
+    // ===== State =====
+    const state = {
+      template: 'M1',
+      name: '', role: '', email: '', phone: '', location: '', website: '',
+      linkedin: '', github: '',
+      summary: '',
+      experience: [], education: [], projects: [],
+      skills: '', techskills: '', softskills: '',
+      languages: [], references: [], socials: []
+    };
+
+    const SAMPLE = {
+      template: 'M1',
+      name: 'Jane Doe', role: 'Senior Frontend Engineer',
+      email: 'jane.doe@email.com', phone: '(415) 555-0182',
+      location: 'San Francisco, CA', website: 'janedoe.dev',
+      linkedin: 'linkedin.com/in/janedoe', github: 'github.com/janedoe',
+      summary: 'Frontend engineer with 7+ years building accessible, performant web apps at scale. Specialize in React, design systems, and developer tooling. Passionate about mentoring and shipping polished UX.',
+      experience: [
+        { title: 'Senior Frontend Engineer', company: 'Acme Corp', dates: '2021 — Present',
+          description: 'Led migration of legacy Angular app to React + TypeScript, reducing bundle size by 38%.\nMentored 4 junior engineers; established frontend code-review standards.\nShipped a design system adopted by 6 product teams.' },
+        { title: 'Frontend Engineer', company: 'Startup XYZ', dates: '2018 — 2021',
+          description: 'Built customer-facing dashboard used by 50k+ daily active users.\nImproved Lighthouse performance score from 62 to 96.' }
+      ],
+      education: [
+        { degree: 'B.S. in Computer Science', school: 'UC Berkeley', dates: '2014 — 2018' }
+      ],
+      skills: 'Communication, Problem Solving, Project Management, Mentoring',
+      techskills: 'JavaScript, TypeScript, React, Next.js, Node.js, GraphQL, Tailwind CSS, Figma, AWS, Jest',
+      softskills: 'Leadership, Collaboration, Time Management, Adaptability',
+      languages: [
+        { name: 'English', proficiency: 'Native' },
+        { name: 'Spanish', proficiency: 'Fluent' },
+        { name: 'French',  proficiency: 'Intermediate' }
+      ],
+      references: [
+        { name: 'Alex Rivera', title: 'VP Engineering', company: 'Acme Corp', email: 'alex@acme.com', phone: '(415) 555-0190' }
+      ],
+      socials: [
+        { platform: 'Twitter',  url: 'twitter.com/janedoe' },
+        { platform: 'Dribbble', url: 'dribbble.com/janedoe' }
+      ],
+      projects: [
+        { title: 'OpenChart', url: 'github.com/janedoe/openchart', description: 'Open-source charting library with 2.3k GitHub stars. Tree-shakeable, 12kb gzipped.' }
+      ]
+    };
+
+    // ===== Helpers =====
+    function escapeHtml(s) { if (!s) return ''; return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c])); }
+    function splitCsv(s) { return (s || '').split(',').map(x => x.trim()).filter(Boolean); }
+    function listToText(arr, max) { if (!arr.length) return ''; const slice = max ? arr.slice(0, max) : arr; if (slice.length === 1) return slice[0]; if (slice.length === 2) return slice[0] + ' and ' + slice[1]; return slice.slice(0, -1).join(', ') + ', and ' + slice[slice.length - 1]; }
+
+    // ===== Render template grid =====
+    function renderTemplateGrid() {
+      const grid = $('tpl-grid');
+      const families = [
+        { label: 'Modern', keys: ['M1','M2','M3','M4','M5'] },
+        { label: 'Classic', keys: ['C1','C2','C3','C4','C5'] },
+        { label: 'Minimal', keys: ['P1','P2','P3','P4','P5'] }
+      ];
+      let html = '';
+      families.forEach(fam => {
+        html += `<div class="tpl-family-label">${fam.label}</div>`;
+        fam.keys.forEach(key => {
+          const t = TEMPLATES[key];
+          const accent = t.accent || '#1a1a1a';
+          html += `
+            <label class="tpl-card ${state.template === key ? 'sel' : ''}" data-key="${key}" style="--accent:${accent}">
+              <input type="radio" name="tpl" value="${key}" ${state.template === key ? 'checked' : ''}>
+              <div class="tpl-thumb">
+                <div class="tpl-thumb-line short accent"></div>
+                <div class="tpl-thumb-line long"></div>
+                <div class="tpl-thumb-line med"></div>
+                <div class="tpl-thumb-line long"></div>
+              </div>
+              <div class="tpl-name">${key} · ${t.name}</div>
+            </label>`;
+        });
+      });
+      grid.innerHTML = html;
+      grid.querySelectorAll('.tpl-card').forEach(card => {
+        card.addEventListener('click', () => {
+          state.template = card.dataset.key;
+          grid.querySelectorAll('.tpl-card').forEach(c => c.classList.toggle('sel', c === card));
+          renderPreview();
+        });
+      });
+    }
+
+    // ===== Repeatable entries =====
+    function makeRemoveBtn(handler) {
+      const b = document.createElement('button');
+      b.className = 'rb-entry-remove'; b.type = 'button'; b.innerHTML = '×';
+      b.setAttribute('aria-label', 'Remove');
+      b.addEventListener('click', handler);
+      return b;
+    }
+
+    function addExperience(data = {}) {
+      const idx = state.experience.length;
+      state.experience.push({ title: data.title || '', company: data.company || '', dates: data.dates || '', description: data.description || '' });
+      renderExpList(); renderPreview();
+    }
+    function renderExpList() {
+      const list = $('exp-list'); list.innerHTML = '';
+      state.experience.forEach((exp, i) => {
+        const div = document.createElement('div'); div.className = 'rb-entry';
+        div.innerHTML = `
+          <div class="grid-2">
+            <input class="input-sm" data-f="title" placeholder="Job title" value="${escapeHtml(exp.title)}">
+            <input class="input-sm" data-f="company" placeholder="Company" value="${escapeHtml(exp.company)}">
+          </div>
+          <input class="input-sm mt-2" data-f="dates" placeholder="Dates (e.g. 2021 — Present)" value="${escapeHtml(exp.dates)}">
+          <textarea class="input-sm mt-2" data-f="description" rows="2" placeholder="Bullet-point achievements (one per line)">${escapeHtml(exp.description)}</textarea>`;
+        div.appendChild(makeRemoveBtn(() => { state.experience.splice(i, 1); renderExpList(); renderPreview(); }));
+        div.querySelectorAll('[data-f]').forEach(el => el.addEventListener('input', (e) => { state.experience[i][e.target.dataset.f] = e.target.value; renderPreview(); }));
+        list.appendChild(div);
+      });
+      $('cnt-exp').textContent = state.experience.length;
+    }
+
+    function addEducation(data = {}) {
+      state.education.push({ degree: data.degree || '', school: data.school || '', dates: data.dates || '' });
+      renderEduList(); renderPreview();
+    }
+    function renderEduList() {
+      const list = $('edu-list'); list.innerHTML = '';
+      state.education.forEach((edu, i) => {
+        const div = document.createElement('div'); div.className = 'rb-entry';
+        div.innerHTML = `
+          <div class="grid-2">
+            <input class="input-sm" data-f="degree" placeholder="Degree" value="${escapeHtml(edu.degree)}">
+            <input class="input-sm" data-f="school" placeholder="School" value="${escapeHtml(edu.school)}">
+          </div>
+          <input class="input-sm mt-2" data-f="dates" placeholder="Dates" value="${escapeHtml(edu.dates)}">`;
+        div.appendChild(makeRemoveBtn(() => { state.education.splice(i, 1); renderEduList(); renderPreview(); }));
+        div.querySelectorAll('[data-f]').forEach(el => el.addEventListener('input', (e) => { state.education[i][e.target.dataset.f] = e.target.value; renderPreview(); }));
+        list.appendChild(div);
+      });
+      $('cnt-edu').textContent = state.education.length;
+    }
+
+    function addProject(data = {}) {
+      state.projects.push({ title: data.title || '', url: data.url || '', description: data.description || '' });
+      renderProjList(); renderPreview();
+    }
+    function renderProjList() {
+      const list = $('proj-list'); list.innerHTML = '';
+      state.projects.forEach((p, i) => {
+        const div = document.createElement('div'); div.className = 'rb-entry';
+        div.innerHTML = `
+          <input class="input-sm" data-f="title" placeholder="Project name" value="${escapeHtml(p.title)}">
+          <input class="input-sm mt-2" data-f="url" placeholder="Project URL (e.g. github.com/you/project)" value="${escapeHtml(p.url)}">
+          <textarea class="input-sm mt-2" data-f="description" rows="2" placeholder="Short description">${escapeHtml(p.description)}</textarea>`;
+        div.appendChild(makeRemoveBtn(() => { state.projects.splice(i, 1); renderProjList(); renderPreview(); }));
+        div.querySelectorAll('[data-f]').forEach(el => el.addEventListener('input', (e) => { state.projects[i][e.target.dataset.f] = e.target.value; renderPreview(); }));
+        list.appendChild(div);
+      });
+      $('cnt-proj').textContent = state.projects.length;
+    }
+
+    function addLanguage(data = {}) {
+      state.languages.push({ name: data.name || '', proficiency: data.proficiency || 'Intermediate' });
+      renderLangList(); renderPreview();
+    }
+    function renderLangList() {
+      const list = $('lang-list'); list.innerHTML = '';
+      state.languages.forEach((l, i) => {
+        const div = document.createElement('div'); div.className = 'rb-entry';
+        div.innerHTML = `
+          <div class="grid-2">
+            <input class="input-sm" data-f="name" placeholder="Language (e.g. Spanish)" value="${escapeHtml(l.name)}">
+            <select class="input-sm" data-f="proficiency">
+              ${['Basic','Intermediate','Fluent','Native'].map(o => `<option ${l.proficiency === o ? 'selected' : ''}>${o}</option>`).join('')}
+            </select>
+          </div>`;
+        div.appendChild(makeRemoveBtn(() => { state.languages.splice(i, 1); renderLangList(); renderPreview(); }));
+        div.querySelectorAll('[data-f]').forEach(el => el.addEventListener('input', (e) => { state.languages[i][e.target.dataset.f] = e.target.value; renderPreview(); }));
+        list.appendChild(div);
+      });
+      $('cnt-lang').textContent = state.languages.length;
+    }
+
+    function addReference(data = {}) {
+      state.references.push({ name: data.name || '', title: data.title || '', company: data.company || '', email: data.email || '', phone: data.phone || '' });
+      renderRefList(); renderPreview();
+    }
+    function renderRefList() {
+      const list = $('ref-list'); list.innerHTML = '';
+      state.references.forEach((r, i) => {
+        const div = document.createElement('div'); div.className = 'rb-entry';
+        div.innerHTML = `
+          <div class="grid-2">
+            <input class="input-sm" data-f="name" placeholder="Name" value="${escapeHtml(r.name)}">
+            <input class="input-sm" data-f="title" placeholder="Title (e.g. VP Engineering)" value="${escapeHtml(r.title)}">
+            <input class="input-sm" data-f="company" placeholder="Company" value="${escapeHtml(r.company)}">
+            <input class="input-sm" data-f="email" placeholder="Email" value="${escapeHtml(r.email)}">
+          </div>
+          <input class="input-sm mt-2" data-f="phone" placeholder="Phone" value="${escapeHtml(r.phone)}">`;
+        div.appendChild(makeRemoveBtn(() => { state.references.splice(i, 1); renderRefList(); renderPreview(); }));
+        div.querySelectorAll('[data-f]').forEach(el => el.addEventListener('input', (e) => { state.references[i][e.target.dataset.f] = e.target.value; renderPreview(); }));
+        list.appendChild(div);
+      });
+      $('cnt-ref').textContent = state.references.length;
+    }
+
+    function addSocial(data = {}) {
+      state.socials.push({ platform: data.platform || '', url: data.url || '' });
+      renderSocialList(); renderPreview();
+    }
+    function renderSocialList() {
+      const list = $('social-list'); list.innerHTML = '';
+      state.socials.forEach((s, i) => {
+        const div = document.createElement('div'); div.className = 'rb-entry';
+        div.innerHTML = `
+          <div class="grid-2">
+            <input class="input-sm" data-f="platform" placeholder="Platform (e.g. Twitter, Dribbble)" value="${escapeHtml(s.platform)}">
+            <input class="input-sm" data-f="url" placeholder="URL" value="${escapeHtml(s.url)}">
+          </div>`;
+        div.appendChild(makeRemoveBtn(() => { state.socials.splice(i, 1); renderSocialList(); renderPreview(); }));
+        div.querySelectorAll('[data-f]').forEach(el => el.addEventListener('input', (e) => { state.socials[i][e.target.dataset.f] = e.target.value; renderPreview(); }));
+        list.appendChild(div);
+      });
+      $('cnt-social').textContent = state.socials.length;
+    }
+
+    // ===== Render preview =====
+    function applyTemplateClass() {
+      const t = TEMPLATES[state.template];
+      PREVIEW.className = 'resume-frame tpl-' + t.family;
+      PREVIEW.style.setProperty('--accent', t.accent || '#FF6B35');
+      PREVIEW.style.setProperty('--serif', t.serif || 'Georgia, serif');
+      PREVIEW.style.setProperty('--space', t.space || '1.25rem');
+    }
+
+    function renderPreview() {
+      applyTemplateClass();
+      const t = TEMPLATES[state.template];
+      const skillsArr = splitCsv(state.skills);
+      const techArr = splitCsv(state.techskills);
+      const softArr = splitCsv(state.softskills);
+      const allSkills = [...techArr, ...skillsArr, ...softArr];
+      const isClassic = t.family === 'classic';
+
+      // Contact line
+      const contactParts = [];
+      if (state.email) contactParts.push(state.email);
+      if (state.phone) contactParts.push(state.phone);
+      if (state.location) contactParts.push(state.location);
+      if (state.website) contactParts.push(state.website);
+      if (state.linkedin) contactParts.push(state.linkedin);
+      if (state.github) contactParts.push(state.github);
+      state.socials.forEach(s => { if (s.platform && s.url) contactParts.push(`${s.platform}: ${s.url}`); });
+      const contactHtml = contactParts.length
+        ? `<div class="r-contact">${contactParts.map(p => `<span>${escapeHtml(p)}</span>`).join('')}</div>`
+        : '';
+
+      // Summary
+      const summaryHtml = state.summary ? `<h3>Summary</h3><div class="r-summary">${escapeHtml(state.summary)}</div>` : '';
+
+      // Experience
+      const expHtml = state.experience.length ? `<h3>Experience</h3>` + state.experience.map(e => `
+        <div class="r-exp">
+          <div class="r-exp-head">
+            <span><span class="r-exp-title">${escapeHtml(e.title)}</span> · <span class="r-exp-co">${escapeHtml(e.company)}</span></span>
+            <span class="r-exp-dates">${escapeHtml(e.dates)}</span>
+          </div>
+          <div class="r-exp-desc">${escapeHtml(e.description)}</div>
+        </div>`).join('') : '';
+
+      // Education
+      const eduHtml = state.education.length ? `<h3>Education</h3>` + state.education.map(e => `
+        <div class="r-edu">
+          <div class="r-edu-head">
+            <span><span class="r-edu-degree">${escapeHtml(e.degree)}</span> — <span class="r-edu-school">${escapeHtml(e.school)}</span></span>
+            <span class="r-edu-dates">${escapeHtml(e.dates)}</span>
+          </div>
+        </div>`).join('') : '';
+
+      // Skills
+      let skillsHtml = '';
+      if (allSkills.length) {
+        skillsHtml = `<h3>Skills</h3><div class="r-skills">` + allSkills.map(s => isClassic
+          ? `<span class="r-skill">${escapeHtml(s)}</span>`
+          : `<span class="r-skill">${escapeHtml(s)}</span>`).join('') + `</div>`;
+      }
+
+      // Languages
+      let langHtml = '';
+      if (state.languages.filter(l => l.name).length) {
+        const langs = state.languages.filter(l => l.name);
+        langHtml = `<h3>Languages</h3><div class="r-lang-list">` + (isClassic
+          ? langs.map(l => `<span class="row"><span class="r-lang-name">${escapeHtml(l.name)}</span> <span class="r-lang-prof">(${escapeHtml(l.proficiency)})</span></span>`).join('')
+          : langs.map(l => `<div><span class="r-lang-name">${escapeHtml(l.name)}</span><div class="r-lang-prof">${escapeHtml(l.proficiency)}</div></div>`).join('')) + `</div>`;
+      }
+
+      // References
+      let refHtml = '';
+      if (state.references.filter(r => r.name).length) {
+        const refs = state.references.filter(r => r.name);
+        refHtml = `<h3>References</h3><div class="r-ref-list">` + refs.map(r => `
+          <div>
+            <div class="r-ref-name">${escapeHtml(r.name)}</div>
+            <div class="r-ref-meta">${escapeHtml([r.title, r.company].filter(Boolean).join(', '))}</div>
+            <div class="r-ref-meta">${escapeHtml([r.email, r.phone].filter(Boolean).join(' · '))}</div>
+          </div>`).join('') + `</div>`;
+      }
+
+      // Projects
+      let projHtml = '';
+      if (state.projects.filter(p => p.title).length) {
+        projHtml = `<h3>Projects</h3>` + state.projects.filter(p => p.title).map(p => `
+          <div class="r-proj" style="margin-bottom:0.5rem;">
+            <span class="r-proj-title">${escapeHtml(p.title)}</span>${p.url ? `<span class="r-proj-link">${escapeHtml(p.url)}</span>` : ''}
+            <div class="r-proj-desc">${escapeHtml(p.description)}</div>
+          </div>`).join('');
+      }
+
+      const name = state.name || 'Your Name';
+      const role = state.role || 'Your Job Title';
+
+      PREVIEW.innerHTML = `
+        <div class="r-header">
+          <h1 class="r-name">${escapeHtml(name)}</h1>
+          <div class="r-role">${escapeHtml(role)}</div>
+          ${contactHtml}
+        </div>
+        <div class="r-divider"></div>
+        ${summaryHtml}
+        ${expHtml}
+        ${eduHtml}
+        ${skillsHtml}
+        ${langHtml}
+        ${projHtml}
+        ${refHtml}
+        ${(!state.summary && !state.experience.length && !state.education.length && !allSkills.length) ? '<p class="rb-empty">Start filling out the form on the left to see your resume here.</p>' : ''}
+      `;
+
+      // Update personal count
+      const personalCount = [state.name, state.role, state.email, state.phone, state.location, state.website, state.linkedin, state.github].filter(Boolean).length;
+      $('cnt-personal').textContent = personalCount + '/8';
+    }
+
+    // ===== Bind simple inputs =====
+    function bindSimple(id, key) {
+      const el = $(id);
+      el.addEventListener('input', () => { state[key] = el.value; renderPreview(); });
+    }
+    bindSimple('f-name', 'name'); bindSimple('f-role', 'role'); bindSimple('f-email', 'email');
+    bindSimple('f-phone', 'phone'); bindSimple('f-location', 'location'); bindSimple('f-website', 'website');
+    bindSimple('f-linkedin', 'linkedin'); bindSimple('f-github', 'github');
+    bindSimple('f-summary', 'summary'); bindSimple('f-skills', 'skills');
+    bindSimple('f-techskills', 'techskills'); bindSimple('f-softskills', 'softskills');
+
+    // ===== Add buttons =====
+    $('exp-add').addEventListener('click', () => addExperience());
+    $('edu-add').addEventListener('click', () => addEducation());
+    $('proj-add').addEventListener('click', () => addProject());
+    $('lang-add').addEventListener('click', () => addLanguage());
+    $('ref-add').addEventListener('click', () => addReference());
+    $('social-add').addEventListener('click', () => addSocial());
+
+    // ===== PDF download =====
+    $('download-btn').addEventListener('click', () => {
+      const filename = (state.name || 'resume').toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-resume.pdf';
+      const opt = {
+        margin: 0,
+        filename: filename,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+        jsPDF: { unit: 'pt', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+      };
+      CL.toast('Generating PDF…');
+      html2pdf().set(opt).from(PREVIEW).save().then(() => {
+        CL.toast('PDF downloaded');
+      }).catch(err => { console.error(err); CL.toast('PDF generation failed', false); });
+    });
+
+    // ===== Sample / Clear =====
+    $('sample-btn').addEventListener('click', () => loadSample());
+    $('clear-btn').addEventListener('click', () => clearAll());
+
+    function loadSample() {
+      Object.assign(state, JSON.parse(JSON.stringify(SAMPLE)));
+      // Sync simple inputs
+      $('f-name').value = state.name; $('f-role').value = state.role;
+      $('f-email').value = state.email; $('f-phone').value = state.phone;
+      $('f-location').value = state.location; $('f-website').value = state.website;
+      $('f-linkedin').value = state.linkedin; $('f-github').value = state.github;
+      $('f-summary').value = state.summary; $('f-skills').value = state.skills;
+      $('f-techskills').value = state.techskills; $('f-softskills').value = state.softskills;
+      renderExpList(); renderEduList(); renderProjList(); renderLangList(); renderRefList(); renderSocialList();
+      renderTemplateGrid(); renderPreview();
+      CL.toast('Sample data loaded');
+    }
+
+    function clearAll() {
+      Object.assign(state, { template: 'M1', name: '', role: '', email: '', phone: '', location: '', website: '', linkedin: '', github: '', summary: '', experience: [], education: [], projects: [], skills: '', techskills: '', softskills: '', languages: [], references: [], socials: [] });
+      ['f-name','f-role','f-email','f-phone','f-location','f-website','f-linkedin','f-github','f-summary','f-skills','f-techskills','f-softskills'].forEach(id => $(id).value = '');
+      renderExpList(); renderEduList(); renderProjList(); renderLangList(); renderRefList(); renderSocialList();
+      renderTemplateGrid(); renderPreview();
+      CL.toast('Form cleared');
+    }
+
+    // ===== Email Generator =====
+    const modal = $('email-modal');
+    $('open-email-modal').addEventListener('click', () => {
+      // Auto-fill from resume state
+      $('em-sender-name').value = state.name || '';
+      $('em-sender-email').value = state.email || '';
+      $('em-company').value = (state.experience[0] && state.experience[0].company) || '';
+      $('em-jobtitle').value = state.role || '';
+      modal.classList.add('open');
+    });
+    $('email-modal-close').addEventListener('click', () => modal.classList.remove('open'));
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('open'); });
+
+    $('em-generate').addEventListener('click', () => {
+      const senderName = $('em-sender-name').value.trim() || 'Your Name';
+      const senderEmail = $('em-sender-email').value.trim() || 'your@email.com';
+      const receiverName = $('em-receiver-name').value.trim() || 'Hiring Manager';
+      const receiverEmail = $('em-receiver-email').value.trim() || 'hiring@company.com';
+      const company = $('em-company').value.trim() || 'your company';
+      const jobtitle = $('em-jobtitle').value.trim() || 'the open position';
+      const mentionCover = $('em-mention-cover').value === 'yes';
+
+      const techArr = splitCsv(state.techskills);
+      const skillArr = splitCsv(state.skills);
+      const softArr = splitCsv(state.softskills);
+      const topSkills = listToText([...techArr.slice(0,5), ...skillArr.slice(0,3)], 6);
+      const yearsHint = state.experience.length ? `across ${state.experience.length} role${state.experience.length === 1 ? '' : 's'}` : 'in the field';
+      const topExp = state.experience[0];
+      const expLine = topExp ? `Most recently as ${topExp.title} at ${topExp.company}${topExp.dates ? ` (${topExp.dates})` : ''}` : 'with relevant industry experience';
+      const projLine = state.projects[0] ? ` Notable project: ${state.projects[0].title}${state.projects[0].description ? ' — ' + state.projects[0].description.split('.')[0] + '.' : ''}` : '';
+
+      const subject = `Application: ${jobtitle} — ${senderName}`;
+      const coverLine = mentionCover ? `I have also attached a cover letter that walks through my motivation for joining ${company} in more detail. ` : '';
+
+      const body = `Dear ${receiverName},
+
+I am writing to apply for the ${jobtitle} position at ${company}. Please find my resume attached for your review.
+
+${expLine}${projLine} My core strengths include ${topSkills || 'relevant technical and soft skills'}, and I would welcome the chance to bring this experience to your team.
+
+${coverLine}The resume summarizes my background${yearsHint ? ' ' + yearsHint : ''}, education, and key projects. I would be delighted to discuss how I can contribute to ${company}'s goals and am available for an interview at your convenience.
+
+Thank you for your time and consideration — I look forward to hearing from you.
+
+Sincerely,
+${senderName}
+${senderEmail}`;
+
+      const fullEmail = `To: ${receiverEmail}\nSubject: ${subject}\n\n${body}`;
+      $('email-output').value = fullEmail;
+      $('email-result').classList.remove('hidden');
+      modal.classList.remove('open');
+      $('email-result').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      CL.toast('Application email generated');
+    });
+
+    $('email-copy').addEventListener('click', async () => {
+      const txt = $('email-output').value;
+      if (!txt) { CL.toast('Nothing to copy yet', false); return; }
+      try { await navigator.clipboard.writeText(txt); CL.toast('Copied to clipboard'); }
+      catch (e) { const ta = $('email-output'); ta.select(); document.execCommand('copy'); CL.toast('Copied to clipboard'); }
+    });
+    $('email-download').addEventListener('click', () => {
+      const txt = $('email-output').value;
+      if (!txt) { CL.toast('Nothing to download yet', false); return; }
+      const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+      const name = (state.name || 'application-email').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      CL.download(blob, name + '-email.txt');
+      CL.toast('Email .txt downloaded');
+    });
+    $('email-clear').addEventListener('click', () => {
+      $('email-output').value = '';
+      $('email-result').classList.add('hidden');
+      CL.toast('Email cleared');
+    });
+
+    // ===== Init =====
+    renderTemplateGrid();
+    renderPreview();
+  })();
+  </script>
+</body>
+</html>

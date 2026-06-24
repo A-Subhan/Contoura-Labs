@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Age Calculator — Contoura Labs</title>
+  <meta name="description" content="Calculate exact age in years, months, days plus total time lived and next birthday countdown.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 73 28 A 32 32 0 0 0 27 28' stroke='%23FF6B35' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 24 32 A 32 32 0 0 0 24 68' stroke='%23E8384F' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 27 72 A 32 32 0 0 0 73 72' stroke='%2300B8A9' stroke-width='9' fill='none' stroke-linecap='round'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: {
+        colors: {
+          brand: { orange: '#FF6B35', red: '#E8384F', teal: '#00B8A9' },
+          surface: { light: '#F8F9FA', dark: '#0A0A0A', card: '#1A1A1A', alt: '#111111' }
+        },
+        fontFamily: { sans: ['Inter', 'sans-serif'] }
+      }}
+    }
+  </script>
+  <link rel="stylesheet" href="../assets/css/common.css">
+</head>
+<body class="font-sans bg-white text-gray-900 dark:bg-surface-dark dark:text-gray-100 antialiased">
+
+  <div id="navbar-mount"></div>
+
+  <main class="tool-page">
+    <div class="tool-container">
+      <header class="tool-header">
+        <span class="badge mb-3">Calculators</span>
+        <h1 class="tool-title">Age <span class="gradient-text">Calculator</span></h1>
+        <p class="tool-subtitle">Find your exact age in years, months, and days — plus total time lived and a countdown to your next birthday.</p>
+      </header>
+
+      <div class="tool-card">
+        <div class="grid-2 mb-4">
+          <div>
+            <label class="field-label" for="dob">Date of birth</label>
+            <input type="date" id="dob">
+          </div>
+          <div>
+            <label class="field-label" for="at-date">Age at date</label>
+            <input type="date" id="at-date">
+          </div>
+        </div>
+
+        <div class="flex flex-wrap gap-3">
+          <button class="btn-primary" id="calc-btn">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m-6 4h6m-6 4h4m-7 5h12a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+            Calculate age
+          </button>
+          <button class="btn-secondary" id="reset-btn">Reset</button>
+        </div>
+
+        <!-- Result -->
+        <div id="result" class="mt-6 hidden">
+          <!-- Hero age -->
+          <div class="rounded-xl p-6 text-center mb-5" style="background: linear-gradient(135deg, rgba(255,107,53,0.08), rgba(232,56,79,0.06), rgba(0,184,169,0.08)); border:1px solid rgba(255,107,53,0.15);">
+            <p class="text-xs font-semibold tracking-widest text-gray-400 uppercase mb-2">Your age is</p>
+            <p id="hero-age" class="text-3xl sm:text-4xl font-bold gradient-text">—</p>
+          </div>
+
+          <!-- Stat grid -->
+          <div class="grid-3 mb-5">
+            <div class="text-center p-4 rounded-lg bg-gray-50 dark:bg-white/5">
+              <div id="stat-months" class="text-xl font-bold text-brand-orange">—</div>
+              <div class="text-xs text-gray-400 mt-1">Months</div>
+            </div>
+            <div class="text-center p-4 rounded-lg bg-gray-50 dark:bg-white/5">
+              <div id="stat-weeks" class="text-xl font-bold text-brand-red">—</div>
+              <div class="text-xs text-gray-400 mt-1">Weeks</div>
+            </div>
+            <div class="text-center p-4 rounded-lg bg-gray-50 dark:bg-white/5">
+              <div id="stat-days" class="text-xl font-bold text-brand-teal">—</div>
+              <div class="text-xs text-gray-400 mt-1">Days</div>
+            </div>
+          </div>
+
+          <!-- Detailed breakdown -->
+          <div class="space-y-2 text-sm">
+            <div class="flex justify-between items-center p-3 rounded-lg bg-gray-50 dark:bg-white/5">
+              <span class="text-gray-500 dark:text-gray-400">Total months</span>
+              <span id="d-months" class="font-semibold">—</span>
+            </div>
+            <div class="flex justify-between items-center p-3 rounded-lg bg-gray-50 dark:bg-white/5">
+              <span class="text-gray-500 dark:text-gray-400">Total weeks</span>
+              <span id="d-weeks" class="font-semibold">—</span>
+            </div>
+            <div class="flex justify-between items-center p-3 rounded-lg bg-gray-50 dark:bg-white/5">
+              <span class="text-gray-500 dark:text-gray-400">Total days</span>
+              <span id="d-days" class="font-semibold">—</span>
+            </div>
+            <div class="flex justify-between items-center p-3 rounded-lg bg-gray-50 dark:bg-white/5">
+              <span class="text-gray-500 dark:text-gray-400">Total hours</span>
+              <span id="d-hours" class="font-semibold">—</span>
+            </div>
+            <div class="flex justify-between items-center p-3 rounded-lg bg-gray-50 dark:bg-white/5">
+              <span class="text-gray-500 dark:text-gray-400">Total minutes</span>
+              <span id="d-mins" class="font-semibold">—</span>
+            </div>
+            <div class="flex justify-between items-center p-3 rounded-lg bg-gray-50 dark:bg-white/5">
+              <span class="text-gray-500 dark:text-gray-400">Day of week born</span>
+              <span id="d-dow" class="font-semibold text-brand-orange">—</span>
+            </div>
+          </div>
+
+          <!-- Next birthday -->
+          <div class="mt-5 p-4 rounded-lg border border-brand-teal/30 bg-brand-teal/5">
+            <p class="text-xs font-semibold tracking-wider uppercase text-brand-teal mb-2">Next birthday</p>
+            <div class="flex flex-wrap items-center gap-4">
+              <div class="flex items-center gap-2">
+                <span id="bd-days" class="text-2xl font-bold text-brand-teal">—</span>
+                <span class="text-xs text-gray-400">days</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span id="bd-hours" class="text-lg font-semibold">—</span>
+                <span class="text-xs text-gray-400">hours</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span id="bd-mins" class="text-lg font-semibold">—</span>
+                <span class="text-xs text-gray-400">mins</span>
+              </div>
+              <div class="ml-auto text-xs text-gray-400">
+                on <span id="bd-date" class="font-semibold text-gray-700 dark:text-gray-300">—</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <p class="text-xs text-gray-400 mt-4 text-center">All calculations happen locally in your browser. No data is stored or sent anywhere.</p>
+      </div>
+    </div>
+  </main>
+
+  <footer class="py-8 border-t border-gray-100 dark:border-white/5 mt-12">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p class="text-xs text-gray-400">© 2025 Contoura Labs</p>
+      <a href="index.html" class="text-xs text-brand-orange hover:text-brand-red transition-colors">← Back to all tools</a>
+    </div>
+  </footer>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+  (function () {
+    'use strict';
+
+    const dobEl = document.getElementById('dob');
+    const atEl = document.getElementById('at-date');
+    const resultEl = document.getElementById('result');
+
+    // Default "age at date" to today
+    function todayStr() {
+      const d = new Date();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${d.getFullYear()}-${m}-${day}`;
+    }
+    atEl.value = todayStr();
+
+    const DOW = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    function fmt(n) { return n.toLocaleString(); }
+
+    function calcAge(dob, at) {
+      if (at < dob) return null;
+      let y = at.getFullYear() - dob.getFullYear();
+      let m = at.getMonth() - dob.getMonth();
+      let d = at.getDate() - dob.getDate();
+
+      if (d < 0) {
+        m -= 1;
+        // days in previous month relative to `at`
+        const prevMonth = new Date(at.getFullYear(), at.getMonth(), 0);
+        d += prevMonth.getDate();
+      }
+      if (m < 0) {
+        y -= 1;
+        m += 12;
+      }
+
+      // Total spans (using ms)
+      const ms = at.getTime() - dob.getTime();
+      const totalDays = Math.floor(ms / 86400000);
+      const totalHours = Math.floor(ms / 3600000);
+      const totalMins = Math.floor(ms / 60000);
+      const totalWeeks = Math.floor(totalDays / 7);
+      // Approx months: 30.436875 days/month (Gregorian average)
+      const totalMonths = Math.floor(totalDays / 30.436875);
+
+      return { y, m, d, totalDays, totalHours, totalMins, totalWeeks, totalMonths };
+    }
+
+    function nextBirthday(dob, at) {
+      let next = new Date(at.getFullYear(), dob.getMonth(), dob.getDate());
+      if (next < at) {
+        next = new Date(at.getFullYear() + 1, dob.getMonth(), dob.getDate());
+      }
+      const ms = next.getTime() - at.getTime();
+      const days = Math.floor(ms / 86400000);
+      const hours = Math.floor((ms % 86400000) / 3600000);
+      const mins = Math.floor((ms % 3600000) / 60000);
+      return { days, hours, mins, date: next };
+    }
+
+    function run() {
+      const dobStr = dobEl.value;
+      const atStr = atEl.value;
+      if (!dobStr) {
+        CL.toast('Please pick a date of birth', false);
+        return;
+      }
+      const dob = new Date(dobStr + 'T00:00:00');
+      const at = atStr ? new Date(atStr + 'T00:00:00') : new Date();
+      if (isNaN(dob.getTime())) {
+        CL.toast('Invalid date of birth', false);
+        return;
+      }
+      const age = calcAge(dob, at);
+      if (!age) {
+        CL.toast('"Age at" date must be after date of birth', false);
+        return;
+      }
+
+      document.getElementById('hero-age').textContent = `${age.y} years · ${age.m} months · ${age.d} days`;
+      document.getElementById('stat-months').textContent = fmt(age.totalMonths);
+      document.getElementById('stat-weeks').textContent = fmt(age.totalWeeks);
+      document.getElementById('stat-days').textContent = fmt(age.totalDays);
+
+      document.getElementById('d-months').textContent = fmt(age.totalMonths) + ' months';
+      document.getElementById('d-weeks').textContent = fmt(age.totalWeeks) + ' weeks';
+      document.getElementById('d-days').textContent = fmt(age.totalDays) + ' days';
+      document.getElementById('d-hours').textContent = fmt(age.totalHours) + ' hours';
+      document.getElementById('d-mins').textContent = fmt(age.totalMins) + ' minutes';
+      document.getElementById('d-dow').textContent = DOW[dob.getDay()];
+
+      const nb = nextBirthday(dob, at);
+      document.getElementById('bd-days').textContent = nb.days;
+      document.getElementById('bd-hours').textContent = nb.hours;
+      document.getElementById('bd-mins').textContent = nb.mins;
+      document.getElementById('bd-date').textContent = `${MON[nb.date.getMonth()]} ${nb.date.getDate()}, ${nb.date.getFullYear()}`;
+
+      resultEl.classList.remove('hidden');
+      CL.toast('Age calculated!');
+    }
+
+    document.getElementById('calc-btn').addEventListener('click', run);
+    document.getElementById('reset-btn').addEventListener('click', () => {
+      dobEl.value = '';
+      atEl.value = todayStr();
+      resultEl.classList.add('hidden');
+      CL.toast('Reset');
+    });
+  })();
+  </script>
+</body>
+</html>

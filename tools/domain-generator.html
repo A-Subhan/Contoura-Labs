@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Domain Name Generator — Contoura Labs</title>
+  <meta name="description" content="Generate 30+ creative domain name ideas from any keyword. Each suggestion links to Namecheap for instant registration check.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 73 28 A 32 32 0 0 0 27 28' stroke='%23FF6B35' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 24 32 A 32 32 0 0 0 24 68' stroke='%23E8384F' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 27 72 A 32 32 0 0 0 73 72' stroke='%2300B8A9' stroke-width='9' fill='none' stroke-linecap='round'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: {
+        colors: {
+          brand: { orange: '#FF6B35', red: '#E8384F', teal: '#00B8A9' },
+          surface: { light: '#F8F9FA', dark: '#0A0A0A', card: '#1A1A1A', alt: '#111111' }
+        },
+        fontFamily: { sans: ['Inter', 'sans-serif'] }
+      }}
+    }
+  </script>
+  <link rel="stylesheet" href="../assets/css/common.css">
+</head>
+<body class="font-sans bg-white text-gray-900 dark:bg-surface-dark dark:text-gray-100 antialiased">
+
+  <div id="navbar-mount"></div>
+
+  <main class="tool-page">
+    <div class="tool-container" style="max-width:64rem;">
+      <header class="tool-header">
+        <span class="badge mb-3">Generators</span>
+        <h1 class="tool-title">Domain Name <span class="gradient-text">Generator</span></h1>
+        <p class="tool-subtitle">Turn a keyword into 30+ domain name ideas. Each suggestion links to Namecheap for instant availability check.</p>
+      </header>
+
+      <div class="tool-card">
+        <label class="field-label" for="kw">Keyword</label>
+        <input type="text" id="kw" placeholder="e.g. acme, pixel, brew" value="pixel">
+
+        <div class="flex flex-wrap gap-3 mt-4">
+          <button class="btn-primary" id="gen-btn">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>
+            Generate ideas
+          </button>
+          <button class="btn-secondary" id="copy-all">Copy all</button>
+        </div>
+
+        <div id="result" class="mt-6 hidden">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="font-semibold"><span id="count">0</span> suggestions</h3>
+            <span class="text-xs text-gray-400">Click "check" to open Namecheap</span>
+          </div>
+          <div id="cards" class="grid-3"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="py-8 border-t border-gray-100 dark:border-white/5 mt-12">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p class="text-xs text-gray-400">© 2025 Contoura Labs</p>
+      <a href="index.html" class="text-xs text-brand-orange hover:text-brand-red transition-colors">← Back to all tools</a>
+    </div>
+  </footer>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    const PREFIXES = ['get','my','the','best','go','try','use','your','try','top','hello','hey'];
+    const SUFFIXES = ['ly','ify','hub','lab','labs','ster','io','sy','ery','ly','book','pad','ify','ster','spot','base','zone','hq','works','studio','co'];
+    const TLD_HACKS = ['.com','.io','.co','.app','.dev','.ai','.ly','.so','.sh','.tech','.xyz','.run','.fyi','.tools','.studio'];
+    const BLEND_WORDS = ['flow','nova','pulse','spark','wave','loop','nest','sphere','bit','verse','cloud','forge','grid','edge','shift','pop','mint','snap','track','beam'];
+    const RHYMES = {
+      // simple suffix rhymes appended to keyword
+      a: ['mania','land','verse','base'],
+      e: ['verse','wave','base'],
+      i: ['ify','fi','licious'],
+      o: ['go','flow','io'],
+      u: ['hub','lab','plus'],
+      default: ['ly','lab','hub','ster','ify']
+    };
+
+    function slug(s) {
+      return s.toLowerCase().replace(/[^a-z0-9]/g, '');
+    }
+
+    function generate() {
+      const kwRaw = $('kw').value.trim();
+      if (!kwRaw) { CL.toast('Enter a keyword first', false); return; }
+      const kw = slug(kwRaw);
+      if (!kw) { CL.toast('Keyword must contain letters', false); return; }
+
+      const ideas = new Set();
+
+      // 1. TLD hacks
+      TLD_HACKS.forEach(tld => ideas.add(kw + tld));
+
+      // 2. prefix + keyword
+      PREFIXES.forEach(p => ideas.add(p + kw));
+
+      // 3. keyword + suffix
+      SUFFIXES.forEach(s => ideas.add(kw + s));
+
+      // 4. Portmanteau / blends
+      BLEND_WORDS.forEach(w => {
+        ideas.add(kw + w);
+        ideas.add(w + kw);
+      });
+
+      // 5. Rhyming-style endings
+      const last = kw.slice(-1);
+      (RHYMES[last] || RHYMES.default).forEach(r => ideas.add(kw + r));
+
+      // 6. keyword + modifier word combos
+      ['app','tool','tools','pro','hq','now','daily','go'].forEach(m => ideas.add(kw + m));
+
+      // Build display list (limit ~36)
+      const list = Array.from(ideas).slice(0, 36);
+
+      const cards = $('cards');
+      cards.innerHTML = '';
+      list.forEach(name => {
+        const card = document.createElement('div');
+        card.className = 'p-4 rounded-xl flex flex-col gap-2';
+        card.style.background = '#fafafa';
+        card.style.border = '1px solid #f3f4f6';
+        card.innerHTML = `
+          <div class="font-mono font-semibold text-sm break-all" style="color:#111;">${name}</div>
+          <div class="flex gap-2">
+            <a class="text-xs font-semibold px-3 py-1.5 rounded-lg inline-flex items-center gap-1"
+               style="background:linear-gradient(135deg,#FF6B35,#E8384F,#00B8A9);color:#fff;text-decoration:none;"
+               href="https://www.namecheap.com/domains/registration/results/?domain=${encodeURIComponent(name)}"
+               target="_blank" rel="noopener noreferrer">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
+              check
+            </a>
+            <button class="text-xs font-semibold px-3 py-1.5 rounded-lg copy-btn"
+                    style="background:#f3f4f6;color:#374151;border:1px solid #e5e7eb;"
+                    data-name="${name}">copy</button>
+          </div>
+        `;
+        cards.appendChild(card);
+      });
+
+      cards.querySelectorAll('.copy-btn').forEach(b => {
+        b.addEventListener('click', () => {
+          navigator.clipboard.writeText(b.dataset.name).then(() => CL.toast('Copied ' + b.dataset.name));
+        });
+      });
+
+      $('count').textContent = list.length;
+      $('result').classList.remove('hidden');
+      CL.toast(`Generated ${list.length} domain ideas`);
+    }
+
+    $('gen-btn').addEventListener('click', generate);
+    $('kw').addEventListener('keydown', (e) => { if (e.key === 'Enter') generate(); });
+    $('copy-all').addEventListener('click', () => {
+      const names = Array.from($('cards').querySelectorAll('[data-name]')).map(b => b.dataset.name);
+      if (!names.length) { CL.toast('Generate ideas first', false); return; }
+      navigator.clipboard.writeText(names.join('\n')).then(() => CL.toast('All names copied'));
+    });
+
+    generate();
+  </script>
+</body>
+</html>

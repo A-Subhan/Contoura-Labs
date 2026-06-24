@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Games — Contoura Labs</title>
+  <meta name="description" content="Kill time with our free in-browser games: Tic-Tac-Toe vs AI, Flappy Bird clone, Minesweeper, Trivia Quiz, Would You Rather, Typing Speed Test. No signup, no ads.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 73 28 A 32 32 0 0 0 27 28' stroke='%23FF6B35' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 24 32 A 32 32 0 0 0 24 68' stroke='%23E8384F' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 27 72 A 32 32 0 0 0 73 72' stroke='%2300B8A9' stroke-width='9' fill='none' stroke-linecap='round'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: {
+        colors: {
+          brand: { orange: '#FF6B35', red: '#E8384F', teal: '#00B8A9' },
+          surface: { light: '#F8F9FA', dark: '#0A0A0A', card: '#1A1A1A', alt: '#111111' }
+        },
+        fontFamily: { sans: ['Inter', 'sans-serif'] }
+      }}
+    }
+  </script>
+  <link rel="stylesheet" href="../assets/css/common.css">
+</head>
+<body class="font-sans bg-white text-gray-900 dark:bg-surface-dark dark:text-gray-100 antialiased">
+
+  <div id="navbar-mount"></div>
+
+  <section class="hub-hero relative">
+    <div class="orb w-[400px] h-[400px] bg-brand-red top-[-10%] right-[-10%] float"></div>
+    <div class="orb w-[350px] h-[350px] bg-brand-teal bottom-[-15%] left-[-8%] float-delay"></div>
+    <div class="relative z-10 max-w-4xl mx-auto">
+      <span class="badge mb-4">6 Games · Free · No Ads · No Signup</span>
+      <h1 class="reveal visible">Kill Some <span class="gradient-text">Time</span></h1>
+      <p class="reveal reveal-delay-1 visible">Quick in-browser games for your coffee break. All run on your device, no installs.</p>
+    </div>
+  </section>
+
+  <div class="category-section">
+    <h2 class="category-title">All Games</h2>
+    <div class="tool-grid">
+
+      <a href="tic-tac-toe.html" class="tool-card-link">
+        <div class="tool-card-icon"><svg viewBox="0 0 40 40" fill="none" class="w-7 h-7" xmlns="http://www.w3.org/2000/svg"><path d="M15 5 V35 M25 5 V35" stroke="#6b7280" stroke-width="1.5" stroke-linecap="round"/><path d="M5 15 H35 M5 25 H35" stroke="#6b7280" stroke-width="1.5" stroke-linecap="round"/><path d="M8 8 L13 13 M13 8 L8 13" stroke="#FF6B35" stroke-width="2.5" stroke-linecap="round"/><circle cx="30" cy="10" r="3" stroke="#00B8A9" stroke-width="2.2" fill="none"/><circle cx="20" cy="20" r="3" stroke="#00B8A9" stroke-width="2.2" fill="none"/><path d="M27 27 L32 32 M32 27 L27 32" stroke="#FF6B35" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+        <h3 class="tool-card-title">Tic-Tac-Toe</h3>
+        <p class="tool-card-desc">Classic 3x3 game vs an unbeatable AI (minimax algorithm).</p>
+      </a>
+
+      <a href="flappy-bird.html" class="tool-card-link">
+        <div class="tool-card-icon"><svg viewBox="0 0 40 40" fill="none" class="w-7 h-7" xmlns="http://www.w3.org/2000/svg"><rect x="24" y="2" width="9" height="11" fill="#00B8A9" rx="0.5"/><rect x="22" y="12" width="13" height="3" fill="#00B8A9" rx="0.5"/><rect x="22" y="25" width="13" height="3" fill="#00B8A9" rx="0.5"/><rect x="24" y="27" width="9" height="11" fill="#00B8A9" rx="0.5"/><circle cx="13" cy="20" r="6" fill="#FF6B35"/><ellipse cx="10" cy="22" rx="3" ry="1.5" fill="#E8384F"/><circle cx="15" cy="18" r="1.5" fill="#fff"/><circle cx="15.5" cy="18" r="0.7" fill="#1a1a1a"/><polygon points="18,20 22,19 22,21" fill="#E8384F"/></svg></div>
+        <h3 class="tool-card-title">Flappy Dot</h3>
+        <p class="tool-card-desc">Tap to fly through pipes. How far can you get?</p>
+      </a>
+
+      <a href="minesweeper.html" class="tool-card-link">
+        <div class="tool-card-icon"><svg viewBox="0 0 40 40" fill="none" class="w-7 h-7" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="4" width="32" height="32" stroke="#6b7280" stroke-width="1" fill="none"/><path d="M14.67 4 V36 M25.33 4 V36 M4 14.67 H36 M4 25.33 H36" stroke="#6b7280" stroke-width="1"/><line x1="9.33" y1="7" x2="9.33" y2="13" stroke="#374151" stroke-width="1.2"/><polygon points="9.33,7 13.5,9 9.33,11" fill="#FF6B35"/><circle cx="20" cy="20" r="3.2" fill="#1a1a1a"/><path d="M22.5 17.5 L24.5 15.5" stroke="#1a1a1a" stroke-width="1.5" stroke-linecap="round"/><circle cx="25" cy="15" r="1" fill="#E8384F"/><text x="30.67" y="23" font-family="Inter, sans-serif" font-size="7" font-weight="800" fill="#00B8A9" text-anchor="middle">2</text></svg></div>
+        <h3 class="tool-card-title">Minesweeper</h3>
+        <p class="tool-card-desc">Classic minefield puzzle. Three difficulty levels.</p>
+      </a>
+
+      <a href="trivia-quiz.html" class="tool-card-link">
+        <div class="tool-card-icon"><svg viewBox="0 0 40 40" fill="none" class="w-7 h-7" xmlns="http://www.w3.org/2000/svg"><path d="M20 2 V5 M20 35 V38 M2 20 H5 M35 20 H38 M7 7 L9 9 M31 7 L29 9 M7 33 L9 31 M31 33 L29 31" stroke="#FF6B35" stroke-width="1.5" stroke-linecap="round"/><circle cx="20" cy="20" r="11" fill="#FF6B35"/><rect x="16" y="29" width="8" height="2.5" fill="#374151"/><rect x="17" y="31.5" width="6" height="2" fill="#374151"/><text x="20" y="25" font-family="Inter, sans-serif" font-size="13" font-weight="800" fill="#fff" text-anchor="middle">?</text></svg></div>
+        <h3 class="tool-card-title">Trivia Quiz</h3>
+        <p class="tool-card-desc">Test your knowledge across multiple categories.</p>
+      </a>
+
+      <a href="would-you-rather.html" class="tool-card-link">
+        <div class="tool-card-icon"><svg viewBox="0 0 40 40" fill="none" class="w-7 h-7" xmlns="http://www.w3.org/2000/svg"><path d="M20 12 H8 M12 8 L8 12 L12 16" stroke="#FF6B35" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 28 H32 M28 24 L32 28 L28 32" stroke="#00B8A9" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="20" cy="20" r="5" fill="#fff" stroke="#E8384F" stroke-width="1.5"/><text x="20" y="22.5" font-family="Inter, sans-serif" font-size="5" font-weight="800" fill="#E8384F" text-anchor="middle">VS</text></svg></div>
+        <h3 class="tool-card-title">Would You Rather</h3>
+        <p class="tool-card-desc">Tough choices, harder answers. 100+ questions.</p>
+      </a>
+
+      <a href="typing-test.html" class="tool-card-link">
+        <div class="tool-card-icon"><svg viewBox="0 0 40 40" fill="none" class="w-7 h-7" xmlns="http://www.w3.org/2000/svg"><text x="4" y="11" font-family="Inter, sans-serif" font-size="6" font-weight="800" fill="#FF6B35">WPM</text><path d="M22 5 L30 5 M24 8 L33 8 M26 11 L34 11" stroke="#00B8A9" stroke-width="1.2" stroke-linecap="round"/><rect x="3" y="15" width="34" height="18" rx="2" fill="#1a1a1a"/><rect x="5" y="17" width="3.5" height="3" rx="0.5" fill="#FF6B35"/><rect x="9.5" y="17" width="3.5" height="3" rx="0.5" fill="#6b7280"/><rect x="14" y="17" width="3.5" height="3" rx="0.5" fill="#6b7280"/><rect x="18.5" y="17" width="3.5" height="3" rx="0.5" fill="#00B8A9"/><rect x="23" y="17" width="3.5" height="3" rx="0.5" fill="#6b7280"/><rect x="27.5" y="17" width="3.5" height="3" rx="0.5" fill="#6b7280"/><rect x="32" y="17" width="3.5" height="3" rx="0.5" fill="#E8384F"/><rect x="13" y="22" width="14" height="3" rx="0.5" fill="#6b7280"/><rect x="8" y="27" width="3.5" height="3" rx="0.5" fill="#6b7280"/><rect x="12.5" y="27" width="3.5" height="3" rx="0.5" fill="#6b7280"/><rect x="17" y="27" width="3.5" height="3" rx="0.5" fill="#6b7280"/><rect x="21.5" y="27" width="3.5" height="3" rx="0.5" fill="#6b7280"/><rect x="26" y="27" width="3.5" height="3" rx="0.5" fill="#6b7280"/></svg></div>
+        <h3 class="tool-card-title">Typing Speed Test</h3>
+        <p class="tool-card-desc">Measure your WPM and accuracy with timed tests.</p>
+      </a>
+
+    </div>
+  </div>
+
+  <footer class="py-10 border-t border-gray-100 dark:border-white/5">
+    <div class="max-w-6xl mx-auto px-6 text-center">
+      <p class="text-xs text-gray-400">© 2025 Contoura Labs. All games run in your browser.</p>
+    </div>
+  </footer>
+
+  <script src="../assets/js/common.js"></script>
+</body>
+</html>

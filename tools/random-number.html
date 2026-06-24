@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Random Number Generator — Contoura Labs</title>
+  <meta name="description" content="Random number generator, dice roller, coin flipper, and list picker. Generate N numbers, optional unique, with history.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 73 28 A 32 32 0 0 0 27 28' stroke='%23FF6B35' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 24 32 A 32 32 0 0 0 24 68' stroke='%23E8384F' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 27 72 A 32 32 0 0 0 73 72' stroke='%2300B8A9' stroke-width='9' fill='none' stroke-linecap='round'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: {
+        colors: {
+          brand: { orange: '#FF6B35', red: '#E8384F', teal: '#00B8A9' },
+          surface: { light: '#F8F9FA', dark: '#0A0A0A', card: '#1A1A1A', alt: '#111111' }
+        },
+        fontFamily: { sans: ['Inter', 'sans-serif'] }
+      }}
+    }
+  </script>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <style>
+    .help-toggle {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      font-size: 0.8rem; font-weight: 600;
+      color: #FF6B35;
+      cursor: pointer;
+      user-select: none;
+      background: rgba(255,107,53,0.08);
+      padding: 0.3rem 0.75rem;
+      border-radius: 9999px;
+      transition: background 0.2s ease;
+    }
+    .help-toggle:hover { background: rgba(255,107,53,0.18); }
+    .help-toggle .help-q {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: #FF6B35; color: #fff;
+      font-size: 0.7rem; font-weight: 800;
+    }
+    .help-box {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease, margin 0.3s ease, opacity 0.3s ease;
+      opacity: 0;
+    }
+    .help-box.open {
+      max-height: 240px;
+      margin-top: 0.75rem;
+      opacity: 1;
+    }
+    .help-box-inner {
+      padding: 0.85rem 1rem;
+      border-radius: 0.6rem;
+      background: rgba(0,184,169,0.07);
+      border-left: 3px solid #00B8A9;
+      font-size: 0.825rem;
+      line-height: 1.55;
+      color: #4b5563;
+    }
+    .dark .help-box-inner { color: #d1d5db; }
+    .help-box-inner strong { color: #00B8A9; }
+    .dark .help-box-inner strong { color: #2dd4bf; }
+  </style>
+</head>
+<body class="font-sans bg-white text-gray-900 dark:bg-surface-dark dark:text-gray-100 antialiased">
+
+  <div id="navbar-mount"></div>
+
+  <main class="tool-page">
+    <div class="tool-container" style="max-width:56rem;">
+      <header class="tool-header">
+        <span class="badge mb-3">Generators</span>
+        <h1 class="tool-title">Random Number <span class="gradient-text">Generator</span></h1>
+        <p class="tool-subtitle">Generate numbers, roll dice, flip coins, and pick from lists — all in your browser.</p>
+      </header>
+
+      <!-- Mode tabs -->
+      <div class="flex flex-wrap gap-2 justify-center mb-6">
+        <button class="mode-tab btn-primary" data-mode="number">Numbers</button>
+        <button class="mode-tab btn-secondary" data-mode="dice">Dice</button>
+        <button class="mode-tab btn-secondary" data-mode="coin">Coin flip</button>
+        <button class="mode-tab btn-secondary" data-mode="list">Pick from list</button>
+      </div>
+
+      <div class="tool-card">
+        <!-- NUMBER MODE -->
+        <div id="mode-number" class="mode-panel">
+          <div class="grid-2 mb-4">
+            <div>
+              <label class="field-label" for="min">Minimum</label>
+              <input type="number" id="min" value="1">
+            </div>
+            <div>
+              <label class="field-label" for="max">Maximum</label>
+              <input type="number" id="max" value="100">
+            </div>
+          </div>
+          <div class="grid-2 mb-4">
+            <div>
+              <label class="field-label" for="count">How many</label>
+              <input type="number" id="count" value="1" min="1" max="10000">
+            </div>
+            <div class="flex flex-col gap-2 justify-end pb-1">
+              <label class="flex items-center gap-2 text-sm"><input type="checkbox" id="unique" class="w-4 h-4 accent-brand-orange"> Unique only</label>
+              <label class="flex items-center gap-2 text-sm"><input type="checkbox" id="sort" class="w-4 h-4 accent-brand-orange"> Sort ascending</label>
+            </div>
+          </div>
+          <button class="btn-primary" id="gen-num">Generate</button>
+          <div id="num-result" class="mt-5 hidden">
+            <div class="code-output" id="num-out" style="font-size:1rem;max-height:280px;"></div>
+            <button class="btn-secondary mt-3" id="copy-num">Copy</button>
+          </div>
+        </div>
+
+        <!-- DICE MODE -->
+        <div id="mode-dice" class="mode-panel hidden">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Dice Roller</span>
+            <span class="help-toggle" data-help="help-dice"><span class="help-q">?</span> How it works</span>
+          </div>
+          <div class="help-box" id="help-dice">
+            <div class="help-box-inner">
+              <strong>Dice Roller:</strong> Roll one or more dice (1-6 sides each). Useful for board games, decision making, or probability experiments. Each die is independent — rolling 2 dice gives you results like 3+5=8.
+            </div>
+          </div>
+          <div class="grid-2 mb-4">
+            <div>
+              <label class="field-label" for="dice-count">Number of dice</label>
+              <input type="number" id="dice-count" value="2" min="1" max="20">
+            </div>
+            <div>
+              <label class="field-label" for="dice-sides">Sides per die</label>
+              <input type="number" id="dice-sides" value="6" min="2" max="100">
+            </div>
+          </div>
+          <button class="btn-primary" id="roll-dice">Roll dice</button>
+          <div id="dice-result" class="mt-5 hidden">
+            <div id="dice-cells" class="flex flex-wrap gap-3 mb-3"></div>
+            <div class="text-sm text-gray-500 dark:text-gray-400">Total: <span id="dice-total" class="font-bold text-brand-orange text-lg">0</span></div>
+          </div>
+        </div>
+
+        <!-- COIN MODE -->
+        <div id="mode-coin" class="mode-panel hidden text-center">
+          <div class="flex items-center justify-between mb-3 text-left">
+            <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Coin Flip</span>
+            <span class="help-toggle" data-help="help-coin"><span class="help-q">?</span> How it works</span>
+          </div>
+          <div class="help-box" id="help-coin">
+            <div class="help-box-inner text-left">
+              <strong>Coin Flip:</strong> Simulates a fair coin toss (50/50 Heads or Tails). Useful for quick decisions, bets, or probability demonstrations. Multiple flips show the distribution.
+            </div>
+          </div>
+          <div id="coin-face" class="text-7xl mb-4 select-none" style="transition:transform 0.3s;">🪙</div>
+          <div id="coin-label" class="text-2xl font-bold mb-4">—</div>
+          <button class="btn-primary" id="flip-coin">Flip coin</button>
+        </div>
+
+        <!-- LIST MODE -->
+        <div id="mode-list" class="mode-panel hidden">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Pick from List</span>
+            <span class="help-toggle" data-help="help-list"><span class="help-q">?</span> How it works</span>
+          </div>
+          <div class="help-box" id="help-list">
+            <div class="help-box-inner">
+              <strong>Pick from List:</strong> Paste a list of items (one per line or comma-separated), and the tool picks one or more at random. Useful for contests, random selection, choosing winners, or deciding what to eat tonight!
+            </div>
+          </div>
+          <label class="field-label" for="list-input">Paste items (one per line, or comma-separated)</label>
+          <textarea id="list-input" rows="5" placeholder="apple, banana, cherry&#10;or one per line">Alice, Bob, Charlie, Diana, Eve, Frank, Grace</textarea>
+          <div class="grid-2 mt-4">
+            <div>
+              <label class="field-label" for="list-count">Pick how many</label>
+              <input type="number" id="list-count" value="1" min="1">
+            </div>
+            <div class="flex items-end">
+              <label class="flex items-center gap-2 text-sm p-3" style="width:100%;"><input type="checkbox" id="list-unique" class="w-4 h-4 accent-brand-orange"> No repeats</label>
+            </div>
+          </div>
+          <button class="btn-primary mt-3" id="pick-list">Pick</button>
+          <div id="list-result" class="mt-5 hidden">
+            <div class="code-output" id="list-out" style="font-size:1rem;"></div>
+          </div>
+        </div>
+
+        <!-- HISTORY -->
+        <div id="history-wrap" class="mt-8 hidden">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="font-semibold">History (last 10)</h3>
+            <button class="text-xs text-brand-orange hover:text-brand-red" id="clear-hist">Clear</button>
+          </div>
+          <div id="history-list" class="space-y-2"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="py-8 border-t border-gray-100 dark:border-white/5 mt-12">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p class="text-xs text-gray-400">© 2025 Contoura Labs</p>
+      <a href="index.html" class="text-xs text-brand-orange hover:text-brand-red transition-colors">← Back to all tools</a>
+    </div>
+  </footer>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    let history = [];
+    let currentMode = 'number';
+
+    // Secure random int in [min, max] inclusive
+    function randInt(min, max) {
+      if (max < min) [min, max] = [max, min];
+      const range = max - min + 1;
+      const arr = new Uint32Array(1);
+      const limit = Math.floor(0xFFFFFFFF / range) * range;
+      let r;
+      do { crypto.getRandomValues(arr); r = arr[0]; } while (r >= limit);
+      return min + (r % range);
+    }
+
+    function setMode(m) {
+      currentMode = m;
+      document.querySelectorAll('.mode-panel').forEach(p => p.classList.add('hidden'));
+      $('mode-' + m).classList.remove('hidden');
+      document.querySelectorAll('.mode-tab').forEach(t => {
+        if (t.dataset.mode === m) {
+          t.classList.remove('btn-secondary'); t.classList.add('btn-primary');
+        } else {
+          t.classList.remove('btn-primary'); t.classList.add('btn-secondary');
+        }
+      });
+    }
+    document.querySelectorAll('.mode-tab').forEach(t => t.addEventListener('click', () => setMode(t.dataset.mode)));
+
+    function addHistory(label, value) {
+      history.unshift({ label, value, time: new Date().toLocaleTimeString() });
+      if (history.length > 10) history.length = 10;
+      renderHistory();
+    }
+    function renderHistory() {
+      const wrap = $('history-wrap'), list = $('history-list');
+      if (!history.length) { wrap.classList.add('hidden'); return; }
+      wrap.classList.remove('hidden');
+      list.innerHTML = history.map(h => `
+        <div class="flex items-center justify-between gap-3 p-3 rounded-lg" style="background:#fafafa;border:1px solid #f3f4f6;">
+          <div class="flex-1 min-w-0">
+            <div class="text-xs text-gray-400">${h.time} · ${h.label}</div>
+            <div class="text-sm font-mono break-all">${h.value}</div>
+          </div>
+          <button class="text-xs px-2 py-1 rounded hist-copy" style="background:#f3f4f6;" data-v="${h.value.replace(/"/g,'&quot;')}">copy</button>
+        </div>
+      `).join('');
+      list.querySelectorAll('.hist-copy').forEach(b => {
+        b.addEventListener('click', () => navigator.clipboard.writeText(b.dataset.v).then(() => CL.toast('Copied')));
+      });
+    }
+
+    // ----- NUMBER MODE -----
+    function genNumbers() {
+      let min = parseInt($('min').value, 10);
+      let max = parseInt($('max').value, 10);
+      let count = parseInt($('count').value, 10);
+      if (isNaN(min) || isNaN(max)) { CL.toast('Enter valid min/max', false); return; }
+      if (min > max) [min, max] = [max, min];
+      count = Math.max(1, Math.min(10000, count || 1));
+      const unique = $('unique').checked, sort = $('sort').checked;
+      const range = max - min + 1;
+      if (unique && count > range) { CL.toast(`Cannot pick ${count} unique from range of ${range}`, false); return; }
+      const out = [];
+      const used = new Set();
+      while (out.length < count) {
+        const n = randInt(min, max);
+        if (unique) { if (used.has(n)) continue; used.add(n); }
+        out.push(n);
+      }
+      if (sort) out.sort((a, b) => a - b);
+      $('num-out').textContent = out.join(', ');
+      $('num-result').classList.remove('hidden');
+      addHistory(`Numbers ${min}–${max} ×${count}${unique ? ' (unique)' : ''}`, out.join(', '));
+      CL.toast(`Generated ${count} number${count > 1 ? 's' : ''}`);
+    }
+    $('gen-num').addEventListener('click', genNumbers);
+    $('copy-num').addEventListener('click', () => navigator.clipboard.writeText($('num-out').textContent).then(() => CL.toast('Copied')));
+
+    // ----- DICE MODE -----
+    function rollDice() {
+      const n = Math.max(1, Math.min(20, parseInt($('dice-count').value, 10) || 1));
+      const sides = Math.max(2, Math.min(100, parseInt($('dice-sides').value, 10) || 6));
+      const rolls = [];
+      for (let i = 0; i < n; i++) rolls.push(randInt(1, sides));
+      const cells = $('dice-cells');
+      cells.innerHTML = '';
+      rolls.forEach(r => {
+        const c = document.createElement('div');
+        c.className = 'flex items-center justify-center font-bold text-2xl rounded-xl';
+        c.style.cssText = 'width:64px;height:64px;background:linear-gradient(135deg,#FF6B35,#E8384F,#00B8A9);color:#fff;box-shadow:0 6px 16px rgba(255,107,53,0.25);';
+        c.textContent = r;
+        cells.appendChild(c);
+      });
+      $('dice-total').textContent = rolls.reduce((a, b) => a + b, 0);
+      $('dice-result').classList.remove('hidden');
+      addHistory(`Dice ${n}d${sides}`, rolls.join(', ') + ' = ' + rolls.reduce((a, b) => a + b, 0));
+      CL.toast('Rolled ' + n + 'd' + sides);
+    }
+    $('roll-dice').addEventListener('click', rollDice);
+
+    // ----- COIN MODE -----
+    function flipCoin() {
+      const face = $('coin-face');
+      face.style.transform = 'rotateY(720deg) scale(1.1)';
+      setTimeout(() => face.style.transform = '', 400);
+      setTimeout(() => {
+        const r = Math.random() < 0.5 ? 'Heads' : 'Tails';
+        face.textContent = r === 'Heads' ? '🪙' : '⚪';
+        $('coin-label').textContent = r;
+        addHistory('Coin flip', r);
+        CL.toast('Flipped: ' + r);
+      }, 200);
+    }
+    $('flip-coin').addEventListener('click', flipCoin);
+
+    // ----- LIST MODE -----
+    function pickList() {
+      const raw = $('list-input').value.trim();
+      if (!raw) { CL.toast('Paste some items first', false); return; }
+      const items = raw.split(/\n|,/).map(s => s.trim()).filter(Boolean);
+      const count = Math.max(1, parseInt($('list-count').value, 10) || 1);
+      const unique = $('list-unique').checked;
+      if (unique && count > items.length) { CL.toast(`Cannot pick ${count} unique from ${items.length} items`, false); return; }
+      const picked = [];
+      const used = new Set();
+      while (picked.length < count) {
+        const i = randInt(0, items.length - 1);
+        if (unique) { if (used.has(i)) continue; used.add(i); }
+        picked.push(items[i]);
+      }
+      $('list-out').textContent = picked.join(', ');
+      $('list-result').classList.remove('hidden');
+      addHistory(`Pick ${count} from ${items.length}`, picked.join(', '));
+      CL.toast('Picked ' + count + ' item' + (count > 1 ? 's' : ''));
+    }
+    $('pick-list').addEventListener('click', pickList);
+
+    $('clear-hist').addEventListener('click', () => { history = []; renderHistory(); CL.toast('History cleared'); });
+
+    // ----- HELP TOGGLES -----
+    document.querySelectorAll('.help-toggle').forEach(t => {
+      t.addEventListener('click', () => {
+        const box = document.getElementById(t.dataset.help);
+        if (box) box.classList.toggle('open');
+      });
+    });
+
+    setMode('number');
+  </script>
+</body>
+</html>

@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BMI Calculator — Contoura Labs</title>
+  <meta name="description" content="Calculate Body Mass Index with metric or imperial units. Visual scale shows your category at a glance.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 73 28 A 32 32 0 0 0 27 28' stroke='%23FF6B35' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 24 32 A 32 32 0 0 0 24 68' stroke='%23E8384F' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 27 72 A 32 32 0 0 0 73 72' stroke='%2300B8A9' stroke-width='9' fill='none' stroke-linecap='round'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: {
+        colors: {
+          brand: { orange: '#FF6B35', red: '#E8384F', teal: '#00B8A9' },
+          surface: { light: '#F8F9FA', dark: '#0A0A0A', card: '#1A1A1A', alt: '#111111' }
+        },
+        fontFamily: { sans: ['Inter', 'sans-serif'] }
+      }}
+    }
+  </script>
+  <link rel="stylesheet" href="../assets/css/common.css">
+</head>
+<body class="font-sans bg-white text-gray-900 dark:bg-surface-dark dark:text-gray-100 antialiased">
+
+  <div id="navbar-mount"></div>
+
+  <main class="tool-page">
+    <div class="tool-container">
+      <header class="tool-header">
+        <span class="badge mb-3">Calculators</span>
+        <h1 class="tool-title">BMI <span class="gradient-text">Calculator</span></h1>
+        <p class="tool-subtitle">Check your Body Mass Index in metric or imperial units with a visual category scale.</p>
+      </header>
+
+      <div class="tool-card">
+        <!-- Unit toggle -->
+        <div class="flex justify-center mb-6">
+          <div class="inline-flex p-1 rounded-xl bg-gray-100 dark:bg-white/5">
+            <button id="tab-metric" class="px-5 py-2 rounded-lg text-sm font-semibold transition-colors bg-white dark:bg-surface-card shadow-sm text-brand-orange">Metric (cm, kg)</button>
+            <button id="tab-imperial" class="px-5 py-2 rounded-lg text-sm font-semibold transition-colors text-gray-500 dark:text-gray-400">Imperial (ft, lb)</button>
+          </div>
+        </div>
+
+        <!-- Metric inputs -->
+        <div id="metric-panel" class="grid-2">
+          <div>
+            <label class="field-label" for="m-height">Height (cm)</label>
+            <input type="number" id="m-height" min="50" max="300" step="0.1" placeholder="170">
+          </div>
+          <div>
+            <label class="field-label" for="m-weight">Weight (kg)</label>
+            <input type="number" id="m-weight" min="10" max="400" step="0.1" placeholder="65">
+          </div>
+        </div>
+
+        <!-- Imperial inputs -->
+        <div id="imperial-panel" class="grid-2 hidden">
+          <div class="grid-2">
+            <div>
+              <label class="field-label" for="i-ft">Height (ft)</label>
+              <input type="number" id="i-ft" min="1" max="9" step="1" placeholder="5">
+            </div>
+            <div>
+              <label class="field-label" for="i-in">Height (in)</label>
+              <input type="number" id="i-in" min="0" max="11" step="0.5" placeholder="9">
+            </div>
+          </div>
+          <div>
+            <label class="field-label" for="i-lb">Weight (lb)</label>
+            <input type="number" id="i-lb" min="20" max="900" step="0.1" placeholder="150">
+          </div>
+        </div>
+
+        <div class="flex flex-wrap gap-3 mt-5">
+          <button class="btn-primary" id="calc-btn">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m-6 4h6m-6 4h4m-7 5h12a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+            Calculate BMI
+          </button>
+          <button class="btn-secondary" id="reset-btn">Reset</button>
+        </div>
+
+        <!-- Result -->
+        <div id="result" class="mt-6 hidden">
+          <div class="grid-2 mb-5">
+            <div class="rounded-xl p-5 text-center" style="background: linear-gradient(135deg, rgba(255,107,53,0.08), rgba(0,184,169,0.08));">
+              <p class="text-xs font-semibold tracking-widest text-gray-400 uppercase mb-1">Your BMI</p>
+              <p id="bmi-value" class="text-4xl font-bold gradient-text">—</p>
+            </div>
+            <div class="rounded-xl p-5 text-center border" id="cat-box" style="border-color:rgba(0,184,169,0.3); background:rgba(0,184,169,0.05);">
+              <p class="text-xs font-semibold tracking-widest text-gray-400 uppercase mb-1">Category</p>
+              <p id="bmi-cat" class="text-xl font-bold">—</p>
+              <p id="bmi-note" class="text-xs text-gray-500 dark:text-gray-400 mt-1">—</p>
+            </div>
+          </div>
+
+          <!-- Visual scale -->
+          <div class="mb-3">
+            <div class="flex h-3 rounded-full overflow-hidden">
+              <div style="flex: 0 0 18.5%; background:#60A5FA;" title="Underweight"></div>
+              <div style="flex: 0 0 6.4%; background:#10B981;" title="Normal"></div>
+              <div style="flex: 0 0 5%; background:#F59E0B;" title="Overweight"></div>
+              <div style="flex: 0 0 10%; background:#EF4444;" title="Obese"></div>
+            </div>
+            <!-- marker -->
+            <div class="relative h-4 mt-1">
+              <div id="bmi-marker" class="absolute -top-3" style="left:50%; transform:translateX(-50%); transition:left 0.6s cubic-bezier(0.16,1,0.3,1);">
+                <div class="w-0.5 h-6 bg-gray-800 dark:bg-white mx-auto"></div>
+                <div class="text-[10px] font-bold text-gray-700 dark:text-gray-200 text-center -mt-1">YOU</div>
+              </div>
+            </div>
+            <div class="flex justify-between text-[10px] text-gray-400 mt-2">
+              <span>15</span><span>18.5</span><span>25</span><span>30</span><span>40</span>
+            </div>
+          </div>
+
+          <!-- Healthy weight range -->
+          <div class="mt-5 p-4 rounded-lg bg-gray-50 dark:bg-white/5 text-sm">
+            <p class="text-gray-500 dark:text-gray-400">Healthy weight range for your height:</p>
+            <p id="healthy-range" class="font-semibold text-brand-teal mt-1">—</p>
+          </div>
+        </div>
+
+        <p class="text-xs text-gray-400 mt-4 text-center">BMI is a general guide and doesn't account for muscle mass, age, or body composition. Consult a doctor for health advice.</p>
+      </div>
+    </div>
+  </main>
+
+  <footer class="py-8 border-t border-gray-100 dark:border-white/5 mt-12">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p class="text-xs text-gray-400">© 2025 Contoura Labs</p>
+      <a href="index.html" class="text-xs text-brand-orange hover:text-brand-red transition-colors">← Back to all tools</a>
+    </div>
+  </footer>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+  (function () {
+    'use strict';
+
+    let mode = 'metric';
+    const tabM = document.getElementById('tab-metric');
+    const tabI = document.getElementById('tab-imperial');
+    const pM = document.getElementById('metric-panel');
+    const pI = document.getElementById('imperial-panel');
+    const resultEl = document.getElementById('result');
+
+    function setMode(m) {
+      mode = m;
+      if (m === 'metric') {
+        tabM.classList.add('bg-white', 'dark:bg-surface-card', 'shadow-sm', 'text-brand-orange');
+        tabM.classList.remove('text-gray-500', 'dark:text-gray-400');
+        tabI.classList.remove('bg-white', 'dark:bg-surface-card', 'shadow-sm', 'text-brand-orange');
+        tabI.classList.add('text-gray-500', 'dark:text-gray-400');
+        pM.classList.remove('hidden');
+        pI.classList.add('hidden');
+      } else {
+        tabI.classList.add('bg-white', 'dark:bg-surface-card', 'shadow-sm', 'text-brand-orange');
+        tabI.classList.remove('text-gray-500', 'dark:text-gray-400');
+        tabM.classList.remove('bg-white', 'dark:bg-surface-card', 'shadow-sm', 'text-brand-orange');
+        tabM.classList.add('text-gray-500', 'dark:text-gray-400');
+        pI.classList.remove('hidden');
+        pM.classList.add('hidden');
+      }
+    }
+    tabM.addEventListener('click', () => setMode('metric'));
+    tabI.addEventListener('click', () => setMode('imperial'));
+
+    function category(bmi) {
+      if (bmi < 18.5) return { name: 'Underweight', color: '#60A5FA', note: 'Below healthy range' };
+      if (bmi < 25)   return { name: 'Normal',      color: '#10B981', note: 'Healthy range' };
+      if (bmi < 30)   return { name: 'Overweight',  color: '#F59E0B', note: 'Above healthy range' };
+      return { name: 'Obese', color: '#EF4444', note: 'Significantly above healthy range' };
+    }
+
+    function run() {
+      let hMeters, wKg, hCm;
+      if (mode === 'metric') {
+        hCm = parseFloat(document.getElementById('m-height').value);
+        wKg = parseFloat(document.getElementById('m-weight').value);
+        if (!hCm || !wKg || hCm <= 0 || wKg <= 0) { CL.toast('Enter valid height and weight', false); return; }
+        hMeters = hCm / 100;
+      } else {
+        const ft = parseFloat(document.getElementById('i-ft').value) || 0;
+        const inch = parseFloat(document.getElementById('i-in').value) || 0;
+        const lb = parseFloat(document.getElementById('i-lb').value);
+        const totalIn = ft * 12 + inch;
+        if (!totalIn || !lb || lb <= 0) { CL.toast('Enter valid height and weight', false); return; }
+        hMeters = totalIn * 0.0254;
+        wKg = lb * 0.45359237;
+        hCm = hMeters * 100;
+      }
+
+      const bmi = wKg / (hMeters * hMeters);
+      const cat = category(bmi);
+
+      document.getElementById('bmi-value').textContent = bmi.toFixed(1);
+      document.getElementById('bmi-cat').textContent = cat.name;
+      document.getElementById('bmi-note').textContent = cat.note;
+      const catBox = document.getElementById('cat-box');
+      catBox.style.borderColor = cat.color + '55';
+      catBox.style.background = cat.color + '12';
+      document.getElementById('bmi-cat').style.color = cat.color;
+
+      // Position marker: scale 15..40 → 0..100%
+      const pct = Math.max(0, Math.min(100, ((bmi - 15) / (40 - 15)) * 100));
+      document.getElementById('bmi-marker').style.left = pct + '%';
+
+      // Healthy weight range: BMI 18.5..24.9 × height²
+      const lo = 18.5 * hMeters * hMeters;
+      const hi = 24.9 * hMeters * hMeters;
+      if (mode === 'metric') {
+        document.getElementById('healthy-range').textContent = `${lo.toFixed(1)} – ${hi.toFixed(1)} kg`;
+      } else {
+        document.getElementById('healthy-range').textContent = `${(lo / 0.45359237).toFixed(1)} – ${(hi / 0.45359237).toFixed(1)} lb`;
+      }
+
+      resultEl.classList.remove('hidden');
+      CL.toast('BMI calculated!');
+    }
+
+    document.getElementById('calc-btn').addEventListener('click', run);
+    document.getElementById('reset-btn').addEventListener('click', () => {
+      ['m-height','m-weight','i-ft','i-in','i-lb'].forEach(id => document.getElementById(id).value = '');
+      resultEl.classList.add('hidden');
+      CL.toast('Reset');
+    });
+
+    // Enter key triggers calc
+    [document.getElementById('m-height'), document.getElementById('m-weight'),
+     document.getElementById('i-ft'), document.getElementById('i-in'), document.getElementById('i-lb')]
+      .forEach(el => el.addEventListener('keydown', e => { if (e.key === 'Enter') run(); }));
+  })();
+  </script>
+</body>
+</html>

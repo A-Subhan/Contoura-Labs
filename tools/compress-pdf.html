@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Compress PDF — Contoura Labs</title>
+  <meta name="description" content="Reduce PDF file size by stripping unused objects or rasterizing pages.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 73 28 A 32 32 0 0 0 27 28' stroke='%23FF6B35' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 24 32 A 32 32 0 0 0 24 68' stroke='%23E8384F' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 27 72 A 32 32 0 0 0 73 72' stroke='%2300B8A9' stroke-width='9' fill='none' stroke-linecap='round'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: {
+        colors: {
+          brand: { orange: '#FF6B35', red: '#E8384F', teal: '#00B8A9' },
+          surface: { light: '#F8F9FA', dark: '#0A0A0A', card: '#1A1A1A', alt: '#111111' }
+        },
+        fontFamily: { sans: ['Inter', 'sans-serif'] }
+      }}
+    }
+  </script>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+</head>
+<body class="font-sans bg-white text-gray-900 dark:bg-surface-dark dark:text-gray-100 antialiased">
+
+  <div id="navbar-mount"></div>
+
+  <main class="tool-page">
+    <div class="tool-container">
+      <header class="tool-header">
+        <span class="badge mb-3">PDF Tools</span>
+        <h1 class="tool-title">Compress PDF</h1>
+        <p class="tool-subtitle">Reduce PDF file size. Choose lossless re-save or aggressive rasterization.</p>
+      </header>
+
+      <div class="tool-card">
+        <div class="dropzone block" id="dropzone" role="button" tabindex="0">
+          <input type="file" id="file-input" class="hidden" accept="application/pdf,.pdf">
+          <svg class="w-10 h-10 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"/></svg>
+          <p class="text-sm font-medium" id="dz-text">Drop PDF here or click to browse</p>
+          <p class="text-xs text-gray-400 mt-1">PDF only · Max 50MB</p>
+        </div>
+
+        <div id="options" class="mt-6 hidden">
+          <p class="text-xs text-gray-500 mb-3" id="pdf-info"></p>
+          <p class="field-label">Compression mode</p>
+          <div class="space-y-2 mb-4">
+            <label class="flex items-start gap-3 p-3 rounded-xl border border-gray-200 dark:border-white/10 cursor-pointer hover:border-brand-orange">
+              <input type="radio" name="mode" value="lossless" checked class="accent-brand-orange mt-1">
+              <div>
+                <p class="text-sm font-medium">Lossless re-save</p>
+                <p class="text-xs text-gray-400">Strips unused objects & metadata. Quality preserved. Smaller gains.</p>
+              </div>
+            </label>
+            <label class="flex items-start gap-3 p-3 rounded-xl border border-gray-200 dark:border-white/10 cursor-pointer hover:border-brand-orange">
+              <input type="radio" name="mode" value="rasterize" class="accent-brand-orange mt-1">
+              <div>
+                <p class="text-sm font-medium">Rasterize pages (JPEG)</p>
+                <p class="text-xs text-gray-400">Renders each page as a compressed JPEG. Best size reduction, but text becomes non-selectable.</p>
+              </div>
+            </label>
+          </div>
+
+          <div id="quality-wrap" class="hidden">
+            <label class="field-label">JPEG quality: <span id="quality-val" class="text-brand-orange font-semibold">70</span></label>
+            <input type="range" id="quality" min="10" max="95" value="70" class="w-full accent-brand-orange">
+            <div class="flex justify-between text-xs text-gray-400 mt-1">
+              <span>Smaller file</span><span>Better quality</span>
+            </div>
+            <label class="field-label mt-3">Render DPI (lower = smaller)</label>
+            <select id="dpi">
+              <option value="72">72 (screen, smallest)</option>
+              <option value="100" selected>100 (balanced)</option>
+              <option value="150">150 (good quality)</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="progress-wrap" class="mt-6 hidden">
+          <div class="flex justify-between text-xs mb-2">
+            <span id="progress-label">Processing…</span>
+            <span id="progress-pct">0%</span>
+          </div>
+          <div class="progress-bar"><div class="progress-bar-fill" id="progress-fill" style="width:0%"></div></div>
+        </div>
+
+        <div class="flex gap-3 mt-4">
+          <button class="btn-primary flex-1" id="compress-btn" disabled>Compress PDF</button>
+          <button class="btn-secondary" id="reset-btn">Reset</button>
+        </div>
+
+        <div id="result" class="mt-6 hidden">
+          <div class="grid-3 mb-4 text-center">
+            <div class="p-3 rounded-xl bg-gray-50 dark:bg-white/5">
+              <p class="text-xs text-gray-400 mb-1">Original</p>
+              <p class="font-bold text-sm" id="orig-size">—</p>
+            </div>
+            <div class="p-3 rounded-xl bg-gray-50 dark:bg-white/5">
+              <p class="text-xs text-gray-400 mb-1">Compressed</p>
+              <p class="font-bold text-sm" id="comp-size">—</p>
+            </div>
+            <div class="p-3 rounded-xl bg-brand-teal/10">
+              <p class="text-xs text-gray-400 mb-1">Savings</p>
+              <p class="font-bold text-sm text-brand-teal" id="savings">—</p>
+            </div>
+          </div>
+          <button class="btn-primary w-full" id="download-btn">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+            Download compressed PDF
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="py-8 border-t border-gray-100 dark:border-white/5 mt-12">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p class="text-xs text-gray-400">© 2025 Contoura Labs</p>
+      <a href="index.html" class="text-xs text-brand-orange hover:text-brand-red transition-colors">← Back to all tools</a>
+    </div>
+  </footer>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+    const { PDFDocument } = PDFLib;
+
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('file-input');
+    const dzText = document.getElementById('dz-text');
+    const options = document.getElementById('options');
+    const pdfInfo = document.getElementById('pdf-info');
+    const qualityWrap = document.getElementById('quality-wrap');
+    const qualityInput = document.getElementById('quality');
+    const qualityVal = document.getElementById('quality-val');
+    const dpiSel = document.getElementById('dpi');
+    const compressBtn = document.getElementById('compress-btn');
+    const resetBtn = document.getElementById('reset-btn');
+    const progressWrap = document.getElementById('progress-wrap');
+    const progressFill = document.getElementById('progress-fill');
+    const progressPct = document.getElementById('progress-pct');
+    const progressLabel = document.getElementById('progress-label');
+    const result = document.getElementById('result');
+    const origSize = document.getElementById('orig-size');
+    const compSize = document.getElementById('comp-size');
+    const savings = document.getElementById('savings');
+    const downloadBtn = document.getElementById('download-btn');
+
+    let currentFile = null;
+    let currentBlob = null;
+
+    qualityInput.addEventListener('input', () => qualityVal.textContent = qualityInput.value);
+    document.querySelectorAll('input[name="mode"]').forEach(r => r.addEventListener('change', e => {
+      qualityWrap.style.display = e.target.value === 'rasterize' ? '' : 'none';
+    }));
+
+    function setProgress(pct, label) {
+      progressWrap.classList.remove('hidden');
+      progressFill.style.width = pct + '%';
+      progressPct.textContent = Math.round(pct) + '%';
+      if (label) progressLabel.textContent = label;
+    }
+
+    async function handleFile(file) {
+      if (!file) return;
+      if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+        CL.toast('Please select a PDF file', false);
+        return;
+      }
+      try {
+        const buf = await file.arrayBuffer();
+        const pdf = await PDFDocument.load(buf, { ignoreEncryption: true });
+        currentFile = file;
+        dzText.textContent = file.name + ' (' + CL.formatBytes(file.size) + ')';
+        pdfInfo.textContent = `${file.name} · ${pdf.getPageCount()} pages · ${CL.formatBytes(file.size)}`;
+        options.classList.remove('hidden');
+        compressBtn.disabled = false;
+        result.classList.add('hidden');
+        progressWrap.classList.add('hidden');
+      } catch (err) {
+        CL.toast('Failed to read PDF: ' + err.message, false);
+      }
+    }
+
+    dropzone.addEventListener('click', () => fileInput.click());
+    dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag-over'); });
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-over'));
+    dropzone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropzone.classList.remove('drag-over');
+      handleFile(e.dataTransfer.files[0]);
+    });
+    fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
+
+    async function compressLossless(buf) {
+      const pdf = await PDFDocument.load(buf, { ignoreEncryption: true, updateMetadata: false });
+      const bytes = await pdf.save({ useObjectStreams: true });
+      return bytes;
+    }
+
+    async function compressRasterize(buf, quality, dpi) {
+      const scale = dpi / 72;
+      const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+      const outPdf = await PDFDocument.create();
+      for (let i = 1; i <= pdf.numPages; i++) {
+        setProgress(10 + (i / pdf.numPages) * 75, `Rendering page ${i} of ${pdf.numPages}…`);
+        const page = await pdf.getPage(i);
+        const viewport = page.getViewport({ scale });
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.floor(viewport.width);
+        canvas.height = Math.floor(viewport.height);
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        await page.render({ canvasContext: ctx, viewport }).promise;
+        const jpegBlob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', quality / 100));
+        const jpegBuf = await jpegBlob.arrayBuffer();
+        const img = await outPdf.embedJpg(jpegBuf);
+        const p = outPdf.addPage([canvas.width, canvas.height]);
+        p.drawImage(img, { x: 0, y: 0, width: canvas.width, height: canvas.height });
+        await new Promise(r => setTimeout(r, 0));
+      }
+      setProgress(90, 'Saving…');
+      return outPdf.save();
+    }
+
+    compressBtn.addEventListener('click', async () => {
+      if (!currentFile) return;
+      compressBtn.disabled = true;
+      try {
+        const origBuf = await currentFile.arrayBuffer();
+        const origBytes = origBuf.byteLength;
+        setProgress(5, 'Loading…');
+        const mode = document.querySelector('input[name="mode"]:checked').value;
+        let bytes;
+        if (mode === 'lossless') {
+          setProgress(40, 'Re-saving PDF…');
+          bytes = await compressLossless(origBuf);
+        } else {
+          const q = parseInt(qualityInput.value, 10);
+          const dpi = parseInt(dpiSel.value, 10);
+          bytes = await compressRasterize(origBuf, q, dpi);
+        }
+        setProgress(95, 'Finalizing…');
+        currentBlob = new Blob([bytes], { type: 'application/pdf' });
+        const compBytes = bytes.byteLength;
+        origSize.textContent = CL.formatBytes(origBytes);
+        compSize.textContent = CL.formatBytes(compBytes);
+        const pct = origBytes > 0 ? Math.max(0, Math.round((1 - compBytes / origBytes) * 100)) : 0;
+        savings.textContent = pct > 0 ? `${pct}% smaller` : 'No reduction';
+        savings.classList.toggle('text-brand-teal', pct > 0);
+        savings.classList.toggle('text-gray-400', pct === 0);
+        setProgress(100, 'Done');
+        result.classList.remove('hidden');
+        CL.toast(pct > 0 ? `Saved ${pct}%!` : 'PDF re-saved (no reduction)');
+      } catch (err) {
+        console.error(err);
+        CL.toast('Compression failed: ' + err.message, false);
+      } finally {
+        compressBtn.disabled = false;
+      }
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      if (!currentBlob) return;
+      const name = currentFile.name.replace(/\.pdf$/i, '') + '_compressed.pdf';
+      CL.download(currentBlob, name);
+    });
+
+    resetBtn.addEventListener('click', () => {
+      currentFile = null;
+      currentBlob = null;
+      fileInput.value = '';
+      dzText.textContent = 'Drop PDF here or click to browse';
+      options.classList.add('hidden');
+      compressBtn.disabled = true;
+      result.classList.add('hidden');
+      progressWrap.classList.add('hidden');
+    });
+  </script>
+</body>
+</html>

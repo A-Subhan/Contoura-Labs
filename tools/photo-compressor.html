@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Photo Compressor — Contoura Labs</title>
+  <meta name="description" content="Compress JPG and PNG images in your browser with adjustable quality.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 73 28 A 32 32 0 0 0 27 28' stroke='%23FF6B35' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 24 32 A 32 32 0 0 0 24 68' stroke='%23E8384F' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 27 72 A 32 32 0 0 0 73 72' stroke='%2300B8A9' stroke-width='9' fill='none' stroke-linecap='round'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: {
+        colors: {
+          brand: { orange: '#FF6B35', red: '#E8384F', teal: '#00B8A9' },
+          surface: { light: '#F8F9FA', dark: '#0A0A0A', card: '#1A1A1A', alt: '#111111' }
+        },
+        fontFamily: { sans: ['Inter', 'sans-serif'] }
+      }}
+    }
+  </script>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.js"></script>
+</head>
+<body class="font-sans bg-white text-gray-900 dark:bg-surface-dark dark:text-gray-100 antialiased">
+
+  <div id="navbar-mount"></div>
+
+  <main class="tool-page">
+    <div class="tool-container">
+      <header class="tool-header">
+        <span class="badge mb-3">Image Tools</span>
+        <h1 class="tool-title">Photo Compressor</h1>
+        <p class="tool-subtitle">Reduce JPG/PNG file size with adjustable quality and max resolution. Runs in a web worker for speed.</p>
+      </header>
+
+      <div class="tool-card">
+        <div class="dropzone block" id="dropzone" role="button" tabindex="0">
+          <input type="file" id="file-input" class="hidden" accept="image/png,image/jpeg,image/webp">
+          <svg class="w-10 h-10 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
+          <p class="text-sm font-medium" id="dz-text">Drop image here or click to browse</p>
+          <p class="text-xs text-gray-400 mt-1">PNG · JPG · WEBP</p>
+        </div>
+
+        <div id="options" class="mt-6 hidden">
+          <div class="grid-2 mb-4">
+            <div>
+              <label class="field-label">Quality: <span id="quality-val" class="text-brand-orange font-semibold">70</span></label>
+              <input type="range" id="quality" min="10" max="100" value="70" class="w-full accent-brand-orange">
+              <div class="flex justify-between text-xs text-gray-400 mt-1">
+                <span>Smaller</span><span>Better</span>
+              </div>
+            </div>
+            <div>
+              <label class="field-label">Max dimension (px)</label>
+              <select id="max-dim">
+                <option value="640">640 (thumbnail)</option>
+                <option value="1280">1280 (web)</option>
+                <option value="1920" selected>1920 (full HD)</option>
+                <option value="2560">2560 (2K)</option>
+                <option value="3840">3840 (4K)</option>
+                <option value="99999">Original</option>
+              </select>
+            </div>
+          </div>
+          <label class="flex items-center gap-2 text-sm">
+            <input type="checkbox" id="to-jpeg" class="accent-brand-orange">
+            Convert to JPEG (best for photos, smaller files)
+          </label>
+        </div>
+
+        <div id="progress-wrap" class="mt-6 hidden">
+          <div class="flex justify-between text-xs mb-2">
+            <span id="progress-label">Compressing…</span>
+            <span id="progress-pct">0%</span>
+          </div>
+          <div class="progress-bar"><div class="progress-bar-fill" id="progress-fill" style="width:0%"></div></div>
+        </div>
+
+        <div class="flex gap-3 mt-4">
+          <button class="btn-primary flex-1" id="compress-btn" disabled>Compress Image</button>
+          <button class="btn-secondary" id="reset-btn">Reset</button>
+        </div>
+
+        <div id="result" class="mt-6 hidden">
+          <div class="grid-2 gap-4 mb-4">
+            <div>
+              <p class="field-label text-center">Original</p>
+              <div class="rounded-xl overflow-hidden bg-gray-50 dark:bg-white/5 p-3 flex items-center justify-center min-h-[160px]">
+                <img id="orig-img" style="max-height:200px;max-width:100%" alt="Original">
+              </div>
+              <p class="text-center text-xs text-gray-400 mt-1" id="orig-meta"></p>
+            </div>
+            <div>
+              <p class="field-label text-center">Compressed</p>
+              <div class="rounded-xl overflow-hidden bg-gray-50 dark:bg-white/5 p-3 flex items-center justify-center min-h-[160px]">
+                <img id="comp-img" style="max-height:200px;max-width:100%" alt="Compressed">
+              </div>
+              <p class="text-center text-xs text-gray-400 mt-1" id="comp-meta"></p>
+            </div>
+          </div>
+          <div class="p-4 rounded-xl bg-brand-teal/10 text-center mb-4">
+            <p class="text-sm">Reduced from <span id="orig-size" class="font-bold"></span> to <span id="comp-size" class="font-bold text-brand-teal"></span></p>
+            <p class="text-lg font-bold text-brand-teal mt-1" id="savings"></p>
+          </div>
+          <button class="btn-primary w-full" id="download-btn">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+            Download compressed image
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="py-8 border-t border-gray-100 dark:border-white/5 mt-12">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p class="text-xs text-gray-400">© 2025 Contoura Labs</p>
+      <a href="index.html" class="text-xs text-brand-orange hover:text-brand-red transition-colors">← Back to all tools</a>
+    </div>
+  </footer>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('file-input');
+    const dzText = document.getElementById('dz-text');
+    const options = document.getElementById('options');
+    const qualityInput = document.getElementById('quality');
+    const qualityVal = document.getElementById('quality-val');
+    const maxDimSel = document.getElementById('max-dim');
+    const toJpeg = document.getElementById('to-jpeg');
+    const compressBtn = document.getElementById('compress-btn');
+    const resetBtn = document.getElementById('reset-btn');
+    const progressWrap = document.getElementById('progress-wrap');
+    const progressFill = document.getElementById('progress-fill');
+    const progressPct = document.getElementById('progress-pct');
+    const progressLabel = document.getElementById('progress-label');
+    const result = document.getElementById('result');
+    const origImg = document.getElementById('orig-img');
+    const compImg = document.getElementById('comp-img');
+    const origMeta = document.getElementById('orig-meta');
+    const compMeta = document.getElementById('comp-meta');
+    const origSize = document.getElementById('orig-size');
+    const compSize = document.getElementById('comp-size');
+    const savings = document.getElementById('savings');
+    const downloadBtn = document.getElementById('download-btn');
+
+    let currentFile = null;
+    let currentBlob = null;
+    let currentExt = 'png';
+
+    qualityInput.addEventListener('input', () => qualityVal.textContent = qualityInput.value);
+
+    function setProgress(pct, label) {
+      progressWrap.classList.remove('hidden');
+      progressFill.style.width = pct + '%';
+      progressPct.textContent = Math.round(pct) + '%';
+      if (label) progressLabel.textContent = label;
+    }
+
+    function handleFile(file) {
+      if (!file) return;
+      if (!file.type.startsWith('image/')) {
+        CL.toast('Please select an image file', false);
+        return;
+      }
+      currentFile = file;
+      dzText.textContent = file.name + ' (' + CL.formatBytes(file.size) + ')';
+      options.classList.remove('hidden');
+      compressBtn.disabled = false;
+      result.classList.add('hidden');
+      progressWrap.classList.add('hidden');
+      origImg.src = URL.createObjectURL(file);
+      // Auto-suggest JPEG for photos
+      const isPng = file.type === 'image/png';
+      toJpeg.checked = !isPng && file.size > 500 * 1024;
+    }
+
+    dropzone.addEventListener('click', () => fileInput.click());
+    dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag-over'); });
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-over'));
+    dropzone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropzone.classList.remove('drag-over');
+      handleFile(e.dataTransfer.files[0]);
+    });
+    fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
+
+    function getImageDims(blob) {
+      return new Promise((resolve, reject) => {
+        const url = URL.createObjectURL(blob);
+        const img = new Image();
+        img.onload = () => { URL.revokeObjectURL(url); resolve({ w: img.naturalWidth, h: img.naturalHeight }); };
+        img.onerror = reject;
+        img.src = url;
+      });
+    }
+
+    compressBtn.addEventListener('click', async () => {
+      if (!currentFile) return;
+      compressBtn.disabled = true;
+      try {
+        setProgress(10, 'Reading image…');
+        const quality = parseInt(qualityInput.value, 10) / 100;
+        const maxDim = parseInt(maxDimSel.value, 10);
+
+        const origDims = await getImageDims(currentFile);
+
+        setProgress(30, 'Compressing…');
+        const compressedFile = await imageCompression(currentFile, {
+          maxSizeMB: 50, // large cap — quality slider controls real compression
+          maxWidthOrHeight: maxDim,
+          useWebWorker: true,
+          initialQuality: quality,
+          fileType: toJpeg.checked ? 'image/jpeg' : currentFile.type
+        });
+
+        setProgress(90, 'Finalizing…');
+        currentBlob = compressedFile;
+        const compDims = await getImageDims(compressedFile);
+        currentExt = toJpeg.checked ? 'jpg' : (currentFile.type === 'image/png' ? 'png' : 'jpg');
+
+        origImg.src = URL.createObjectURL(currentFile);
+        compImg.src = URL.createObjectURL(compressedFile);
+        origMeta.textContent = `${origDims.w}×${origDims.h}`;
+        compMeta.textContent = `${compDims.w}×${compDims.h}`;
+        origSize.textContent = CL.formatBytes(currentFile.size);
+        compSize.textContent = CL.formatBytes(compressedFile.size);
+
+        const pct = currentFile.size > 0 ? Math.max(0, Math.round((1 - compressedFile.size / currentFile.size) * 100)) : 0;
+        savings.textContent = pct > 0 ? `${pct}% smaller` : 'No size reduction';
+
+        setProgress(100, 'Done');
+        result.classList.remove('hidden');
+        CL.toast(pct > 0 ? `Saved ${pct}%!` : 'Image compressed');
+      } catch (err) {
+        console.error(err);
+        CL.toast('Compression failed: ' + err.message, false);
+      } finally {
+        compressBtn.disabled = false;
+      }
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      if (!currentBlob) return;
+      const baseName = currentFile.name.replace(/\.[^.]+$/, '');
+      CL.download(currentBlob, baseName + '_compressed.' + currentExt);
+    });
+
+    resetBtn.addEventListener('click', () => {
+      currentFile = null;
+      currentBlob = null;
+      fileInput.value = '';
+      dzText.textContent = 'Drop image here or click to browse';
+      options.classList.add('hidden');
+      compressBtn.disabled = true;
+      result.classList.add('hidden');
+      progressWrap.classList.add('hidden');
+      origImg.src = '';
+      compImg.src = '';
+    });
+  </script>
+</body>
+</html>

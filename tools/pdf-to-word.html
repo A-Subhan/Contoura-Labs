@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF to Word — Contoura Labs</title>
+  <meta name="description" content="Convert PDF documents into editable Word .doc files in your browser.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 73 28 A 32 32 0 0 0 27 28' stroke='%23FF6B35' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 24 32 A 32 32 0 0 0 24 68' stroke='%23E8384F' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 27 72 A 32 32 0 0 0 73 72' stroke='%2300B8A9' stroke-width='9' fill='none' stroke-linecap='round'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: {
+        colors: {
+          brand: { orange: '#FF6B35', red: '#E8384F', teal: '#00B8A9' },
+          surface: { light: '#F8F9FA', dark: '#0A0A0A', card: '#1A1A1A', alt: '#111111' }
+        },
+        fontFamily: { sans: ['Inter', 'sans-serif'] }
+      }}
+    }
+  </script>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+</head>
+<body class="font-sans bg-white text-gray-900 dark:bg-surface-dark dark:text-gray-100 antialiased">
+
+  <div id="navbar-mount"></div>
+
+  <main class="tool-page">
+    <div class="tool-container">
+      <header class="tool-header">
+        <span class="badge mb-3">PDF Tools</span>
+        <h1 class="tool-title">PDF to Word</h1>
+        <p class="tool-subtitle">Extract text from your PDF and download as an editable Word .doc file. 100% in-browser.</p>
+      </header>
+
+      <div class="tool-card">
+        <div class="dropzone block" id="dropzone" role="button" tabindex="0">
+          <input type="file" id="file-input" class="hidden" accept="application/pdf,.pdf">
+          <svg class="w-10 h-10 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"/></svg>
+          <p class="text-sm font-medium" id="dz-text">Drop PDF here or click to browse</p>
+          <p class="text-xs text-gray-400 mt-1">PDF only · Max 50MB</p>
+        </div>
+
+        <div id="progress-wrap" class="mt-6 hidden">
+          <div class="flex justify-between text-xs mb-2">
+            <span id="progress-label">Processing…</span>
+            <span id="progress-pct">0%</span>
+          </div>
+          <div class="progress-bar"><div class="progress-bar-fill" id="progress-fill" style="width:0%"></div></div>
+        </div>
+
+        <div id="result" class="mt-6 hidden">
+          <div class="flex items-center gap-3 p-4 rounded-xl bg-brand-teal/10 mb-4">
+            <svg class="w-6 h-6 text-brand-teal" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <div>
+              <p class="font-semibold text-sm">Conversion complete</p>
+              <p class="text-xs text-gray-500" id="result-meta"></p>
+            </div>
+          </div>
+          <button class="btn-primary w-full" id="download-btn">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+            Download .doc file
+          </button>
+        </div>
+
+        <div class="flex gap-3 mt-4">
+          <button class="btn-primary flex-1" id="convert-btn" disabled>Convert to Word</button>
+          <button class="btn-secondary" id="reset-btn">Reset</button>
+        </div>
+
+        <p class="text-xs text-gray-400 mt-4">⚠ Text-only extraction — formatting, tables, and images are not preserved. Scanned/image PDFs will produce empty output.</p>
+      </div>
+    </div>
+  </main>
+
+  <footer class="py-8 border-t border-gray-100 dark:border-white/5 mt-12">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p class="text-xs text-gray-400">© 2025 Contoura Labs</p>
+      <a href="index.html" class="text-xs text-brand-orange hover:text-brand-red transition-colors">← Back to all tools</a>
+    </div>
+  </footer>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('file-input');
+    const dzText = document.getElementById('dz-text');
+    const convertBtn = document.getElementById('convert-btn');
+    const resetBtn = document.getElementById('reset-btn');
+    const progressWrap = document.getElementById('progress-wrap');
+    const progressFill = document.getElementById('progress-fill');
+    const progressPct = document.getElementById('progress-pct');
+    const progressLabel = document.getElementById('progress-label');
+    const result = document.getElementById('result');
+    const resultMeta = document.getElementById('result-meta');
+    const downloadBtn = document.getElementById('download-btn');
+
+    let currentFile = null;
+    let currentBlob = null;
+
+    function setProgress(pct, label) {
+      progressWrap.classList.remove('hidden');
+      progressFill.style.width = pct + '%';
+      progressPct.textContent = Math.round(pct) + '%';
+      if (label) progressLabel.textContent = label;
+    }
+
+    function handleFile(file) {
+      if (!file) return;
+      if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+        CL.toast('Please select a PDF file', false);
+        return;
+      }
+      currentFile = file;
+      dzText.textContent = file.name + ' (' + CL.formatBytes(file.size) + ')';
+      convertBtn.disabled = false;
+      result.classList.add('hidden');
+      progressWrap.classList.add('hidden');
+    }
+
+    dropzone.addEventListener('click', () => fileInput.click());
+    dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag-over'); });
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-over'));
+    dropzone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropzone.classList.remove('drag-over');
+      handleFile(e.dataTransfer.files[0]);
+    });
+    fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
+
+    async function extractTextPages(file) {
+      const buf = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+      const pages = [];
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        // Reconstruct text by joining items with spaces, preserving line breaks via Y-position changes
+        let text = '';
+        let lastY = null;
+        content.items.forEach(item => {
+          const y = item.transform[5];
+          if (lastY !== null && Math.abs(y - lastY) > 2) text += '\n';
+          else if (text && !text.endsWith('\n')) text += ' ';
+          text += item.str;
+          lastY = y;
+        });
+        pages.push(text.trim());
+        setProgress((i / pdf.numPages) * 90, `Reading page ${i} of ${pdf.numPages}…`);
+        await new Promise(r => setTimeout(r, 0));
+      }
+      return { pages, numPages: pdf.numPages };
+    }
+
+    function buildDocHtml(pages) {
+      const body = pages.map((text, i) => {
+        const esc = text
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;');
+        const paras = esc.split(/\n/).map(l => `<p>${l.replace(/ /g, '&nbsp;')}</p>`).join('');
+        return `<h2>Page ${i + 1}</h2>${paras}<p style="page-break-after: always"></p>`;
+      }).join('');
+      return `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Converted from PDF</title><style>body{font-family:Calibri,Arial,sans-serif;font-size:11pt;line-height:1.5}h2{font-size:14pt;color:#FF6B35;margin-top:18pt}p{margin:0 0 4pt}</style></head><body>${body}</body></html>`;
+    }
+
+    convertBtn.addEventListener('click', async () => {
+      if (!currentFile) return;
+      convertBtn.disabled = true;
+      try {
+        setProgress(5, 'Loading PDF…');
+        const { pages, numPages } = await extractTextPages(currentFile);
+        setProgress(95, 'Building Word document…');
+        const html = buildDocHtml(pages);
+        currentBlob = new Blob([html], { type: 'application/msword' });
+        setProgress(100, 'Done');
+        const totalChars = pages.reduce((a, p) => a + p.length, 0);
+        resultMeta.textContent = `${numPages} page(s) · ${totalChars.toLocaleString()} characters extracted`;
+        result.classList.remove('hidden');
+        CL.toast('PDF converted to Word!');
+      } catch (err) {
+        console.error(err);
+        CL.toast('Conversion failed: ' + err.message, false);
+      } finally {
+        convertBtn.disabled = false;
+      }
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      if (!currentBlob) return;
+      const name = currentFile.name.replace(/\.pdf$/i, '') + '.doc';
+      CL.download(currentBlob, name);
+    });
+
+    resetBtn.addEventListener('click', () => {
+      currentFile = null;
+      currentBlob = null;
+      fileInput.value = '';
+      dzText.textContent = 'Drop PDF here or click to browse';
+      convertBtn.disabled = true;
+      result.classList.add('hidden');
+      progressWrap.classList.add('hidden');
+    });
+  </script>
+</body>
+</html>

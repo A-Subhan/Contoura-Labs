@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Merge PDF — Contoura Labs</title>
+  <meta name="description" content="Combine multiple PDFs into one in any order. Drag to reorder.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 73 28 A 32 32 0 0 0 27 28' stroke='%23FF6B35' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 24 32 A 32 32 0 0 0 24 68' stroke='%23E8384F' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 27 72 A 32 32 0 0 0 73 72' stroke='%2300B8A9' stroke-width='9' fill='none' stroke-linecap='round'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: {
+        colors: {
+          brand: { orange: '#FF6B35', red: '#E8384F', teal: '#00B8A9' },
+          surface: { light: '#F8F9FA', dark: '#0A0A0A', card: '#1A1A1A', alt: '#111111' }
+        },
+        fontFamily: { sans: ['Inter', 'sans-serif'] }
+      }}
+    }
+  </script>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+</head>
+<body class="font-sans bg-white text-gray-900 dark:bg-surface-dark dark:text-gray-100 antialiased">
+
+  <div id="navbar-mount"></div>
+
+  <main class="tool-page">
+    <div class="tool-container">
+      <header class="tool-header">
+        <span class="badge mb-3">PDF Tools</span>
+        <h1 class="tool-title">Merge PDF</h1>
+        <p class="tool-subtitle">Combine multiple PDF files into one. Reorder by dragging or using the arrow buttons.</p>
+      </header>
+
+      <div class="tool-card">
+        <div class="dropzone block" id="dropzone" role="button" tabindex="0">
+          <input type="file" id="file-input" class="hidden" accept="application/pdf,.pdf" multiple>
+          <svg class="w-10 h-10 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"/></svg>
+          <p class="text-sm font-medium">Drop PDFs here or click to add</p>
+          <p class="text-xs text-gray-400 mt-1">Select multiple PDFs · Max 50MB each</p>
+        </div>
+
+        <div id="file-list" class="mt-6 hidden">
+          <p class="field-label">Files (drag to reorder)</p>
+          <ul id="files-ul" class="space-y-2"></ul>
+        </div>
+
+        <div id="progress-wrap" class="mt-6 hidden">
+          <div class="flex justify-between text-xs mb-2">
+            <span id="progress-label">Merging…</span>
+            <span id="progress-pct">0%</span>
+          </div>
+          <div class="progress-bar"><div class="progress-bar-fill" id="progress-fill" style="width:0%"></div></div>
+        </div>
+
+        <div class="flex gap-3 mt-4">
+          <button class="btn-primary flex-1" id="merge-btn" disabled>Merge PDFs</button>
+          <button class="btn-secondary" id="reset-btn">Reset</button>
+        </div>
+
+        <div id="result" class="mt-6 hidden">
+          <div class="flex items-center gap-3 p-4 rounded-xl bg-brand-teal/10 mb-4">
+            <svg class="w-6 h-6 text-brand-teal" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <div>
+              <p class="font-semibold text-sm">Merge complete</p>
+              <p class="text-xs text-gray-500" id="result-meta"></p>
+            </div>
+          </div>
+          <button class="btn-primary w-full" id="download-btn">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+            Download merged PDF
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="py-8 border-t border-gray-100 dark:border-white/5 mt-12">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p class="text-xs text-gray-400">© 2025 Contoura Labs</p>
+      <a href="index.html" class="text-xs text-brand-orange hover:text-brand-red transition-colors">← Back to all tools</a>
+    </div>
+  </footer>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+    const { PDFDocument } = PDFLib;
+
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('file-input');
+    const fileList = document.getElementById('file-list');
+    const filesUl = document.getElementById('files-ul');
+    const mergeBtn = document.getElementById('merge-btn');
+    const resetBtn = document.getElementById('reset-btn');
+    const progressWrap = document.getElementById('progress-wrap');
+    const progressFill = document.getElementById('progress-fill');
+    const progressPct = document.getElementById('progress-pct');
+    const progressLabel = document.getElementById('progress-label');
+    const result = document.getElementById('result');
+    const resultMeta = document.getElementById('result-meta');
+    const downloadBtn = document.getElementById('download-btn');
+
+    let files = []; // { file, id }
+    let currentBlob = null;
+    let dragId = null;
+
+    function render() {
+      if (files.length === 0) {
+        fileList.classList.add('hidden');
+        mergeBtn.disabled = true;
+        return;
+      }
+      fileList.classList.remove('hidden');
+      mergeBtn.disabled = false;
+      filesUl.innerHTML = files.map((f, i) => `
+        <li class="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5" draggable="true" data-id="${f.id}">
+          <span class="text-gray-300 cursor-grab" title="Drag to reorder">⣿</span>
+          <span class="badge" style="background:rgba(0,184,169,0.1);color:#00B8A9">${i + 1}</span>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium truncate">${f.file.name}</p>
+            <p class="text-xs text-gray-400">${CL.formatBytes(f.file.size)}</p>
+          </div>
+          <button data-id="${f.id}" data-dir="-1" class="up-btn w-8 h-8 rounded-lg hover:bg-gray-200 dark:hover:bg-white/10 flex items-center justify-center" title="Move up">↑</button>
+          <button data-id="${f.id}" data-dir="1" class="down-btn w-8 h-8 rounded-lg hover:bg-gray-200 dark:hover:bg-white/10 flex items-center justify-center" title="Move down">↓</button>
+          <button data-id="${f.id}" class="rm-btn w-8 h-8 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/20 flex items-center justify-center text-gray-400 hover:text-brand-red" title="Remove">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </li>
+      `).join('');
+
+      filesUl.querySelectorAll('.rm-btn').forEach(b => b.addEventListener('click', e => {
+        files = files.filter(f => f.id !== e.currentTarget.dataset.id);
+        render();
+      }));
+      filesUl.querySelectorAll('.up-btn, .down-btn').forEach(b => b.addEventListener('click', e => {
+        const id = e.currentTarget.dataset.id;
+        const dir = parseInt(e.currentTarget.dataset.dir, 10);
+        const idx = files.findIndex(f => f.id === id);
+        const newIdx = idx + dir;
+        if (newIdx < 0 || newIdx >= files.length) return;
+        [files[idx], files[newIdx]] = [files[newIdx], files[idx]];
+        render();
+      }));
+
+      // Drag and drop reordering
+      filesUl.querySelectorAll('li').forEach(li => {
+        li.addEventListener('dragstart', e => { dragId = li.dataset.id; li.style.opacity = '0.5'; });
+        li.addEventListener('dragend', () => { dragId = null; filesUl.querySelectorAll('li').forEach(l => l.style.opacity = ''); });
+        li.addEventListener('dragover', e => { e.preventDefault(); });
+        li.addEventListener('drop', e => {
+          e.preventDefault();
+          const targetId = li.dataset.id;
+          if (!dragId || dragId === targetId) return;
+          const from = files.findIndex(f => f.id === dragId);
+          const to = files.findIndex(f => f.id === targetId);
+          const [moved] = files.splice(from, 1);
+          files.splice(to, 0, moved);
+          render();
+        });
+      });
+    }
+
+    function addFiles(newFiles) {
+      for (const f of newFiles) {
+        if (f.type !== 'application/pdf' && !f.name.toLowerCase().endsWith('.pdf')) {
+          CL.toast(`Skipping ${f.name} (not a PDF)`, false);
+          continue;
+        }
+        files.push({ file: f, id: Math.random().toString(36).slice(2) });
+      }
+      render();
+      result.classList.add('hidden');
+      progressWrap.classList.add('hidden');
+    }
+
+    dropzone.addEventListener('click', () => fileInput.click());
+    dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag-over'); });
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-over'));
+    dropzone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropzone.classList.remove('drag-over');
+      addFiles(e.dataTransfer.files);
+    });
+    fileInput.addEventListener('change', e => { addFiles(e.target.files); fileInput.value = ''; });
+
+    mergeBtn.addEventListener('click', async () => {
+      if (files.length < 2) {
+        CL.toast('Add at least 2 PDFs to merge', false);
+        return;
+      }
+      mergeBtn.disabled = true;
+      try {
+        progressWrap.classList.remove('hidden');
+        progressFill.style.width = '5%';
+        progressPct.textContent = '5%';
+        progressLabel.textContent = 'Creating document…';
+        const merged = await PDFDocument.create();
+        for (let i = 0; i < files.length; i++) {
+          progressLabel.textContent = `Merging ${i + 1} of ${files.length}…`;
+          progressFill.style.width = (5 + (i / files.length) * 85) + '%';
+          progressPct.textContent = Math.round(5 + (i / files.length) * 85) + '%';
+          const buf = await files[i].file.arrayBuffer();
+          const src = await PDFDocument.load(buf, { ignoreEncryption: true });
+          const pages = await merged.copyPages(src, src.getPageIndices());
+          pages.forEach(p => merged.addPage(p));
+          await new Promise(r => setTimeout(r, 0));
+        }
+        progressLabel.textContent = 'Saving…';
+        progressFill.style.width = '95%';
+        progressPct.textContent = '95%';
+        const bytes = await merged.save();
+        currentBlob = new Blob([bytes], { type: 'application/pdf' });
+        progressFill.style.width = '100%';
+        progressPct.textContent = '100%';
+        resultMeta.textContent = `${files.length} files merged · ${merged.getPageCount()} pages · ${CL.formatBytes(currentBlob.size)}`;
+        result.classList.remove('hidden');
+        CL.toast('PDFs merged successfully!');
+      } catch (err) {
+        console.error(err);
+        CL.toast('Merge failed: ' + err.message, false);
+      } finally {
+        mergeBtn.disabled = false;
+      }
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      if (!currentBlob) return;
+      CL.download(currentBlob, 'merged.pdf');
+    });
+
+    resetBtn.addEventListener('click', () => {
+      files = [];
+      currentBlob = null;
+      fileInput.value = '';
+      render();
+      result.classList.add('hidden');
+      progressWrap.classList.add('hidden');
+    });
+  </script>
+</body>
+</html>

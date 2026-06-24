@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Website Speed Test — Contoura Labs</title>
+  <meta name="description" content="Free in-browser website speed test. Measure load time, TTFB estimate, page weight, and get quick performance recommendations.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 73 28 A 32 32 0 0 0 27 28' stroke='%23FF6B35' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 24 32 A 32 32 0 0 0 24 68' stroke='%23E8384F' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 27 72 A 32 32 0 0 0 73 72' stroke='%2300B8A9' stroke-width='9' fill='none' stroke-linecap='round'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: {
+        colors: {
+          brand: { orange: '#FF6B35', red: '#E8384F', teal: '#00B8A9' },
+          surface: { light: '#F8F9FA', dark: '#0A0A0A', card: '#1A1A1A', alt: '#111111' }
+        },
+        fontFamily: { sans: ['Inter', 'sans-serif'] }
+      }}
+    }
+  </script>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <style>
+    .stat-card {
+      background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 0.75rem;
+      padding: 1.1rem 1.25rem; transition: all .2s ease;
+    }
+    .dark .stat-card { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.08); }
+    .stat-label { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.05em;
+      text-transform: uppercase; color: #9ca3af; }
+    .stat-value { font-size: 1.65rem; font-weight: 700; margin-top: 0.25rem;
+      font-variant-numeric: tabular-nums; }
+    .stat-sub { font-size: 0.75rem; color: #6b7280; margin-top: 0.15rem; }
+    .dark .stat-sub { color: #9ca3af; }
+    .meter-dot { display:inline-block; width:0.6rem; height:0.6rem; border-radius:9999px; margin-right:0.4rem; vertical-align: middle; }
+    .rec-item {
+      display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.75rem;
+      border-radius: 0.5rem; background: rgba(255,107,53,0.05);
+      border: 1px solid rgba(255,107,53,0.15); margin-bottom: 0.5rem;
+    }
+    .dark .rec-item { background: rgba(255,107,53,0.06); border-color: rgba(255,107,53,0.18); }
+    .progress-strip {
+      height: 8px; border-radius: 9999px; background: #e5e7eb; overflow: hidden;
+      position: relative;
+    }
+    .dark .progress-strip { background: #1f1f1f; }
+    .progress-strip > div { height:100%; border-radius: 9999px; transition: width .8s cubic-bezier(.16,1,.3,1); }
+    .spinner {
+      width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body class="font-sans bg-white text-gray-900 dark:bg-surface-dark dark:text-gray-100 antialiased">
+
+  <div id="navbar-mount"></div>
+
+  <main class="tool-page">
+    <div class="tool-container" style="max-width: 64rem;">
+      <header class="tool-header">
+        <span class="badge mb-3">Developer</span>
+        <h1 class="tool-title">Website <span class="gradient-text">Speed Test</span></h1>
+        <p class="tool-subtitle">A best-effort in-browser page-load test using fetch + the Performance API. Measures round-trip time, redirect count, page weight, and asset response — with quick recommendations.</p>
+      </header>
+
+      <div class="tool-card">
+
+        <!-- URL input -->
+        <form id="test-form" class="flex flex-col sm:flex-row gap-3">
+          <input type="text" id="url-input" placeholder="https://example.com"
+                 value="https://www.wikipedia.org" required
+                 style="flex:1; min-width:0;">
+          <button type="submit" id="test-btn" class="btn-primary" style="padding:0.75rem 1.5rem; white-space:nowrap;">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            Run Speed Test
+          </button>
+        </form>
+
+        <p class="text-xs text-gray-400 mt-3">
+          <strong>Note:</strong> Due to browser CORS restrictions, this is a basic best-effort test (we measure fetch round-trip + asset preload timing). For a full Lighthouse-grade audit, use
+          <a href="https://pagespeed.web.dev/" target="_blank" rel="noopener" class="text-brand-orange hover:underline">Google PageSpeed Insights</a>.
+        </p>
+
+        <!-- Loading state -->
+        <div id="loading" class="hidden mt-6">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="spinner"></div>
+            <span id="loading-text" class="text-sm font-medium text-gray-600 dark:text-gray-300">Connecting…</span>
+          </div>
+          <div class="progress-strip"><div id="progress-fill" style="width:10%; background: var(--gradient);"></div></div>
+        </div>
+
+        <!-- Results -->
+        <div id="results" class="hidden mt-6">
+
+          <!-- Headline -->
+          <div class="text-center mb-6">
+            <div class="stat-label">Overall Load Time</div>
+            <div id="headline-time" class="text-4xl sm:text-5xl font-bold mt-1">—</div>
+            <div id="headline-grade" class="inline-flex items-center gap-2 mt-2 text-sm font-semibold"></div>
+          </div>
+
+          <!-- Metric cards -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+            <div class="stat-card">
+              <div class="stat-label">Round-Trip</div>
+              <div id="m-rtt" class="stat-value">—</div>
+              <div class="stat-sub">fetch() total</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">TTFB (est.)</div>
+              <div id="m-ttfb" class="stat-value">—</div>
+              <div class="stat-sub">first byte</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Page Size</div>
+              <div id="m-size" class="stat-value">—</div>
+              <div class="stat-sub">transferred</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Redirects</div>
+              <div id="m-redir" class="stat-value">—</div>
+              <div class="stat-sub">hops detected</div>
+            </div>
+          </div>
+
+          <!-- Breakdown table -->
+          <div class="stat-card mb-6">
+            <div class="stat-label mb-3">Asset Breakdown</div>
+            <div id="asset-list" class="space-y-2"></div>
+            <div id="asset-empty" class="text-xs text-gray-400 hidden">No asset timings captured (likely blocked by CORS).</div>
+          </div>
+
+          <!-- Recommendations -->
+          <div>
+            <div class="stat-label mb-3">Recommendations</div>
+            <div id="rec-list"></div>
+          </div>
+
+          <div class="flex flex-wrap gap-3 mt-6">
+            <button id="retest-btn" class="btn-primary" style="padding:0.6rem 1.25rem;">Re-test</button>
+            <a href="https://pagespeed.web.dev/?url=" id="psi-link" target="_blank" rel="noopener" class="btn-secondary" style="padding:0.6rem 1.25rem; text-decoration:none;">
+              Open in PageSpeed Insights ↗
+            </a>
+          </div>
+        </div>
+
+        <!-- Error -->
+        <div id="error-box" class="hidden mt-6 p-4 rounded-xl" style="background: rgba(232,56,79,0.08); border: 1px solid rgba(232,56,79,0.25);">
+          <div class="flex items-start gap-3">
+            <svg class="w-5 h-5 text-brand-red shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/></svg>
+            <div>
+              <p class="font-semibold text-sm text-brand-red">Test failed</p>
+              <p id="error-text" class="text-sm text-gray-600 dark:text-gray-300 mt-1"></p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <footer class="py-8 border-t border-gray-100 dark:border-white/5 mt-12">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p class="text-xs text-gray-400">© 2025 Contoura Labs</p>
+      <a href="index.html" class="text-xs text-brand-orange hover:text-brand-red transition-colors">← Back to all tools</a>
+    </div>
+  </footer>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+  (function () {
+    'use strict';
+
+    const form = document.getElementById('test-form');
+    const urlInput = document.getElementById('url-input');
+    const testBtn = document.getElementById('test-btn');
+    const loading = document.getElementById('loading');
+    const loadingText = document.getElementById('loading-text');
+    const progressFill = document.getElementById('progress-fill');
+    const results = document.getElementById('results');
+    const errorBox = document.getElementById('error-box');
+    const errorText = document.getElementById('error-text');
+    const psiLink = document.getElementById('psi-link');
+
+    const $h = (id) => document.getElementById(id);
+
+    function normalizeUrl(raw) {
+      let u = raw.trim();
+      if (!/^https?:\/\//i.test(u)) u = 'https://' + u;
+      return u;
+    }
+
+    function setGrade(ms) {
+      const el = $h('headline-grade');
+      let label, color, dotColor;
+      if (ms < 2000) { label = 'Fast'; color = '#00B8A9'; dotColor = '#00B8A9'; }
+      else if (ms < 5000) { label = 'Moderate'; color = '#FF6B35'; dotColor = '#FF6B35'; }
+      else { label = 'Slow'; color = '#E8384F'; dotColor = '#E8384F'; }
+      el.innerHTML = `<span class="meter-dot" style="background:${dotColor};"></span><span style="color:${color};">${label}</span>`;
+    }
+
+    function fmtMs(ms) {
+      if (ms == null || isNaN(ms)) return '—';
+      if (ms < 1000) return Math.round(ms) + ' ms';
+      return (ms / 1000).toFixed(2) + ' s';
+    }
+
+    function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+    async function runTest(rawUrl) {
+      const url = normalizeUrl(rawUrl);
+      let parsed;
+      try { parsed = new URL(url); }
+      catch (e) {
+        showError('That doesn\'t look like a valid URL. Try something like https://example.com');
+        return;
+      }
+
+      // reset UI
+      results.classList.add('hidden');
+      errorBox.classList.add('hidden');
+      loading.classList.remove('hidden');
+      testBtn.disabled = true;
+      testBtn.innerHTML = '<span class="spinner"></span> Testing…';
+      progressFill.style.width = '15%';
+      loadingText.textContent = 'Connecting to ' + parsed.hostname + '…';
+
+      // Clear previous perf entries
+      performance.clearResourceTimings();
+
+      // Build favicon URL (used for asset-load probe + redirect count)
+      const faviconUrl = parsed.origin + '/favicon.ico';
+      const startTime = performance.now();
+
+      // Track progress messages
+      const stages = [
+        { at: 200, msg: 'Sending request…' },
+        { at: 600, msg: 'Waiting for response (TTFB)…' },
+        { at: 1200, msg: 'Receiving payload…' },
+        { at: 2000, msg: 'Probing favicon & assets…' }
+      ];
+      stages.forEach(s => setTimeout(() => {
+        if (!loading.classList.contains('hidden')) {
+          loadingText.textContent = s.msg;
+          progressFill.style.width = Math.min(80, parseFloat(progressFill.style.width) + 15) + '%';
+        }
+      }, s.at));
+
+      let fetchOk = false, fetchErr = null, contentLength = 0, responseSize = 0;
+      let fetchDuration = 0, ttfbEst = 0;
+
+      // === Step 1: try fetch() (will likely be CORS-opaque but timing still works) ===
+      try {
+        const fetchStart = performance.now();
+        const res = await fetch(url, {
+          method: 'GET',
+          mode: 'no-cors',
+          cache: 'no-store',
+          redirect: 'follow'
+        });
+        const fetchEnd = performance.now();
+        fetchDuration = fetchEnd - fetchStart;
+        // no-cors gives opaque response; we can't read body, but timing is real
+        fetchOk = true;
+        // TTFB estimate: use Performance API resource timing if available
+        const entries = performance.getEntriesByType('resource').filter(e => e.name === url);
+        if (entries.length && entries[0].responseStart > 0) {
+          ttfbEst = entries[0].responseStart - entries[0].requestStart;
+          contentLength = entries[0].transferSize || entries[0].encodedBodySize || 0;
+        } else {
+          // No timing — estimate TTFB as half of fetch (rough)
+          ttfbEst = fetchDuration * 0.4;
+        }
+      } catch (err) {
+        fetchErr = err.message;
+        fetchDuration = performance.now() - startTime;
+      }
+
+      // === Step 2: favicon probe (for asset-load timing + redirect count) ===
+      loadingText.textContent = 'Probing favicon & assets…';
+      progressFill.style.width = '85%';
+      let faviconOk = false, faviconTime = 0, redirectCount = 0;
+      const faviconImg = new Image();
+      const favPromise = new Promise(resolve => {
+        const t0 = performance.now();
+        faviconImg.onload = () => { faviconTime = performance.now() - t0; faviconOk = true; resolve(); };
+        faviconImg.onerror = () => { faviconTime = performance.now() - t0; resolve(); }; // still gives us timing
+        faviconImg.src = faviconUrl + '?cb=' + Date.now();
+      });
+      await Promise.race([favPromise, sleep(4000)]);
+
+      // === Step 3: gather resource timings ===
+      const resourceEntries = performance.getEntriesByType('resource')
+        .filter(e => e.name.includes(parsed.hostname) || e.name === url || e.name === faviconUrl);
+
+      // Estimate redirect count from navigation-less approach: count chained resources to same path
+      // We can't truly count redirects without Navigation Timing, but we can check if resource timing
+      // shows redirectStart != 0
+      const withRedirect = resourceEntries.filter(e => e.redirectStart > 0 && e.redirectEnd > 0);
+      redirectCount = withRedirect.length;
+
+      // Page size estimate
+      let totalBytes = contentLength;
+      if (!totalBytes && resourceEntries.length) {
+        totalBytes = resourceEntries.reduce((s, e) => s + (e.transferSize || e.encodedBodySize || 0), 0);
+      }
+      // If still 0, use rough HTML weight estimate from no-cors response (assume ~50KB if fetch succeeded)
+      if (!totalBytes && fetchOk) totalBytes = 0; // unknown
+
+      // === Step 4: render results ===
+      await sleep(200);
+      progressFill.style.width = '100%';
+      loadingText.textContent = 'Done!';
+      await sleep(300);
+      loading.classList.add('hidden');
+      testBtn.disabled = false;
+      testBtn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> Run Speed Test';
+
+      // Headline
+      const totalTime = fetchDuration;
+      $h('headline-time').textContent = fmtMs(totalTime);
+      $h('headline-time').style.color = totalTime < 2000 ? '#00B8A9' : (totalTime < 5000 ? '#FF6B35' : '#E8384F');
+      setGrade(totalTime);
+
+      // Stat cards
+      $h('m-rtt').textContent = fmtMs(fetchDuration);
+      $h('m-ttfb').textContent = fmtMs(ttfbEst);
+      $h('m-size').textContent = totalBytes > 0 ? CL.formatBytes(totalBytes) : 'N/A';
+      $h('m-redir').textContent = String(redirectCount);
+
+      // Asset breakdown
+      const assetList = $h('asset-list');
+      assetList.innerHTML = '';
+      const assetEntries = resourceEntries.slice(0, 8);
+      if (assetEntries.length === 0) {
+        $h('asset-empty').classList.remove('hidden');
+      } else {
+        $h('asset-empty').classList.add('hidden');
+        assetEntries.forEach(e => {
+          const dur = e.responseEnd - e.startTime;
+          const size = e.transferSize || e.encodedBodySize || 0;
+          const short = e.name.length > 60 ? e.name.slice(0, 57) + '…' : e.name;
+          let type = 'other';
+          if (/\.css(\?|$)/.test(e.name)) type = 'CSS';
+          else if (/\.js(\?|$)/.test(e.name)) type = 'JS';
+          else if (/\.(png|jpg|jpeg|gif|webp|svg|ico)(\?|$)/.test(e.name)) type = 'Image';
+          else if (/\.woff2?(\?|$)/.test(e.name)) type = 'Font';
+          else if (e.name === url || e.name === parsed.href) type = 'Document';
+          const row = document.createElement('div');
+          row.className = 'flex items-center gap-3 text-xs';
+          row.innerHTML = `
+            <span class="badge" style="min-width:62px; text-align:center;">${type}</span>
+            <span class="flex-1 truncate font-mono text-gray-600 dark:text-gray-300" title="${e.name}">${short}</span>
+            <span class="text-gray-500 dark:text-gray-400" style="min-width:60px; text-align:right;">${fmtMs(dur)}</span>
+            <span class="text-gray-500 dark:text-gray-400" style="min-width:60px; text-align:right;">${size ? CL.formatBytes(size) : '—'}</span>
+          `;
+          assetList.appendChild(row);
+        });
+      }
+
+      // Recommendations
+      const recs = [];
+      if (totalTime > 5000) recs.push({ t: 'Slow round-trip', d: 'Total load time exceeds 5 seconds. Consider a CDN, HTTP/2, and reducing initial payload.' });
+      else if (totalTime > 2000) recs.push({ t: 'Moderate load time', d: 'Page takes 2–5s to load. Compress assets, lazy-load images, and review render-blocking scripts.' });
+      else recs.push({ t: 'Fast load time', d: 'Round-trip under 2 seconds — good baseline. Keep monitoring as the page grows.' });
+
+      if (ttfbEst > 800) recs.push({ t: 'Slow TTFB', d: 'Time to first byte exceeds 800ms. Investigate server response time, caching, and database queries.' });
+      if (totalBytes > 2_000_000) recs.push({ t: 'Heavy page weight', d: 'Page transfers >2 MB. Compress images, minify JS/CSS, and use modern formats (WebP/AVIF).' });
+      if (redirectCount > 0) recs.push({ t: 'Redirects detected', d: redirectCount + ' resource(s) followed redirects. Each redirect adds latency — update links to canonical URLs.' });
+      if (!fetchOk) recs.push({ t: 'Fetch blocked', d: 'The site blocked cross-origin fetch. Timing values shown are best-effort from asset preloading.' });
+      if (!faviconOk) recs.push({ t: 'Missing favicon', d: 'No favicon found at /favicon.ico — minor, but adds a 404 round-trip on every visit.' });
+      recs.push({ t: 'Full audit', d: 'For a complete Lighthouse-style audit (CLS, LCP, FID), paste this URL into Google PageSpeed Insights.' });
+
+      const recList = $h('rec-list');
+      recList.innerHTML = '';
+      recs.forEach(r => {
+        const div = document.createElement('div');
+        div.className = 'rec-item';
+        div.innerHTML = `
+          <svg class="w-4 h-4 text-brand-orange shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z"/></svg>
+          <div>
+            <p class="text-sm font-semibold">${r.t}</p>
+            <p class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">${r.d}</p>
+          </div>`;
+        recList.appendChild(div);
+      });
+
+      // Update PageSpeed Insights link
+      psiLink.href = 'https://pagespeed.web.dev/?url=' + encodeURIComponent(url);
+
+      results.classList.remove('hidden');
+      CL.toast('Speed test complete');
+    }
+
+    function showError(msg) {
+      loading.classList.add('hidden');
+      testBtn.disabled = false;
+      testBtn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> Run Speed Test';
+      errorText.textContent = msg;
+      errorBox.classList.remove('hidden');
+      CL.toast('Test failed', false);
+    }
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      runTest(urlInput.value);
+    });
+
+    document.getElementById('retest-btn').addEventListener('click', () => {
+      runTest(urlInput.value);
+    });
+  })();
+  </script>
+</body>
+</html>

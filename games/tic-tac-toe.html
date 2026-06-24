@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tic-Tac-Toe vs AI — Contoura Labs</title>
+  <meta name="description" content="Play Tic-Tac-Toe against an unbeatable AI using the minimax algorithm. Three difficulty levels, score tracking, animated SVG X and O.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 73 28 A 32 32 0 0 0 27 28' stroke='%23FF6B35' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 24 32 A 32 32 0 0 0 24 68' stroke='%23E8384F' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 27 72 A 32 32 0 0 0 73 72' stroke='%2300B8A9' stroke-width='9' fill='none' stroke-linecap='round'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: {
+        colors: {
+          brand: { orange: '#FF6B35', red: '#E8384F', teal: '#00B8A9' },
+          surface: { light: '#F8F9FA', dark: '#0A0A0A', card: '#1A1A1A', alt: '#111111' }
+        },
+        fontFamily: { sans: ['Inter', 'sans-serif'] }
+      }}
+    }
+  </script>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <style>
+    .ttt-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      width: 320px;
+      max-width: 100%;
+      margin: 0 auto;
+    }
+    .ttt-cell {
+      aspect-ratio: 1 / 1;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.15s ease, background 0.2s ease, border-color 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .dark .ttt-cell { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.08); }
+    .ttt-cell:hover:not(.filled):not(.disabled) {
+      transform: translateY(-3px);
+      border-color: rgba(255,107,53,0.4);
+      background: rgba(255,107,53,0.06);
+    }
+    .ttt-cell.disabled { cursor: not-allowed; }
+    .ttt-cell.win {
+      background: linear-gradient(135deg, rgba(0,184,169,0.18), rgba(0,184,169,0.32));
+      border-color: #00B8A9;
+      animation: winPulse 0.9s ease infinite alternate;
+    }
+    @keyframes winPulse { from { box-shadow: 0 0 0 0 rgba(0,184,169,0.4); } to { box-shadow: 0 0 0 8px rgba(0,184,169,0); } }
+    .ttt-cell svg { width: 65%; height: 65%; }
+    .x-stroke {
+      stroke: #FF6B35;
+      stroke-width: 8;
+      stroke-linecap: round;
+      fill: none;
+      stroke-dasharray: 100;
+      stroke-dashoffset: 100;
+      animation: drawStroke 0.35s ease forwards;
+    }
+    .o-stroke {
+      stroke: #00B8A9;
+      stroke-width: 8;
+      stroke-linecap: round;
+      fill: none;
+      stroke-dasharray: 220;
+      stroke-dashoffset: 220;
+      animation: drawStroke 0.45s ease forwards;
+    }
+    @keyframes drawStroke { to { stroke-dashoffset: 0; } }
+    .difficulty-btn {
+      padding: 0.5rem 1rem;
+      border-radius: 9999px;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      border: 1px solid #e5e7eb;
+      background: #fff;
+      color: #6b7280;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .dark .difficulty-btn { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.1); color: #9ca3af; }
+    .difficulty-btn.active {
+      background: linear-gradient(135deg, #FF6B35, #E8384F, #00B8A9);
+      color: #fff;
+      border-color: transparent;
+      box-shadow: 0 6px 18px rgba(255,107,53,0.25);
+    }
+    .score-card {
+      flex: 1;
+      text-align: center;
+      padding: 1rem 0.5rem;
+      border-radius: 0.75rem;
+      background: #f9fafb;
+      border: 1px solid #f3f4f6;
+    }
+    .dark .score-card { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.06); }
+    .score-num { font-size: 1.75rem; font-weight: 800; line-height: 1; }
+    .score-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: #9ca3af; margin-top: 0.35rem; font-weight: 600; }
+    .turn-indicator {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.4rem 0.9rem; border-radius: 9999px; font-size: 0.8125rem; font-weight: 600;
+      background: rgba(255,107,53,0.1); color: #FF6B35;
+    }
+    .turn-indicator.ai { background: rgba(0,184,169,0.1); color: #00B8A9; }
+  </style>
+</head>
+<body class="font-sans bg-white text-gray-900 dark:bg-surface-dark dark:text-gray-100 antialiased">
+
+  <div id="navbar-mount"></div>
+
+  <main class="tool-page">
+    <div class="tool-container">
+      <header class="tool-header">
+        <span class="badge mb-3">Games</span>
+        <h1 class="tool-title">Tic-Tac-Toe vs AI</h1>
+        <p class="tool-subtitle">Beat the random easy mode, survive the medium, and try to draw against the unbeatable minimax.</p>
+      </header>
+
+      <div class="tool-card">
+
+        <!-- Score bar -->
+        <div class="flex gap-3 mb-6">
+          <div class="score-card">
+            <div class="score-num text-brand-orange" id="score-wins">0</div>
+            <div class="score-label">Wins (You)</div>
+          </div>
+          <div class="score-card">
+            <div class="score-num text-brand-red" id="score-losses">0</div>
+            <div class="score-label">Losses (AI)</div>
+          </div>
+          <div class="score-card">
+            <div class="score-num text-gray-400" id="score-draws">0</div>
+            <div class="score-label">Draws</div>
+          </div>
+        </div>
+
+        <!-- Difficulty selector -->
+        <div class="flex flex-wrap items-center justify-center gap-2 mb-5">
+          <span class="text-xs text-gray-400 font-semibold uppercase tracking-wider mr-1">Difficulty</span>
+          <button class="difficulty-btn" data-difficulty="easy">Easy</button>
+          <button class="difficulty-btn active" data-difficulty="medium">Medium</button>
+          <button class="difficulty-btn" data-difficulty="hard">Hard</button>
+        </div>
+
+        <!-- Turn indicator -->
+        <div class="text-center mb-5">
+          <span class="turn-indicator" id="turn-indicator">
+            <span class="w-2 h-2 rounded-full bg-brand-orange"></span>
+            <span id="turn-text">Your turn — you are X</span>
+          </span>
+        </div>
+
+        <!-- Grid -->
+        <div class="ttt-grid" id="ttt-grid"></div>
+
+        <!-- Controls -->
+        <div class="flex flex-wrap justify-center gap-3 mt-7">
+          <button class="btn-primary" id="new-round-btn">New Round</button>
+          <button class="btn-secondary" id="reset-score-btn">Reset Score</button>
+        </div>
+
+        <p class="text-xs text-gray-400 text-center mt-5">
+          You play <strong class="text-brand-orange">X</strong>, AI plays <strong class="text-brand-teal">O</strong>. Easy = random moves. Medium = 50% optimal. Hard = full minimax (unbeatable).
+        </p>
+      </div>
+    </div>
+  </main>
+
+  <footer class="py-8 border-t border-gray-100 dark:border-white/5 mt-12">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p class="text-xs text-gray-400">© 2025 Contoura Labs</p>
+      <a href="index.html" class="text-xs text-brand-orange hover:text-brand-red transition-colors">← Back to all games</a>
+    </div>
+  </footer>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+  (function () {
+    'use strict';
+
+    const HUMAN = 'X';
+    const AI = 'O';
+    const WIN_LINES = [
+      [0,1,2],[3,4,5],[6,7,8],
+      [0,3,6],[1,4,7],[2,5,8],
+      [0,4,8],[2,4,6]
+    ];
+
+    let board = Array(9).fill('');
+    let difficulty = 'medium';
+    let gameOver = false;
+    let aiThinking = false;
+    let scores = { wins: 0, losses: 0, draws: 0 };
+
+    const gridEl = document.getElementById('ttt-grid');
+    const turnIndicator = document.getElementById('turn-indicator');
+    const turnText = document.getElementById('turn-text');
+
+    // ---- SVG markup ----
+    function xSvg() {
+      return `<svg viewBox="0 0 100 100">
+        <path class="x-stroke" d="M 22 22 L 78 78"/>
+        <path class="x-stroke" d="M 78 22 L 22 78" style="animation-delay:0.18s"/>
+      </svg>`;
+    }
+    function oSvg() {
+      return `<svg viewBox="0 0 100 100">
+        <circle class="o-stroke" cx="50" cy="50" r="32"/>
+      </svg>`;
+    }
+
+    // ---- Board render ----
+    function renderBoard(winLine = []) {
+      gridEl.innerHTML = '';
+      board.forEach((val, i) => {
+        const cell = document.createElement('div');
+        cell.className = 'ttt-cell';
+        if (val) cell.classList.add('filled');
+        if (gameOver || aiThinking) cell.classList.add('disabled');
+        if (winLine.includes(i)) cell.classList.add('win');
+        if (val === 'X') cell.innerHTML = xSvg();
+        else if (val === 'O') cell.innerHTML = oSvg();
+        cell.addEventListener('click', () => onCellClick(i));
+        gridEl.appendChild(cell);
+      });
+    }
+
+    function setTurn(player) {
+      if (player === HUMAN) {
+        turnIndicator.classList.remove('ai');
+        turnIndicator.querySelector('span:first-child').className = 'w-2 h-2 rounded-full bg-brand-orange';
+        turnText.textContent = 'Your turn — you are X';
+      } else {
+        turnIndicator.classList.add('ai');
+        turnIndicator.querySelector('span:first-child').className = 'w-2 h-2 rounded-full bg-brand-teal';
+        turnText.textContent = aiThinking ? 'AI is thinking…' : 'AI plays O';
+      }
+    }
+
+    // ---- Game flow ----
+    function onCellClick(i) {
+      if (gameOver || aiThinking) return;
+      if (board[i] !== '') return;
+      board[i] = HUMAN;
+      const win = checkWinner(board);
+      if (win) {
+        endGame(win);
+        return;
+      }
+      setTurn(AI);
+      aiThinking = true;
+      renderBoard();
+      // small delay for realism
+      setTimeout(() => {
+        const move = pickAiMove();
+        if (move !== -1) board[move] = AI;
+        aiThinking = false;
+        const winAfter = checkWinner(board);
+        if (winAfter) {
+          endGame(winAfter);
+        } else {
+          setTurn(HUMAN);
+          renderBoard();
+        }
+      }, 380);
+    }
+
+    function pickAiMove() {
+      const empty = board.map((v, i) => v === '' ? i : -1).filter(i => i !== -1);
+      if (empty.length === 0) return -1;
+
+      if (difficulty === 'easy') {
+        return empty[Math.floor(Math.random() * empty.length)];
+      }
+      if (difficulty === 'medium') {
+        // 50% chance optimal, 50% random
+        if (Math.random() < 0.5) {
+          return empty[Math.floor(Math.random() * empty.length)];
+        }
+        return bestMove();
+      }
+      return bestMove();
+    }
+
+    // ---- Minimax ----
+    function checkWinner(b) {
+      for (const line of WIN_LINES) {
+        const [a,b1,c] = line;
+        if (b[a] && b[a] === b[b1] && b[a] === b[c]) {
+          return { winner: b[a], line };
+        }
+      }
+      if (b.every(v => v !== '')) return { winner: 'draw', line: [] };
+      return null;
+    }
+
+    function minimax(b, isMaximizing, depth) {
+      const res = checkWinner(b);
+      if (res) {
+        if (res.winner === AI) return 10 - depth;
+        if (res.winner === HUMAN) return depth - 10;
+        return 0;
+      }
+      if (isMaximizing) {
+        let best = -Infinity;
+        for (let i = 0; i < 9; i++) {
+          if (b[i] === '') {
+            b[i] = AI;
+            best = Math.max(best, minimax(b, false, depth + 1));
+            b[i] = '';
+          }
+        }
+        return best;
+      } else {
+        let best = Infinity;
+        for (let i = 0; i < 9; i++) {
+          if (b[i] === '') {
+            b[i] = HUMAN;
+            best = Math.min(best, minimax(b, true, depth + 1));
+            b[i] = '';
+          }
+        }
+        return best;
+      }
+    }
+
+    function bestMove() {
+      let bestScore = -Infinity;
+      let move = -1;
+      for (let i = 0; i < 9; i++) {
+        if (board[i] === '') {
+          board[i] = AI;
+          const score = minimax(board, false, 0);
+          board[i] = '';
+          if (score > bestScore) {
+            bestScore = score;
+            move = i;
+          }
+        }
+      }
+      return move;
+    }
+
+    function endGame(result) {
+      gameOver = true;
+      renderBoard(result.line);
+      if (result.winner === HUMAN) {
+        scores.wins++;
+        CL.toast('You win! Nice move.', true);
+      } else if (result.winner === AI) {
+        scores.losses++;
+        CL.toast('AI wins this round.', false);
+      } else {
+        scores.draws++;
+        CL.toast("It's a draw.", true);
+      }
+      updateScores();
+      setTimeout(() => {
+        turnText.textContent = result.winner === 'draw' ? "Draw — click New Round" : (result.winner === HUMAN ? 'You won! 🎉' : 'AI won. Try again?');
+      }, 100);
+    }
+
+    function updateScores() {
+      document.getElementById('score-wins').textContent = scores.wins;
+      document.getElementById('score-losses').textContent = scores.losses;
+      document.getElementById('score-draws').textContent = scores.draws;
+    }
+
+    function newRound() {
+      board = Array(9).fill('');
+      gameOver = false;
+      aiThinking = false;
+      setTurn(HUMAN);
+      renderBoard();
+    }
+
+    // ---- Wire UI ----
+    document.querySelectorAll('.difficulty-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.difficulty-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        difficulty = btn.dataset.difficulty;
+        CL.toast(`Difficulty: ${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}`, true);
+        newRound();
+        updateScores();
+      });
+    });
+
+    document.getElementById('new-round-btn').addEventListener('click', newRound);
+    document.getElementById('reset-score-btn').addEventListener('click', () => {
+      scores = { wins: 0, losses: 0, draws: 0 };
+      updateScores();
+      newRound();
+      CL.toast('Score reset.', true);
+    });
+
+    // ---- Init ----
+    renderBoard();
+    setTurn(HUMAN);
+  })();
+  </script>
+</body>
+</html>

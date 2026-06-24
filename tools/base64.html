@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Base64 Encode / Decode — Contoura Labs</title>
+  <meta name="description" content="Encode text to Base64 or decode Base64 back to text. Handles UTF-8 properly.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 73 28 A 32 32 0 0 0 27 28' stroke='%23FF6B35' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 24 32 A 32 32 0 0 0 24 68' stroke='%23E8384F' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 27 72 A 32 32 0 0 0 73 72' stroke='%2300B8A9' stroke-width='9' fill='none' stroke-linecap='round'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: {
+        colors: {
+          brand: { orange: '#FF6B35', red: '#E8384F', teal: '#00B8A9' },
+          surface: { light: '#F8F9FA', dark: '#0A0A0A', card: '#1A1A1A', alt: '#111111' }
+        },
+        fontFamily: { sans: ['Inter', 'sans-serif'] }
+      }}
+    }
+  </script>
+  <link rel="stylesheet" href="../assets/css/common.css">
+</head>
+<body class="font-sans bg-white text-gray-900 dark:bg-surface-dark dark:text-gray-100 antialiased">
+
+  <div id="navbar-mount"></div>
+
+  <main class="tool-page">
+    <div class="tool-container">
+      <header class="tool-header">
+        <span class="badge mb-3">Text / Dev Tools</span>
+        <h1 class="tool-title">Base64 <span class="gradient-text">Encoder / Decoder</span></h1>
+        <p class="tool-subtitle">Convert text to Base64 and back again. Full UTF-8 support, live byte counter, one-click copy.</p>
+      </header>
+
+      <div class="tool-card">
+        <!-- Mode toggle -->
+        <div class="flex justify-center mb-6">
+          <div class="inline-flex p-1 rounded-xl bg-gray-100 dark:bg-white/5">
+            <button id="tab-encode" class="px-5 py-2 rounded-lg text-sm font-semibold transition-colors bg-white dark:bg-surface-card shadow-sm text-brand-orange">Encode → Base64</button>
+            <button id="tab-decode" class="px-5 py-2 rounded-lg text-sm font-semibold transition-colors text-gray-500 dark:text-gray-400">Decode → Text</button>
+          </div>
+        </div>
+
+        <label class="field-label" for="input" id="input-label">Input text</label>
+        <textarea id="input" rows="6" placeholder="Type text to encode…"></textarea>
+
+        <div class="flex items-center justify-between mt-2 text-xs text-gray-400">
+          <span id="input-bytes">0 bytes</span>
+          <span id="input-chars">0 chars</span>
+        </div>
+
+        <div class="flex flex-wrap gap-3 mt-4">
+          <button class="btn-primary" id="run-btn">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7"/></svg>
+            <span id="run-label">Encode</span>
+          </button>
+          <button class="btn-secondary" id="clear-btn">Clear</button>
+        </div>
+
+        <!-- Output -->
+        <div id="output-wrap" class="mt-5 hidden">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="font-semibold text-sm" id="output-label">Output (Base64)</h3>
+            <button class="btn-secondary" id="copy-btn" style="padding:0.4rem 0.85rem;">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.5a2.25 2.25 0 00-2.25-2.25h-2.5a2.25 2.25 0 01-2.25-2.25v-2.5A2.25 2.25 0 009.375 3h-1.5"/></svg>
+              Copy
+            </button>
+          </div>
+          <textarea id="output" rows="6" readonly style="min-height:140px;"></textarea>
+          <div class="flex items-center justify-between mt-2 text-xs text-gray-400">
+            <span id="output-bytes">0 bytes</span>
+            <span id="output-chars">0 chars</span>
+          </div>
+          <!-- swap output→input -->
+          <button class="btn-secondary mt-3" id="swap-btn" style="padding:0.5rem 1rem;">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/></svg>
+            Use output as input
+          </button>
+        </div>
+
+        <p class="text-xs text-gray-400 mt-4 text-center">All encoding happens locally in your browser. UTF-8 characters like emoji and CJK are fully supported.</p>
+      </div>
+    </div>
+  </main>
+
+  <footer class="py-8 border-t border-gray-100 dark:border-white/5 mt-12">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p class="text-xs text-gray-400">© 2025 Contoura Labs</p>
+      <a href="index.html" class="text-xs text-brand-orange hover:text-brand-red transition-colors">← Back to all tools</a>
+    </div>
+  </footer>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+  (function () {
+    'use strict';
+
+    let mode = 'encode';
+    const tabE = document.getElementById('tab-encode');
+    const tabD = document.getElementById('tab-decode');
+    const inputEl = document.getElementById('input');
+    const inputLabel = document.getElementById('input-label');
+    const outputEl = document.getElementById('output');
+    const outputWrap = document.getElementById('output-wrap');
+    const outputLabel = document.getElementById('output-label');
+    const runLabel = document.getElementById('run-label');
+
+    // UTF-8 safe base64
+    function encodeB64(str) {
+      // encodeURIComponent handles UTF-8; btoa handles Latin-1
+      return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (_, p1) =>
+        String.fromCharCode(parseInt(p1, 16))));
+    }
+    function decodeB64(str) {
+      const bin = atob(str.trim());
+      const percented = bin.split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('');
+      return decodeURIComponent(percented);
+    }
+
+    function byteLength(str) {
+      return new TextEncoder().encode(str).length;
+    }
+
+    function updateInputStats() {
+      const v = inputEl.value;
+      document.getElementById('input-bytes').textContent = byteLength(v) + ' bytes';
+      document.getElementById('input-chars').textContent = v.length + ' chars';
+    }
+
+    function setMode(m) {
+      mode = m;
+      if (m === 'encode') {
+        tabE.classList.add('bg-white','dark:bg-surface-card','shadow-sm','text-brand-orange');
+        tabE.classList.remove('text-gray-500','dark:text-gray-400');
+        tabD.classList.remove('bg-white','dark:bg-surface-card','shadow-sm','text-brand-orange');
+        tabD.classList.add('text-gray-500','dark:text-gray-400');
+        inputLabel.textContent = 'Input text';
+        outputLabel.textContent = 'Output (Base64)';
+        runLabel.textContent = 'Encode';
+        inputEl.placeholder = 'Type text to encode…';
+      } else {
+        tabD.classList.add('bg-white','dark:bg-surface-card','shadow-sm','text-brand-orange');
+        tabD.classList.remove('text-gray-500','dark:text-gray-400');
+        tabE.classList.remove('bg-white','dark:bg-surface-card','shadow-sm','text-brand-orange');
+        tabE.classList.add('text-gray-500','dark:text-gray-400');
+        inputLabel.textContent = 'Input Base64';
+        outputLabel.textContent = 'Output (text)';
+        runLabel.textContent = 'Decode';
+        inputEl.placeholder = 'Paste Base64 string to decode…';
+      }
+    }
+
+    function run() {
+      const v = inputEl.value;
+      if (!v) { CL.toast('Please enter something first', false); return; }
+      try {
+        const out = mode === 'encode' ? encodeB64(v) : decodeB64(v);
+        outputEl.value = out;
+        outputWrap.classList.remove('hidden');
+        document.getElementById('output-bytes').textContent = byteLength(out) + ' bytes';
+        document.getElementById('output-chars').textContent = out.length + ' chars';
+        CL.toast(mode === 'encode' ? 'Encoded!' : 'Decoded!');
+      } catch (e) {
+        CL.toast('Invalid Base64 input', false);
+      }
+    }
+
+    tabE.addEventListener('click', () => setMode('encode'));
+    tabD.addEventListener('click', () => setMode('decode'));
+    inputEl.addEventListener('input', updateInputStats);
+    document.getElementById('run-btn').addEventListener('click', run);
+    document.getElementById('clear-btn').addEventListener('click', () => {
+      inputEl.value = '';
+      outputEl.value = '';
+      outputWrap.classList.add('hidden');
+      updateInputStats();
+      CL.toast('Cleared');
+    });
+    document.getElementById('copy-btn').addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(outputEl.value);
+        CL.toast('Copied!');
+      } catch (e) { CL.toast('Copy failed', false); }
+    });
+    document.getElementById('swap-btn').addEventListener('click', () => {
+      inputEl.value = outputEl.value;
+      updateInputStats();
+      outputWrap.classList.add('hidden');
+      // flip mode to allow re-roundtrip
+      setMode(mode === 'encode' ? 'decode' : 'encode');
+      CL.toast('Output moved to input');
+    });
+
+    updateInputStats();
+  })();
+  </script>
+</body>
+</html>

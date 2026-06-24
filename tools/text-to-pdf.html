@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Text to PDF — Contoura Labs</title>
+  <meta name="description" content="Generate a clean PDF from plain text with custom formatting options.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 73 28 A 32 32 0 0 0 27 28' stroke='%23FF6B35' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 24 32 A 32 32 0 0 0 24 68' stroke='%23E8384F' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 27 72 A 32 32 0 0 0 73 72' stroke='%2300B8A9' stroke-width='9' fill='none' stroke-linecap='round'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: {
+        colors: {
+          brand: { orange: '#FF6B35', red: '#E8384F', teal: '#00B8A9' },
+          surface: { light: '#F8F9FA', dark: '#0A0A0A', card: '#1A1A1A', alt: '#111111' }
+        },
+        fontFamily: { sans: ['Inter', 'sans-serif'] }
+      }}
+    }
+  </script>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+</head>
+<body class="font-sans bg-white text-gray-900 dark:bg-surface-dark dark:text-gray-100 antialiased">
+
+  <div id="navbar-mount"></div>
+
+  <main class="tool-page">
+    <div class="tool-container">
+      <header class="tool-header">
+        <span class="badge mb-3">PDF Tools</span>
+        <h1 class="tool-title">Text to PDF</h1>
+        <p class="tool-subtitle">Paste or type text, customize formatting, and download a clean PDF. All in-browser.</p>
+      </header>
+
+      <div class="tool-card">
+        <label class="field-label">Your text</label>
+        <textarea id="text-input" placeholder="Type or paste your text here…&#10;&#10;Tip: blank lines start a new paragraph. Long lines wrap automatically." style="min-height:240px"></textarea>
+
+        <div class="grid-3 mt-4">
+          <div>
+            <label class="field-label">Page size</label>
+            <select id="page-size">
+              <option value="A4">A4</option>
+              <option value="Letter">US Letter</option>
+              <option value="Legal">US Legal</option>
+            </select>
+          </div>
+          <div>
+            <label class="field-label">Orientation</label>
+            <select id="orientation">
+              <option value="portrait">Portrait</option>
+              <option value="landscape">Landscape</option>
+            </select>
+          </div>
+          <div>
+            <label class="field-label">Font size (pt)</label>
+            <input type="number" id="font-size" value="12" min="8" max="24">
+          </div>
+        </div>
+
+        <div class="grid-3 mt-4">
+          <div>
+            <label class="field-label">Margin (pt)</label>
+            <input type="number" id="margin" value="56" min="24" max="120">
+          </div>
+          <div>
+            <label class="field-label">Line spacing</label>
+            <select id="line-spacing">
+              <option value="1.2">1.2 × (tight)</option>
+              <option value="1.4" selected>1.4 × (normal)</option>
+              <option value="1.6">1.6 × (loose)</option>
+              <option value="2">2 × (double)</option>
+            </select>
+          </div>
+          <div>
+            <label class="field-label">Title (optional)</label>
+            <input type="text" id="doc-title" placeholder="Document title">
+          </div>
+        </div>
+
+        <div class="grid-2 mt-4">
+          <label class="flex items-center gap-2 text-sm">
+            <input type="checkbox" id="bold-title" class="accent-brand-orange">
+            Bold title on first page
+          </label>
+          <label class="flex items-center gap-2 text-sm">
+            <input type="checkbox" id="page-numbers" checked class="accent-brand-orange">
+            Add page numbers
+          </label>
+        </div>
+
+        <div id="progress-wrap" class="mt-6 hidden">
+          <div class="flex justify-between text-xs mb-2">
+            <span id="progress-label">Generating…</span>
+            <span id="progress-pct">0%</span>
+          </div>
+          <div class="progress-bar"><div class="progress-bar-fill" id="progress-fill" style="width:0%"></div></div>
+        </div>
+
+        <div class="flex gap-3 mt-4">
+          <button class="btn-primary flex-1" id="gen-btn">Generate PDF</button>
+          <button class="btn-secondary" id="reset-btn">Reset</button>
+        </div>
+
+        <div id="result" class="mt-6 hidden">
+          <div class="flex items-center gap-3 p-4 rounded-xl bg-brand-teal/10 mb-4">
+            <svg class="w-6 h-6 text-brand-teal" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <div>
+              <p class="font-semibold text-sm" id="result-title">PDF ready</p>
+              <p class="text-xs text-gray-500" id="result-meta"></p>
+            </div>
+          </div>
+          <button class="btn-primary w-full" id="download-btn">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+            Download PDF
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="py-8 border-t border-gray-100 dark:border-white/5 mt-12">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p class="text-xs text-gray-400">© 2025 Contoura Labs</p>
+      <a href="index.html" class="text-xs text-brand-orange hover:text-brand-red transition-colors">← Back to all tools</a>
+    </div>
+  </footer>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+    const { PDFDocument, StandardFonts, rgb } = PDFLib;
+
+    const textInput = document.getElementById('text-input');
+    const pageSizeSel = document.getElementById('page-size');
+    const orientationSel = document.getElementById('orientation');
+    const fontSizeInput = document.getElementById('font-size');
+    const marginInput = document.getElementById('margin');
+    const lineSpacingSel = document.getElementById('line-spacing');
+    const docTitle = document.getElementById('doc-title');
+    const boldTitle = document.getElementById('bold-title');
+    const pageNumbers = document.getElementById('page-numbers');
+    const genBtn = document.getElementById('gen-btn');
+    const resetBtn = document.getElementById('reset-btn');
+    const progressWrap = document.getElementById('progress-wrap');
+    const progressFill = document.getElementById('progress-fill');
+    const progressPct = document.getElementById('progress-pct');
+    const progressLabel = document.getElementById('progress-label');
+    const result = document.getElementById('result');
+    const resultMeta = document.getElementById('result-meta');
+    const downloadBtn = document.getElementById('download-btn');
+
+    let currentBlob = null;
+
+    function setProgress(pct, label) {
+      progressWrap.classList.remove('hidden');
+      progressFill.style.width = pct + '%';
+      progressPct.textContent = Math.round(pct) + '%';
+      if (label) progressLabel.textContent = label;
+    }
+
+    function getPageDims() {
+      const map = { A4: [595.28, 841.89], Letter: [612, 792], Legal: [612, 1008] };
+      let [w, h] = map[pageSizeSel.value] || map.A4;
+      if (orientationSel.value === 'landscape') [w, h] = [h, w];
+      return [w, h];
+    }
+
+    function wrapText(text, font, fontSize, maxWidth) {
+      const words = text.split(/\s+/).filter(Boolean);
+      const lines = [];
+      let line = '';
+      for (const w of words) {
+        const test = line ? line + ' ' + w : w;
+        if (font.widthOfTextAtSize(test, fontSize) > maxWidth && line) {
+          lines.push(line);
+          line = w;
+        } else {
+          line = test;
+        }
+      }
+      if (line) lines.push(line);
+      return lines;
+    }
+
+    genBtn.addEventListener('click', async () => {
+      const text = textInput.value.trim();
+      if (!text) {
+        CL.toast('Please enter some text first', false);
+        return;
+      }
+      genBtn.disabled = true;
+      try {
+        setProgress(10, 'Setting up…');
+        const pdfDoc = await PDFDocument.create();
+        const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+        const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+        const [pageW, pageH] = getPageDims();
+        const margin = parseInt(marginInput.value, 10) || 56;
+        const fontSize = parseInt(fontSizeInput.value, 10) || 12;
+        const lh = parseFloat(lineSpacingSel.value);
+        const maxWidth = pageW - margin * 2;
+        const bottomLimit = margin + (pageNumbers.checked ? 20 : 0);
+
+        let page = pdfDoc.addPage([pageW, pageH]);
+        let y = pageH - margin;
+
+        // Title
+        const title = docTitle.value.trim();
+        if (title) {
+          const titleFont = boldTitle.checked ? fontBold : font;
+          const titleSize = fontSize + 6;
+          const titleLines = wrapText(title, titleFont, titleSize, maxWidth);
+          for (const line of titleLines) {
+            page.drawText(line, { x: margin, y, size: titleSize, font: titleFont, color: rgb(0.1, 0.1, 0.1) });
+            y -= titleSize * lh;
+          }
+          y -= fontSize * 0.8;
+        }
+
+        // Split into paragraphs (blank-line separated)
+        const paragraphs = text.split(/\n\s*\n/);
+        let totalLines = 0;
+        const totalParas = paragraphs.length;
+        setProgress(20, 'Rendering text…');
+
+        for (let pi = 0; pi < paragraphs.length; pi++) {
+          const para = paragraphs[pi].replace(/\n/g, ' ').trim();
+          if (!para) continue;
+          const lines = wrapText(para, font, fontSize, maxWidth);
+          for (const line of lines) {
+            if (y < bottomLimit + fontSize) {
+              page = pdfDoc.addPage([pageW, pageH]);
+              y = pageH - margin;
+            }
+            page.drawText(line, { x: margin, y, size: fontSize, font, color: rgb(0.15, 0.15, 0.15) });
+            y -= fontSize * lh;
+            totalLines++;
+          }
+          y -= fontSize * 0.6; // paragraph spacing
+          if (pi % 5 === 0) {
+            setProgress(20 + (pi / totalParas) * 70, `Rendering paragraph ${pi + 1}/${totalParas}…`);
+            await new Promise(r => setTimeout(r, 0));
+          }
+        }
+
+        // Page numbers
+        setProgress(92, 'Adding page numbers…');
+        if (pageNumbers.checked) {
+          const pages = pdfDoc.getPages();
+          const total = pages.length;
+          for (let i = 0; i < total; i++) {
+            const p = pages[i];
+            const label = `${i + 1} / ${total}`;
+            const w = font.widthOfTextAtSize(label, 9);
+            p.drawText(label, {
+              x: (p.getWidth() - w) / 2,
+              y: 24,
+              size: 9,
+              font,
+              color: rgb(0.55, 0.55, 0.55)
+            });
+          }
+        }
+
+        setProgress(96, 'Saving…');
+        const bytes = await pdfDoc.save();
+        currentBlob = new Blob([bytes], { type: 'application/pdf' });
+        setProgress(100, 'Done');
+        resultMeta.textContent = `${pdfDoc.getPageCount()} page(s) · ${totalLines} line(s) · ${CL.formatBytes(currentBlob.size)}`;
+        result.classList.remove('hidden');
+        CL.toast('PDF generated!');
+      } catch (err) {
+        console.error(err);
+        CL.toast('Generation failed: ' + err.message, false);
+      } finally {
+        genBtn.disabled = false;
+      }
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      if (!currentBlob) return;
+      const name = (docTitle.value.trim() || 'document').replace(/[^a-z0-9-_]+/gi, '_') + '.pdf';
+      CL.download(currentBlob, name);
+    });
+
+    resetBtn.addEventListener('click', () => {
+      textInput.value = '';
+      docTitle.value = '';
+      currentBlob = null;
+      result.classList.add('hidden');
+      progressWrap.classList.add('hidden');
+    });
+  </script>
+</body>
+</html>
