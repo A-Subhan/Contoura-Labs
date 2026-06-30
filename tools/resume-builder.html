@@ -37,7 +37,8 @@
     .rb-section > summary { list-style: none; cursor: pointer; padding: 0.75rem 1rem; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
     .rb-section > summary::-webkit-details-marker { display: none; }
     .rb-section-title { font-size: 0.8rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--brand-orange); display: flex; align-items: center; gap: 0.5rem; }
-    .rb-section-title .chev { width: 1rem; height: 1rem; transition: transform .2s ease; color: #9ca3af; }
+    /* Universal chevron sizing — works regardless of where .chev lives in the markup */
+    .chev { width: 1rem !important; height: 1rem !important; flex-shrink: 0; transition: transform .2s ease; color: #9ca3af; }
     .rb-section[open] > summary .chev { transform: rotate(180deg); }
     .rb-section-body { padding: 0 1rem 1rem 1rem; }
     .rb-section-count { font-size: 0.7rem; font-weight: 600; color: #9ca3af; background: rgba(0,0,0,0.04); padding: 0.1rem 0.5rem; border-radius: 999px; }
@@ -63,8 +64,9 @@
     .input-sm { padding: 0.5rem 0.7rem !important; font-size: 0.8125rem !important; min-height: 0 !important; }
 
     /* ===== Template selector ===== */
-    .tpl-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.5rem; }
-    @media (max-width: 640px) { .tpl-grid { grid-template-columns: repeat(3, 1fr); } }
+    .tpl-grid { display: flex; flex-direction: column; gap: 0.6rem; }
+    .tpl-family { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.5rem; }
+    @media (max-width: 640px) { .tpl-family { grid-template-columns: repeat(3, 1fr); } }
     .tpl-card { cursor: pointer; border-radius: 0.55rem; overflow: hidden; border: 2px solid #e5e7eb; transition: all .2s ease; background: #fff; position: relative; }
     .dark .tpl-card { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.1); }
     .tpl-card input { position: absolute; opacity: 0; pointer-events: none; }
@@ -80,7 +82,8 @@
     .tpl-name { font-size: 0.7rem; font-weight: 600; padding: 0.35rem 0.4rem; text-align: center; color: #374151; border-top: 1px solid #f3f4f6; }
     .dark .tpl-name { color: #d1d5db; border-top-color: rgba(255,255,255,0.06); }
     .tpl-card.sel .tpl-name { color: var(--brand-orange); }
-    .tpl-family-label { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #9ca3af; margin: 0.6rem 0 0.35rem 0.05rem; }
+    .tpl-family-label { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #9ca3af; margin: 0 0 0.35rem 0.05rem; }
+    .tpl-family-row + .tpl-family-row { margin-top: 0.25rem; }
 
     /* ===== Resume preview ===== */
     .resume-frame {
@@ -229,7 +232,7 @@
               <span class="rb-section-title">Personal Info</span>
               <span class="flex items-center gap-2">
                 <span class="rb-section-count" id="cnt-personal">0/8</span>
-                <svg class="chev" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                <svg class="chev" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
               </span>
             </summary>
             <div class="rb-section-body">
@@ -250,7 +253,7 @@
           <details class="rb-section" open>
             <summary>
               <span class="rb-section-title">Professional Summary</span>
-              <svg class="chev" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+              <svg class="chev" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
             </summary>
             <div class="rb-section-body">
               <textarea id="f-summary" class="input-sm" rows="3" placeholder="2-3 sentences describing your background, strengths, and what you're looking for."></textarea>
@@ -263,7 +266,7 @@
               <span class="rb-section-title">Work Experience</span>
               <span class="flex items-center gap-2">
                 <span class="rb-section-count" id="cnt-exp">0</span>
-                <svg class="chev" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                <svg class="chev" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
               </span>
             </summary>
             <div class="rb-section-body">
@@ -278,7 +281,7 @@
               <span class="rb-section-title">Education</span>
               <span class="flex items-center gap-2">
                 <span class="rb-section-count" id="cnt-edu">0</span>
-                <svg class="chev" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                <svg class="chev" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
               </span>
             </summary>
             <div class="rb-section-body">
@@ -291,7 +294,7 @@
           <details class="rb-section" open>
             <summary>
               <span class="rb-section-title">Skills</span>
-              <svg class="chev" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+              <svg class="chev" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
             </summary>
             <div class="rb-section-body">
               <label class="field-label">General Skills <span class="text-xs text-gray-400">(comma-separated)</span></label>
@@ -309,7 +312,7 @@
               <span class="rb-section-title">Languages</span>
               <span class="flex items-center gap-2">
                 <span class="rb-section-count" id="cnt-lang">0</span>
-                <svg class="chev" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                <svg class="chev" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
               </span>
             </summary>
             <div class="rb-section-body">
@@ -324,7 +327,7 @@
               <span class="rb-section-title">References</span>
               <span class="flex items-center gap-2">
                 <span class="rb-section-count" id="cnt-ref">0</span>
-                <svg class="chev" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                <svg class="chev" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
               </span>
             </summary>
             <div class="rb-section-body">
@@ -339,7 +342,7 @@
               <span class="rb-section-title">Socials</span>
               <span class="flex items-center gap-2">
                 <span class="rb-section-count" id="cnt-social">0</span>
-                <svg class="chev" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                <svg class="chev" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
               </span>
             </summary>
             <div class="rb-section-body">
@@ -354,7 +357,7 @@
               <span class="rb-section-title">Projects</span>
               <span class="flex items-center gap-2">
                 <span class="rb-section-count" id="cnt-proj">0</span>
-                <svg class="chev" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                <svg class="chev" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
               </span>
             </summary>
             <div class="rb-section-body">
@@ -531,7 +534,10 @@
       ];
       let html = '';
       families.forEach(fam => {
+        // Each family (label + 5 cards) wrapped in its own row container
+        html += `<div class="tpl-family-row">`;
         html += `<div class="tpl-family-label">${fam.label}</div>`;
+        html += `<div class="tpl-family">`;
         fam.keys.forEach(key => {
           const t = TEMPLATES[key];
           const accent = t.accent || '#1a1a1a';
@@ -547,6 +553,7 @@
               <div class="tpl-name">${key} · ${t.name}</div>
             </label>`;
         });
+        html += `</div></div>`;
       });
       grid.innerHTML = html;
       grid.querySelectorAll('.tpl-card').forEach(card => {
@@ -787,16 +794,21 @@
           </div>`).join('');
       }
 
-      const name = state.name || 'Your Name';
-      const role = state.role || 'Your Job Title';
+      const name = state.name || '';
+      const role = state.role || '';
+
+      // Build header — only include name/role if user actually typed them
+      let headerHtml = '';
+      if (name || role || contactHtml) {
+        headerHtml = '<div class="r-header">';
+        if (name) headerHtml += `<h1 class="r-name">${escapeHtml(name)}</h1>`;
+        if (role) headerHtml += `<div class="r-role">${escapeHtml(role)}</div>`;
+        headerHtml += contactHtml + '</div>';
+      }
 
       PREVIEW.innerHTML = `
-        <div class="r-header">
-          <h1 class="r-name">${escapeHtml(name)}</h1>
-          <div class="r-role">${escapeHtml(role)}</div>
-          ${contactHtml}
-        </div>
-        <div class="r-divider"></div>
+        ${headerHtml}
+        ${headerHtml ? '<div class="r-divider"></div>' : ''}
         ${summaryHtml}
         ${expHtml}
         ${eduHtml}
@@ -804,7 +816,7 @@
         ${langHtml}
         ${projHtml}
         ${refHtml}
-        ${(!state.summary && !state.experience.length && !state.education.length && !allSkills.length) ? '<p class="rb-empty">Start filling out the form on the left to see your resume here.</p>' : ''}
+        ${(!state.summary && !state.experience.length && !state.education.length && !allSkills.length && !name && !role) ? '<p class="rb-empty">Start filling out the form on the left to see your resume here.</p>' : ''}
       `;
 
       // Update personal count
@@ -834,18 +846,50 @@
     // ===== PDF download =====
     $('download-btn').addEventListener('click', () => {
       const filename = (state.name || 'resume').toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-resume.pdf';
+
+      // Clone the preview and force light-mode styling so dark mode doesn't break the PDF
+      const clone = PREVIEW.cloneNode(true);
+      clone.style.position = 'fixed';
+      clone.style.left = '-9999px';
+      clone.style.top = '0';
+      clone.style.background = '#ffffff';
+      clone.style.color = '#1a1a1a';
+      clone.style.boxShadow = 'none';
+      clone.style.borderRadius = '0';
+      clone.style.width = '794px'; // A4 width at 96dpi
+      clone.style.padding = '48px 40px';
+      // Force all children to light-mode colors
+      clone.querySelectorAll('*').forEach(el => {
+        const cs = window.getComputedStyle(el);
+        // Only override if the element has dark-ish text/background
+        if (el.style) {
+          if (cs.color === 'rgb(243, 244, 246)' || cs.color === 'rgb(229, 231, 235)' || cs.color === 'rgb(255, 255, 255)') {
+            el.style.color = '#1a1a1a';
+          }
+          if (cs.backgroundColor === 'rgb(26, 26, 26)' || cs.backgroundColor === 'rgb(10, 10, 10)' || cs.backgroundColor === 'rgb(17, 17, 17)') {
+            el.style.backgroundColor = '#ffffff';
+          }
+        }
+      });
+      document.body.appendChild(clone);
+
       const opt = {
         margin: 0,
         filename: filename,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false },
         jsPDF: { unit: 'pt', format: 'a4', orientation: 'portrait' },
         pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
       };
       CL.toast('Generating PDF…');
-      html2pdf().set(opt).from(PREVIEW).save().then(() => {
+      html2pdf().set(opt).from(clone).save().then(() => {
+        document.body.removeChild(clone);
         CL.toast('PDF downloaded');
-      }).catch(err => { console.error(err); CL.toast('PDF generation failed', false); });
+      }).catch(err => {
+        console.error(err);
+        document.body.removeChild(clone);
+        CL.toast('PDF generation failed', false);
+      });
     });
 
     // ===== Sample / Clear =====
@@ -888,10 +932,10 @@
     modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('open'); });
 
     $('em-generate').addEventListener('click', () => {
-      const senderName = $('em-sender-name').value.trim() || 'Your Name';
-      const senderEmail = $('em-sender-email').value.trim() || 'your@email.com';
+      const senderName = $('em-sender-name').value.trim();
+      const senderEmail = $('em-sender-email').value.trim();
       const receiverName = $('em-receiver-name').value.trim() || 'Hiring Manager';
-      const receiverEmail = $('em-receiver-email').value.trim() || 'hiring@company.com';
+      const receiverEmail = $('em-receiver-email').value.trim();
       const company = $('em-company').value.trim() || 'your company';
       const jobtitle = $('em-jobtitle').value.trim() || 'the open position';
       const mentionCover = $('em-mention-cover').value === 'yes';
@@ -905,7 +949,7 @@
       const expLine = topExp ? `Most recently as ${topExp.title} at ${topExp.company}${topExp.dates ? ` (${topExp.dates})` : ''}` : 'with relevant industry experience';
       const projLine = state.projects[0] ? ` Notable project: ${state.projects[0].title}${state.projects[0].description ? ' — ' + state.projects[0].description.split('.')[0] + '.' : ''}` : '';
 
-      const subject = `Application: ${jobtitle} — ${senderName}`;
+      const subject = `Application: ${jobtitle}${senderName ? ' — ' + senderName : ''}`;
       const coverLine = mentionCover ? `I have also attached a cover letter that walks through my motivation for joining ${company} in more detail. ` : '';
 
       const body = `Dear ${receiverName},
@@ -918,11 +962,10 @@ ${coverLine}The resume summarizes my background${yearsHint ? ' ' + yearsHint : '
 
 Thank you for your time and consideration — I look forward to hearing from you.
 
-Sincerely,
-${senderName}
-${senderEmail}`;
+Sincerely,${senderName ? '\n' + senderName : ''}${senderEmail ? '\n' + senderEmail : ''}`;
 
-      const fullEmail = `To: ${receiverEmail}\nSubject: ${subject}\n\n${body}`;
+      const toLine = receiverEmail ? `To: ${receiverEmail}\n` : '';
+      const fullEmail = `${toLine}Subject: ${subject}\n\n${body}`;
       $('email-output').value = fullEmail;
       $('email-result').classList.remove('hidden');
       modal.classList.remove('open');

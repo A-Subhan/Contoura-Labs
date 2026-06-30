@@ -1,0 +1,1830 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Roadlaps — Map Poster Studio | Contoura Labs</title>
+  <meta name="description" content="Create highly customizable, print-ready map posters and wallpapers of any location. Full control over colors, styles, layouts, typography. Export as PNG, PDF, or SVG. 100% in-browser, no signup.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 73 28 A 32 32 0 0 0 27 28' stroke='%23FF6B35' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 24 32 A 32 32 0 0 0 24 68' stroke='%23E8384F' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 27 72 A 32 32 0 0 0 73 72' stroke='%2300B8A9' stroke-width='9' fill='none' stroke-linecap='round'/></svg>">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;600;700;800&family=Bebas+Neue&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- MapLibre GL JS (vector tiles, language support, smooth zoom) -->
+  <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: {
+        colors: {
+          brand: { orange: '#FF6B35', red: '#E8384F', teal: '#00B8A9' },
+          surface: { light: '#F8F9FA', dark: '#0A0A0A', card: '#1A1A1A', alt: '#111111' }
+        },
+        fontFamily: { sans: ['Inter', 'sans-serif'] }
+      }}
+    }
+  </script>
+  <link rel="stylesheet" href="../assets/css/common.css">
+
+  <style>
+    :root {
+      --brand-orange: #FF6B35;
+      --brand-red: #E8384F;
+      --brand-teal: #00B8A9;
+      --gradient: linear-gradient(135deg, #FF6B35 0%, #E8384F 40%, #00B8A9 100%);
+      --radius: 0.75rem;
+      --radius-sm: 0.5rem;
+      --transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Page is scrollable, not locked to viewport */
+    .roadlaps-page {
+      min-height: 100vh;
+    }
+
+    /* Hero */
+    .roadlaps-hero {
+      text-align: center;
+      padding: 3rem 1.5rem 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .roadlaps-hero h1 {
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 0.75rem;
+    }
+    .roadlaps-hero p {
+      color: #6b7280;
+      font-size: 1.05rem;
+      max-width: 40rem;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+    .dark .roadlaps-hero p { color: #9ca3af; }
+
+    /* Main editor grid */
+    .roadlaps-editor {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 1.5rem;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 1.5rem 3rem;
+    }
+    @media (max-width: 900px) {
+      .roadlaps-editor { grid-template-columns: 1fr; }
+    }
+
+    /* Map preview area */
+    .preview-area {
+      position: relative;
+    }
+    .poster-frame {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1 / 1.414;
+      max-height: 75vh;
+      background: #0a0a0a;
+      border-radius: 0.5rem;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.05);
+      transition: aspect-ratio 0.4s ease;
+    }
+    .poster-frame.landscape { aspect-ratio: 1.414 / 1; }
+
+    #map {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      background: #0a0a0a;
+    }
+
+    /* MapLibre overrides */
+    .maplibregl-ctrl-attrib { display: none !important; }
+    .maplibregl-canvas { outline: none !important; }
+
+    /* Poster text overlay */
+    .poster-text {
+      position: absolute;
+      left: 0; right: 0;
+      padding: 1.5rem 2rem;
+      pointer-events: none;
+      z-index: 5;
+    }
+    .poster-text.top { top: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent); }
+    .poster-text.bottom { bottom: 0; background: linear-gradient(to top, rgba(0,0,0,0.5), transparent); }
+    .poster-text.align-left { text-align: left; }
+    .poster-text.align-center { text-align: center; }
+    .poster-text.align-right { text-align: right; }
+
+    .poster-title {
+      font-family: 'Inter', sans-serif;
+      font-weight: 800;
+      color: #fff;
+      margin: 0;
+      line-height: 1.1;
+      text-shadow: 0 2px 12px rgba(0,0,0,0.6);
+      word-break: break-word;
+    }
+    .poster-subtitle {
+      font-family: 'Inter', sans-serif;
+      font-weight: 400;
+      color: rgba(255,255,255,0.85);
+      margin: 0.35rem 0 0;
+      text-shadow: 0 1px 6px rgba(0,0,0,0.6);
+    }
+    .poster-credit {
+      position: absolute;
+      bottom: 0.5rem;
+      right: 0.75rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.6rem;
+      color: rgba(255,255,255,0.5);
+      z-index: 5;
+      pointer-events: none;
+      text-align: right;
+    }
+    .poster-credit.hide-credit { display: none; }
+
+    /* Controls panel */
+    .controls-panel {
+      background: #fff;
+      border: 1px solid #f3f4f6;
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      max-height: 75vh;
+      overflow-y: auto;
+      scrollbar-width: thin;
+    }
+    .dark .controls-panel {
+      background: #1A1A1A;
+      border-color: rgba(255,255,255,0.05);
+    }
+    .controls-panel::-webkit-scrollbar { width: 6px; }
+    .controls-panel::-webkit-scrollbar-thumb { background: rgba(255,107,53,0.3); border-radius: 3px; }
+
+    .panel-section {
+      padding-bottom: 1.25rem;
+      margin-bottom: 1.25rem;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .dark .panel-section { border-bottom-color: rgba(255,255,255,0.05); }
+    .panel-section:last-child { border-bottom: none; margin-bottom: 0; }
+
+    .panel-heading {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--brand-orange);
+      margin: 0 0 0.875rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .panel-heading::before {
+      content: '';
+      width: 3px; height: 0.85rem;
+      border-radius: 2px;
+      background: var(--gradient);
+    }
+
+    .control-row { margin-bottom: 0.75rem; }
+    .control-row:last-child { margin-bottom: 0; }
+    .control-label {
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 0.78rem; font-weight: 500; color: #6b7280;
+      margin-bottom: 0.35rem;
+    }
+    .dark .control-label { color: #9ca3af; }
+    .control-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem; color: var(--brand-teal); font-weight: 600;
+    }
+
+    .text-input, .select-input {
+      width: 100%;
+      padding: 0.5rem 0.75rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid #e5e7eb;
+      background: #f9fafb;
+      color: #111;
+      font-size: 0.8125rem;
+      font-family: 'Inter', sans-serif;
+      outline: none;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+    .dark .text-input, .dark .select-input {
+      background: #0a0a0a;
+      border-color: rgba(255,255,255,0.15);
+      color: #f3f4f6;
+    }
+    /* Force option elements to have dark background + light text in dark mode */
+    .dark .select-input option {
+      background: #1a1a1a;
+      color: #f3f4f6;
+    }
+    .dark .select-input option:checked {
+      background: #FF6B35;
+      color: #fff;
+    }
+    .text-input:focus, .select-input:focus {
+      border-color: var(--brand-orange);
+      box-shadow: 0 0 0 3px rgba(255,107,53,0.12);
+    }
+    .select-input {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      padding-right: 2rem;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%239ca3af' stroke-width='2' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.6rem center;
+      cursor: pointer;
+    }
+    .dark .select-input {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%239ca3af' stroke-width='2' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-color: #0a0a0a;
+    }
+
+    .range-input {
+      -webkit-appearance: none; appearance: none;
+      width: 100%; height: 6px;
+      border-radius: 3px;
+      background: #e5e7eb;
+      outline: none; cursor: pointer;
+    }
+    .dark .range-input { background: rgba(255,255,255,0.1); }
+    .range-input::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none;
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: var(--gradient);
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(255,107,53,0.4);
+    }
+    .range-input::-moz-range-thumb {
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: var(--brand-orange);
+      cursor: pointer; border: none;
+    }
+
+    .color-input-wrap {
+      position: relative; width: 100%; height: 36px;
+      border-radius: var(--radius-sm);
+      border: 1px solid #e5e7eb;
+      overflow: hidden; cursor: pointer;
+      transition: border-color var(--transition);
+    }
+    .dark .color-input-wrap { border-color: rgba(255,255,255,0.1); }
+    .color-input-wrap:hover { border-color: var(--brand-orange); }
+    .color-input-wrap input[type="color"] {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      border: none; padding: 0; cursor: pointer; opacity: 0;
+    }
+    .color-swatch {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.4rem 0.6rem; height: 100%; pointer-events: none;
+    }
+    .color-swatch-chip {
+      width: 20px; height: 20px; border-radius: 4px;
+      border: 1px solid rgba(255,255,255,0.1); flex-shrink: 0;
+    }
+    .color-swatch-code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem; color: #6b7280; text-transform: uppercase;
+    }
+    .dark .color-swatch-code { color: #9ca3af; }
+
+    .toggle-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.35rem 0;
+    }
+    .toggle-label { font-size: 0.8125rem; color: #374151; font-weight: 500; }
+    .dark .toggle-label { color: #e5e7eb; }
+    .toggle-switch { position: relative; width: 38px; height: 22px; flex-shrink: 0; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-track {
+      position: absolute; inset: 0;
+      background: #e5e7eb; border-radius: 999px;
+      cursor: pointer; transition: background var(--transition);
+    }
+    .dark .toggle-track { background: rgba(255,255,255,0.1); }
+    .toggle-thumb {
+      position: absolute; top: 2px; left: 2px;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: #fff; transition: transform var(--transition);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .toggle-switch input:checked + .toggle-track { background: var(--gradient); }
+    .toggle-switch input:checked + .toggle-track .toggle-thumb { transform: translateX(16px); }
+
+    .segmented {
+      display: flex; gap: 0.25rem;
+      background: #f3f4f6; border-radius: var(--radius-sm); padding: 0.2rem;
+    }
+    .dark .segmented { background: rgba(255,255,255,0.05); }
+    .seg-btn {
+      flex: 1; padding: 0.35rem 0.5rem;
+      border: none; border-radius: calc(var(--radius-sm) - 2px);
+      background: transparent; color: #6b7280;
+      font-size: 0.75rem; font-weight: 600; cursor: pointer;
+      transition: all 0.2s ease; font-family: 'Inter', sans-serif;
+    }
+    .dark .seg-btn { color: #9ca3af; }
+    .seg-btn:hover { color: #111; }
+    .dark .seg-btn:hover { color: #fff; }
+    .seg-btn.active {
+      background: #fff; color: var(--brand-orange);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+      border: 1px solid var(--brand-orange);
+    }
+    .dark .seg-btn.active {
+      background: var(--brand-orange);
+      color: #fff;
+      box-shadow: 0 1px 6px rgba(255,107,53,0.4);
+      border: 1px solid var(--brand-orange);
+    }
+
+    .style-pills {
+      display: flex; flex-wrap: wrap; gap: 0.4rem;
+    }
+    .style-pill {
+      padding: 0.4rem 0.75rem; border-radius: 999px;
+      border: 1px solid #e5e7eb; background: #fff;
+      color: #6b7280; font-size: 0.75rem; font-weight: 600;
+      cursor: pointer; transition: all 0.2s ease;
+      font-family: 'Inter', sans-serif;
+    }
+    .dark .style-pill { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); color: #9ca3af; }
+    .style-pill:hover { border-color: var(--brand-orange); color: var(--brand-orange); }
+    .style-pill.active {
+      background: var(--gradient); color: #fff; border-color: transparent;
+      box-shadow: 0 2px 8px rgba(255,107,53,0.3);
+    }
+
+    .palette-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+    .palette-card {
+      cursor: pointer; border: 2px solid #e5e7eb; border-radius: var(--radius-sm);
+      padding: 0.4rem; transition: all 0.2s ease; background: #fff;
+    }
+    .dark .palette-card { background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.1); }
+    .palette-card:hover { transform: translateY(-2px); border-color: var(--brand-orange); }
+    .palette-card.active { border-color: var(--brand-orange); }
+    .palette-preview { width: 100%; height: 36px; border-radius: 4px; margin-bottom: 0.3rem; }
+    .palette-name { font-size: 0.68rem; font-weight: 600; color: #6b7280; text-align: center; }
+    .dark .palette-name { color: #9ca3af; }
+    .palette-card.active .palette-name { color: var(--brand-orange); }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+      padding: 0.625rem 1.25rem; border-radius: var(--radius-sm); border: none;
+      font-size: 0.8125rem; font-weight: 600; cursor: pointer;
+      transition: transform var(--transition), box-shadow var(--transition), background var(--transition);
+      font-family: 'Inter', sans-serif; text-decoration: none;
+    }
+    .btn-primary { background: var(--gradient); color: #fff; }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(255,107,53,0.3); }
+    .btn-secondary { background: #f3f4f6; color: #374151; border: 1px solid #e5e7eb; }
+    .dark .btn-secondary { background: rgba(255,255,255,0.05); color: #e5e7eb; border-color: rgba(255,255,255,0.1); }
+    .btn-secondary:hover { border-color: var(--brand-orange); color: var(--brand-orange); }
+    .btn-block { width: 100%; }
+    .btn-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+
+    /* Welcome modal */
+    .welcome-modal {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 1rem; opacity: 0; visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    .welcome-modal.visible { opacity: 1; visibility: visible; }
+    .welcome-card {
+      background: #fff; border-radius: 1rem;
+      padding: 2.5rem 2rem; max-width: 440px; width: 100%;
+      text-align: center; transform: scale(0.95);
+      transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
+      box-shadow: 0 30px 80px rgba(0,0,0,0.4);
+    }
+    .dark .welcome-card { background: #1A1A1A; }
+    .welcome-modal.visible .welcome-card { transform: scale(1); }
+    .welcome-logo {
+      width: 64px; height: 64px; margin: 0 auto 1.25rem;
+      border-radius: 1rem;
+      background: var(--gradient);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 8px 24px rgba(255,107,53,0.3);
+    }
+    .welcome-title { font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem; }
+    .welcome-desc { color: #6b7280; font-size: 0.9rem; line-height: 1.5; margin-bottom: 1.5rem; }
+    .dark .welcome-desc { color: #9ca3af; }
+    .welcome-search {
+      position: relative; margin-bottom: 1rem;
+    }
+    .welcome-search input {
+      width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem;
+      border-radius: var(--radius); border: 1px solid #e5e7eb;
+      background: #f9fafb; color: #111;
+      font-size: 0.9rem; font-family: 'Inter', sans-serif; outline: none;
+      transition: border-color var(--transition);
+    }
+    .dark .welcome-search input { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); color: #fff; }
+    .welcome-search input:focus { border-color: var(--brand-orange); }
+    .welcome-search svg {
+      position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%);
+      color: #9ca3af;
+    }
+    .welcome-results {
+      position: absolute; top: calc(100% + 0.25rem); left: 0; right: 0;
+      background: #fff; border: 1px solid #e5e7eb; border-radius: var(--radius);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.15); max-height: 240px; overflow-y: auto;
+      display: none; z-index: 10; text-align: left;
+    }
+    .dark .welcome-results { background: #1A1A1A; border-color: rgba(255,255,255,0.1); }
+    .welcome-results.visible { display: block; }
+    .welcome-result {
+      padding: 0.6rem 0.85rem; cursor: pointer;
+      border-bottom: 1px solid #f3f4f6; transition: background 0.15s;
+    }
+    .dark .welcome-result { border-bottom-color: rgba(255,255,255,0.05); }
+    .welcome-result:hover { background: rgba(255,107,53,0.08); }
+    .welcome-result-name { font-weight: 600; font-size: 0.825rem; }
+    .welcome-result-meta { font-size: 0.72rem; color: #9ca3af; margin-top: 0.1rem; }
+    .welcome-divider {
+      display: flex; align-items: center; gap: 0.75rem;
+      margin: 1rem 0; color: #9ca3af; font-size: 0.75rem;
+    }
+    .welcome-divider::before, .welcome-divider::after {
+      content: ''; flex: 1; height: 1px; background: #e5e7eb;
+    }
+    .dark .welcome-divider::before, .dark .welcome-divider::after { background: rgba(255,255,255,0.1); }
+    .welcome-geo-btn {
+      width: 100%; padding: 0.75rem; border-radius: var(--radius);
+      border: 1px solid #e5e7eb; background: #f9fafb;
+      color: #374151; font-size: 0.875rem; font-weight: 600;
+      cursor: pointer; transition: all 0.2s ease; font-family: 'Inter', sans-serif;
+      display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+    }
+    .dark .welcome-geo-btn { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); color: #e5e7eb; }
+    .welcome-geo-btn:hover { border-color: var(--brand-teal); color: var(--brand-teal); }
+
+    /* Floating controls on map */
+    .map-controls {
+      position: absolute; top: 0.75rem; right: 0.75rem;
+      display: flex; flex-direction: column; gap: 0.4rem; z-index: 10;
+    }
+    .map-ctrl-btn {
+      width: 36px; height: 36px; border-radius: var(--radius-sm);
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(20,20,20,0.8); backdrop-filter: blur(10px);
+      color: #fff; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all var(--transition);
+    }
+    .map-ctrl-btn:hover { border-color: var(--brand-orange); color: var(--brand-orange); }
+    .map-ctrl-btn.active { background: var(--gradient); border-color: transparent; }
+
+    /* Loading overlay */
+    .loading-overlay {
+      position: fixed; inset: 0; z-index: 9999;
+      background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
+      display: none; align-items: center; justify-content: center;
+      flex-direction: column; gap: 1rem;
+    }
+    .loading-overlay.visible { display: flex; }
+    .loading-spinner {
+      width: 48px; height: 48px;
+      border: 3px solid rgba(255,107,53,0.2);
+      border-top-color: var(--brand-orange);
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { color: #fff; font-size: 0.875rem; font-weight: 500; }
+
+    /* Search bar on map */
+    .map-search-bar {
+      position: absolute; top: 0.75rem; left: 0.75rem;
+      z-index: 10; width: calc(100% - 5rem);
+      max-width: 320px;
+    }
+    .map-search-input {
+      width: 100%; padding: 0.5rem 2.25rem 0.5rem 2.25rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(20,20,20,0.8); backdrop-filter: blur(10px);
+      color: #fff; font-size: 0.8125rem; font-family: 'Inter', sans-serif;
+      outline: none; transition: border-color var(--transition);
+    }
+    .map-search-input::placeholder { color: rgba(255,255,255,0.5); }
+    .map-search-input:focus { border-color: var(--brand-orange); }
+    .map-search-icon {
+      position: absolute; left: 0.6rem; top: 50%; transform: translateY(-50%);
+      color: rgba(255,255,255,0.5); pointer-events: none;
+    }
+    .map-search-results {
+      position: absolute; top: calc(100% + 0.25rem); left: 0; right: 0;
+      background: rgba(20,20,20,0.95); backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-sm);
+      max-height: 240px; overflow-y: auto; display: none; z-index: 20;
+    }
+    .map-search-results.visible { display: block; }
+
+    .kbd-hint {
+      font-size: 0.7rem; color: #9ca3af; font-family: 'JetBrains Mono', monospace;
+      text-align: center; margin-top: 0.75rem;
+    }
+    .kbd {
+      display: inline-block; padding: 0.1rem 0.4rem; border-radius: 3px;
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1);
+      color: #d1d5db; font-size: 0.65rem;
+    }
+
+    .features-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem; max-width: 56rem; margin: 2rem auto 0;
+    }
+    .feature-card {
+      padding: 1.25rem; border-radius: var(--radius);
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
+      text-align: center;
+    }
+    .feature-icon {
+      width: 40px; height: 40px; margin: 0 auto 0.75rem;
+      border-radius: 0.5rem; background: var(--gradient);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff;
+    }
+    .feature-title { font-weight: 700; font-size: 0.875rem; margin-bottom: 0.25rem; color: #fff; }
+    .feature-desc { font-size: 0.75rem; color: #9ca3af; line-height: 1.4; }
+  </style>
+</head>
+<body class="roadlaps-page font-sans bg-white text-gray-900 dark:bg-surface-dark dark:text-gray-100 antialiased">
+
+  <div id="navbar-mount"></div>
+
+  <!-- Hero -->
+  <section class="roadlaps-hero">
+    <div class="orb w-[300px] h-[300px] bg-brand-orange top-[-10%] right-[-5%] float"></div>
+    <div class="orb w-[250px] h-[250px] bg-brand-teal bottom-[-10%] left-[-5%] float-delay"></div>
+    <div class="relative z-10">
+      <span class="badge mb-4">Map Poster Studio</span>
+      <h1>Roadlaps <span class="gradient-text">Map Studio</span></h1>
+      <p>Create highly customizable, print-ready map posters and wallpapers of any location in the world. Full control over colors, map styles, layouts, and typography. Export as high-resolution PNG, PDF, or SVG. Runs entirely in your browser, no account needed.</p>
+    </div>
+  </section>
+
+  <!-- Main Editor -->
+  <section class="roadlaps-editor">
+    <!-- Map Preview -->
+    <div class="preview-area">
+      <div class="poster-frame" id="poster-frame">
+        <div id="map"></div>
+
+        <!-- Search bar on map -->
+        <div class="map-search-bar">
+          <svg class="map-search-icon" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input type="text" class="map-search-input" id="map-search-input" placeholder="Search location..." autocomplete="off">
+          <div class="map-search-results" id="map-search-results"></div>
+        </div>
+
+        <!-- Map controls -->
+        <div class="map-controls">
+          <button class="map-ctrl-btn" id="ctrl-zoom-in" title="Zoom in" aria-label="Zoom in">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+          </button>
+          <button class="map-ctrl-btn" id="ctrl-zoom-out" title="Zoom out" aria-label="Zoom out">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14"/></svg>
+          </button>
+          <button class="map-ctrl-btn" id="ctrl-fullscreen" title="Fullscreen (F)" aria-label="Toggle fullscreen">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg>
+          </button>
+        </div>
+
+        <!-- Text overlay -->
+        <div class="poster-text bottom align-center" id="poster-text">
+          <h1 class="poster-title" id="poster-title"></h1>
+          <p class="poster-subtitle" id="poster-subtitle"></p>
+        </div>
+        <div class="poster-credit" id="poster-credit"></div>
+      </div>
+      <div class="kbd-hint">
+        <span class="kbd">F</span> Fullscreen &nbsp;
+        <span class="kbd">L</span> Labels &nbsp;
+        <span class="kbd">+</span> <span class="kbd">-</span> Zoom &nbsp;
+        <span class="kbd">/</span> Search
+      </div>
+    </div>
+
+    <!-- Controls Panel -->
+    <aside class="controls-panel" aria-label="Customization panel">
+
+      <!-- Map Style -->
+      <div class="panel-section">
+        <h3 class="panel-heading">Map Style</h3>
+        <div class="style-pills" id="style-pills">
+          <button class="style-pill active" data-style="liberty">Liberty</button>
+          <button class="style-pill" data-style="dark">Dark</button>
+          <button class="style-pill" data-style="positron">Light</button>
+          <button class="style-pill" data-style="bright">Bright</button>
+          <button class="style-pill" data-style="satellite">Satellite</button>
+        </div>
+      </div>
+
+      <!-- Language -->
+      <div class="panel-section">
+        <h3 class="panel-heading">Map Language</h3>
+        <select class="select-input" id="language-select">
+          <option value="en">English</option>
+          <option value="de">German (Deutsch)</option>
+          <option value="fr">French (Francais)</option>
+          <option value="es">Spanish (Espanol)</option>
+          <option value="it">Italian (Italiano)</option>
+          <option value="pt">Portuguese (Portugues)</option>
+          <option value="ru">Russian</option>
+          <option value="zh">Chinese</option>
+          <option value="ja">Japanese</option>
+          <option value="ko">Korean</option>
+          <option value="ar">Arabic</option>
+          <option value="hi">Hindi</option>
+          <option value="nl">Dutch (Nederlands)</option>
+          <option value="sv">Swedish (Svenska)</option>
+          <option value="tr">Turkish (Turkce)</option>
+        </select>
+      </div>
+
+      <!-- Layers -->
+      <div class="panel-section">
+        <h3 class="panel-heading">Map Layers</h3>
+        <div class="toggle-row">
+          <span class="toggle-label">Labels</span>
+          <label class="toggle-switch"><input type="checkbox" id="toggle-labels" checked><span class="toggle-track"><span class="toggle-thumb"></span></span></label>
+        </div>
+        <div class="toggle-row">
+          <span class="toggle-label">Roads</span>
+          <label class="toggle-switch"><input type="checkbox" id="toggle-roads" checked><span class="toggle-track"><span class="toggle-thumb"></span></span></label>
+        </div>
+        <div class="toggle-row">
+          <span class="toggle-label">Buildings</span>
+          <label class="toggle-switch"><input type="checkbox" id="toggle-buildings" checked><span class="toggle-track"><span class="toggle-thumb"></span></span></label>
+        </div>
+        <div class="toggle-row">
+          <span class="toggle-label">Parks</span>
+          <label class="toggle-switch"><input type="checkbox" id="toggle-parks" checked><span class="toggle-track"><span class="toggle-thumb"></span></span></label>
+        </div>
+        <div class="toggle-row">
+          <span class="toggle-label">Water</span>
+          <label class="toggle-switch"><input type="checkbox" id="toggle-water" checked><span class="toggle-track"><span class="toggle-thumb"></span></span></label>
+        </div>
+        <div class="control-row" style="margin-top:0.75rem;">
+          <div class="control-label"><span>Line thickness</span><span class="control-value" id="line-thickness-val">50</span></div>
+          <input type="range" class="range-input" id="line-thickness" min="0" max="100" value="50">
+        </div>
+      </div>
+
+      <!-- Colors -->
+      <div class="panel-section">
+        <h3 class="panel-heading">Colors</h3>
+        <div class="palette-grid" id="palette-grid"></div>
+        <div class="control-row" style="margin-top:0.875rem;">
+          <div class="control-label"><span>Background</span></div>
+          <div class="color-input-wrap"><input type="color" id="color-bg" value="#0a0a0a"><div class="color-swatch"><div class="color-swatch-chip" id="swatch-bg"></div><span class="color-swatch-code" id="code-bg">#0A0A0A</span></div></div>
+        </div>
+        <div class="control-row">
+          <div class="control-label"><span>Text color</span></div>
+          <div class="color-input-wrap"><input type="color" id="color-text" value="#ffffff"><div class="color-swatch"><div class="color-swatch-chip" id="swatch-text"></div><span class="color-swatch-code" id="code-text">#FFFFFF</span></div></div>
+        </div>
+      </div>
+
+      <!-- Typography -->
+      <div class="panel-section">
+        <h3 class="panel-heading">Typography</h3>
+        <div class="control-row">
+          <div class="control-label"><span>Title</span></div>
+          <input type="text" class="text-input" id="text-title" placeholder="Poster title" maxlength="60">
+        </div>
+        <div class="control-row">
+          <div class="control-label"><span>Subtitle</span></div>
+          <input type="text" class="text-input" id="text-subtitle" placeholder="Subtitle or coordinates" maxlength="80">
+        </div>
+        <div class="control-row">
+          <div class="control-label"><span>Font family</span></div>
+          <select class="select-input" id="font-family">
+            <option value="Inter">Inter (Sans)</option>
+            <option value="Playfair Display">Playfair (Serif)</option>
+            <option value="Bebas Neue">Bebas (Display)</option>
+            <option value="JetBrains Mono">JetBrains (Mono)</option>
+          </select>
+        </div>
+        <div class="control-row">
+          <div class="control-label"><span>Font weight</span><span class="control-value" id="font-weight-val">800</span></div>
+          <input type="range" class="range-input" id="font-weight" min="300" max="800" step="100" value="800">
+        </div>
+        <div class="control-row">
+          <div class="control-label"><span>Title size</span><span class="control-value" id="title-size-val">28</span></div>
+          <input type="range" class="range-input" id="title-size" min="14" max="60" value="28">
+        </div>
+        <div class="control-row">
+          <div class="control-label"><span>Alignment</span></div>
+          <div class="segmented" id="align-group">
+            <button class="seg-btn" data-align="left">Left</button>
+            <button class="seg-btn active" data-align="center">Center</button>
+            <button class="seg-btn" data-align="right">Right</button>
+          </div>
+        </div>
+        <div class="control-row">
+          <div class="control-label"><span>Position</span></div>
+          <div class="segmented" id="pos-group">
+            <button class="seg-btn" data-pos="top">Top</button>
+            <button class="seg-btn active" data-pos="bottom">Bottom</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Poster -->
+      <div class="panel-section">
+        <h3 class="panel-heading">Poster</h3>
+        <div class="control-row">
+          <div class="control-label"><span>Orientation</span></div>
+          <div class="segmented" id="orient-group">
+            <button class="seg-btn active" data-orient="portrait">Portrait</button>
+            <button class="seg-btn" data-orient="landscape">Landscape</button>
+          </div>
+        </div>
+        <div class="control-row">
+          <div class="control-label"><span>Paper size</span></div>
+          <select class="select-input" id="paper-size">
+            <option value="a5">A5 (148 x 210 mm)</option>
+            <option value="a4" selected>A4 (210 x 297 mm)</option>
+            <option value="a3">A3 (297 x 420 mm)</option>
+            <option value="a2">A2 (420 x 594 mm)</option>
+            <option value="a1">A1 (594 x 841 mm)</option>
+          </select>
+        </div>
+        <div class="toggle-row" style="margin-top:0.5rem;">
+          <span class="toggle-label">Show coordinates</span>
+          <label class="toggle-switch"><input type="checkbox" id="toggle-coords" checked><span class="toggle-track"><span class="toggle-thumb"></span></span></label>
+        </div>
+      </div>
+
+      <!-- Export -->
+      <div class="panel-section">
+        <h3 class="panel-heading">Export</h3>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="export-png">PNG</button>
+          <button class="btn btn-secondary" id="export-svg">SVG</button>
+          <button class="btn btn-secondary" id="export-pdf">PDF</button>
+        </div>
+        <p style="font-size:0.7rem;color:#9ca3af;margin-top:0.75rem;line-height:1.5;">
+          High-resolution exports suitable for printing as wall art or using as phone and desktop backgrounds.
+        </p>
+      </div>
+
+    </aside>
+  </section>
+
+  <!-- Feature cards (at bottom) -->
+  <section style="max-width: 56rem; margin: 0 auto; padding: 0 1.5rem 3rem;">
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+        <div class="feature-title">Full Control</div>
+        <div class="feature-desc">Custom colors, styles, layouts, typography, building footprints, parks, and water bodies.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg></div>
+        <div class="feature-title">Any Location</div>
+        <div class="feature-desc">Search any city or place worldwide, or use your current location. 15 map languages.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg></div>
+        <div class="feature-title">High-Quality Export</div>
+        <div class="feature-desc">Download as PNG, PDF, or SVG. Print-ready resolution for wall art or wallpapers.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Welcome Modal -->
+  <div class="welcome-modal" id="welcome-modal">
+    <div class="welcome-card">
+      <div class="welcome-logo">
+        <svg width="32" height="32" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      </div>
+      <h2 class="welcome-title">Choose a Location</h2>
+      <p class="welcome-desc">Type a city or place name, or use your current location to start creating your map poster.</p>
+      <div class="welcome-search">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="text" id="welcome-search-input" placeholder="Type a city or place..." autocomplete="off">
+        <div class="welcome-results" id="welcome-results"></div>
+      </div>
+      <div class="welcome-divider">or</div>
+      <button class="welcome-geo-btn" id="welcome-geo-btn">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        Get my location
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading overlay -->
+  <div class="loading-overlay" id="loading-overlay" role="status" aria-live="polite">
+    <div class="loading-spinner"></div>
+    <div class="loading-text" id="loading-text">Loading...</div>
+  </div>
+
+  <!-- MapLibre GL JS -->
+  <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+
+  <!-- Shared common.js -->
+  <script src="../assets/js/common.js"></script>
+
+  <script>
+  (function () {
+    'use strict';
+
+    // ==========================================================
+    // CONFIGURATION
+    // ==========================================================
+
+    // OpenFreeMap styles (free, no API key, vector tiles with language support)
+    const MAP_STYLES = {
+      liberty:    'https://tiles.openfreemap.org/styles/liberty',
+      dark:       'https://tiles.openfreemap.org/styles/dark',
+      positron:   'https://tiles.openfreemap.org/styles/positron',
+      bright:     'https://tiles.openfreemap.org/styles/bright',
+      satellite:  'https://tiles.openfreemap.org/styles/liberty' // fallback (no free satellite vector)
+    };
+
+    const PALETTES = {
+      original:  { name: 'Original',  filter: 'none',                                                              bg: '#0a0a0a', text: '#ffffff', preview: 'linear-gradient(135deg,#1a1a2e,#16213e)' },
+      midnight:  { name: 'Midnight',  filter: 'invert(1) hue-rotate(180deg) brightness(0.85) contrast(1.1)',      bg: '#050510', text: '#e0e0ff', preview: 'linear-gradient(135deg,#0f0f1e,#1a1a3a)' },
+      sunset:    { name: 'Sunset',    filter: 'sepia(0.4) saturate(1.6) hue-rotate(-20deg) brightness(1.05)',     bg: '#1a0a08', text: '#ffe4c4', preview: 'linear-gradient(135deg,#2a1010,#4a2010)' },
+      ocean:     { name: 'Ocean',     filter: 'hue-rotate(170deg) saturate(1.4) brightness(0.9)',                 bg: '#0a1520', text: '#d0e8ff', preview: 'linear-gradient(135deg,#0a1a2a,#102030)' },
+      forest:    { name: 'Forest',    filter: 'hue-rotate(80deg) saturate(1.2) brightness(0.85)',                 bg: '#0a1208', text: '#d0ffd0', preview: 'linear-gradient(135deg,#0a1a0e,#102510)' },
+      mono:      { name: 'Mono',      filter: 'grayscale(1) contrast(1.2) brightness(0.9)',                       bg: '#1a1a1a', text: '#ffffff', preview: 'linear-gradient(135deg,#1a1a1a,#333)' }
+    };
+
+    const FONTS = {
+      'Inter': 'Inter, sans-serif',
+      'Playfair Display': '"Playfair Display", serif',
+      'Bebas Neue': '"Bebas Neue", sans-serif',
+      'JetBrains Mono': '"JetBrains Mono", monospace'
+    };
+
+    const LANGUAGES = ['en','de','fr','es','it','pt','ru','zh','ja','ko','ar','hi','nl','sv','tr'];
+
+    const STORAGE_KEY = 'contoura-roadlaps-v1';
+
+    // ==========================================================
+    // STATE
+    // ==========================================================
+
+    const defaults = {
+      style: 'liberty',
+      language: 'en',
+      title: '',
+      subtitle: '',
+      fontFamily: 'Inter',
+      fontWeight: 800,
+      titleSize: 28,
+      align: 'center',
+      pos: 'bottom',
+      orientation: 'portrait',
+      paperSize: 'a4',
+      palette: 'original',
+      bgColor: '#0a0a0a',
+      textColor: '#ffffff',
+      lineThickness: 50,
+      layers: { labels: true, roads: true, buildings: true, parks: true, water: true },
+      showCoords: true,
+      center: null,
+      zoom: null
+    };
+
+    let state = loadSettings() || JSON.parse(JSON.stringify(defaults));
+
+    // ==========================================================
+    // DOM REFS
+    // ==========================================================
+
+    const $ = (id) => document.getElementById(id);
+    const dom = {
+      map: $('map'),
+      posterFrame: $('poster-frame'),
+      posterText: $('poster-text'),
+      posterTitle: $('poster-title'),
+      posterSubtitle: $('poster-subtitle'),
+      posterCredit: $('poster-credit'),
+      // Search
+      mapSearchInput: $('map-search-input'),
+      mapSearchResults: $('map-search-results'),
+      // Welcome modal
+      welcomeModal: $('welcome-modal'),
+      welcomeSearchInput: $('welcome-search-input'),
+      welcomeResults: $('welcome-results'),
+      welcomeGeoBtn: $('welcome-geo-btn'),
+      // Controls
+      stylePills: $('style-pills'),
+      languageSelect: $('language-select'),
+      toggleLabels: $('toggle-labels'),
+      toggleRoads: $('toggle-roads'),
+      toggleBuildings: $('toggle-buildings'),
+      toggleParks: $('toggle-parks'),
+      toggleWater: $('toggle-water'),
+      toggleCoords: $('toggle-coords'),
+      lineThickness: $('line-thickness'),
+      lineThicknessVal: $('line-thickness-val'),
+      colorBg: $('color-bg'),
+      swatchBg: $('swatch-bg'),
+      codeBg: $('code-bg'),
+      colorText: $('color-text'),
+      swatchText: $('swatch-text'),
+      codeText: $('code-text'),
+      paletteGrid: $('palette-grid'),
+      textTitle: $('text-title'),
+      textSubtitle: $('text-subtitle'),
+      fontFamily: $('font-family'),
+      fontWeight: $('font-weight'),
+      fontWeightVal: $('font-weight-val'),
+      titleSize: $('title-size'),
+      titleSizeVal: $('title-size-val'),
+      alignGroup: $('align-group'),
+      posGroup: $('pos-group'),
+      orientGroup: $('orient-group'),
+      paperSize: $('paper-size'),
+      // Map controls
+      ctrlZoomIn: $('ctrl-zoom-in'),
+      ctrlZoomOut: $('ctrl-zoom-out'),
+      ctrlFullscreen: $('ctrl-fullscreen'),
+      // Export
+      exportPng: $('export-png'),
+      exportSvg: $('export-svg'),
+      exportPdf: $('export-pdf'),
+      // Loading
+      loadingOverlay: $('loading-overlay'),
+      loadingText: $('loading-text')
+    };
+
+    // ==========================================================
+    // MAP (MapLibre GL JS)
+    // ==========================================================
+
+    let map = null;
+    let mapReady = false;
+
+    const mapController = {
+      init() {
+        // If no saved location, show welcome modal and wait
+        if (!state.center) {
+          showWelcomeModal();
+          // Still init the map at a default world view so it's ready
+          this.createMap([20, 0], 1.5);
+        } else {
+          this.createMap(state.center, state.zoom || 12);
+        }
+      },
+
+      createMap(center, zoom) {
+        if (map) return;
+
+        try {
+          map = new maplibregl.Map({
+            container: dom.map,
+            style: MAP_STYLES[state.style],
+            center: center,
+            zoom: zoom,
+            attributionControl: false,
+            cooperativeGestures: false,
+            antialias: true,
+            preserveDrawingBuffer: true
+          });
+
+          map.on('load', () => {
+            mapReady = true;
+            this.applyLanguage(state.language);
+            this.applyLayerVisibility();
+            this.applyFilters();
+            poster.update();
+          });
+
+          map.on('moveend', () => {
+            if (!mapReady) return;
+            state.center = [map.getCenter().lng, map.getCenter().lat];
+            state.zoom = map.getZoom();
+            saveSettings();
+            updateCoordinates();
+          });
+
+          // Resize after layout settles
+          setTimeout(() => { if (map) map.resize(); }, 200);
+          setTimeout(() => { if (map) map.resize(); }, 600);
+
+        } catch (err) {
+          console.error('Map init error:', err);
+          if (window.CL) CL.toast('Map failed to load: ' + (err.message || 'unknown'), false);
+        }
+      },
+
+      setStyle(styleId) {
+        state.style = styleId;
+        if (!map) return;
+
+        dom.stylePills.querySelectorAll('.style-pill').forEach(p => {
+          p.classList.toggle('active', p.dataset.style === styleId);
+        });
+
+        map.setStyle(MAP_STYLES[styleId]);
+
+        // After style loads, re-apply language + layers
+        map.once('styledata', () => {
+          this.applyLanguage(state.language);
+          this.applyLayerVisibility();
+          this.applyFilters();
+        });
+
+        saveSettings();
+      },
+
+      applyLanguage(lang) {
+        if (!map || !mapReady) return;
+
+        // For OpenFreeMap, labels use name:XX properties. We set text-field
+        // on all symbol layers that have text-field.
+        const fieldName = `name:${lang}`;
+        const textField = ['coalesce',
+          ['get', fieldName],
+          ['get', 'name'],
+          ['get', 'name:en'],
+          ['get', 'name:latin']
+        ];
+
+        const layers = map.getStyle().layers || [];
+        layers.forEach(layer => {
+          if (layer.type === 'symbol' && layer.layout && layer.layout['text-field']) {
+            try {
+              map.setLayoutProperty(layer.id, 'text-field', textField);
+            } catch (e) { /* some layers might not support it */ }
+          }
+        });
+      },
+
+      applyLayerVisibility() {
+        if (!map || !mapReady) return;
+
+        const layers = map.getStyle().layers || [];
+        layers.forEach(layer => {
+          let visible = 'visible';
+          const id = layer.id.toLowerCase();
+
+          // Labels = symbol layers with text
+          if (layer.type === 'symbol' && layer.layout && layer.layout['text-field']) {
+            visible = state.layers.labels ? 'visible' : 'none';
+          }
+          // Roads
+          else if (id.includes('road') || id.includes('street') || id.includes('highway') || id.includes('motorway')) {
+            visible = state.layers.roads ? 'visible' : 'none';
+          }
+          // Buildings
+          else if (id.includes('building')) {
+            visible = state.layers.buildings ? 'visible' : 'none';
+          }
+          // Parks
+          else if (id.includes('park') || id.includes('green') || id.includes('wood') || id.includes('forest') || id.includes('grass')) {
+            visible = state.layers.parks ? 'visible' : 'none';
+          }
+          // Water
+          else if (id.includes('water') || id.includes('river') || id.includes('lake') || id.includes('ocean') || id.includes('sea')) {
+            visible = state.layers.water ? 'visible' : 'none';
+          }
+
+          try {
+            map.setLayoutProperty(layer.id, 'visibility', visible);
+          } catch (e) { /* skip */ }
+        });
+      },
+
+      applyFilters() {
+        if (!map) return;
+
+        const palette = PALETTES[state.palette];
+        let filter = palette && palette.filter !== 'none' ? palette.filter : '';
+
+        // Layer enhancement filters
+        if (state.layers.roads)     filter += ' contrast(1.2)';
+        if (state.layers.buildings) filter += ' brightness(1.08)';
+        if (state.layers.parks)     filter += ' sepia(0.15) saturate(1.2)';
+        if (state.layers.water)     filter += ' saturate(1.15)';
+
+        // Line thickness -> contrast
+        const lt = state.lineThickness / 50;
+        const contrast = 0.8 + lt * 0.35;
+        filter += ` contrast(${contrast.toFixed(2)})`;
+
+        // Apply filter to the map canvas container
+        const canvasContainer = dom.map.querySelector('.maplibregl-canvas-container');
+        if (canvasContainer) {
+          canvasContainer.style.filter = filter.trim() || 'none';
+        }
+        // Also apply to the map canvas itself
+        const canvas = dom.map.querySelector('.maplibregl-canvas');
+        if (canvas) {
+          canvas.style.filter = filter.trim() || 'none';
+        }
+
+        dom.lineThicknessVal.textContent = state.lineThickness;
+      },
+
+      flyTo(lng, lat, zoom) {
+        if (!map) return;
+        map.flyTo({
+          center: [lng, lat],
+          zoom: zoom || 13,
+          duration: 2000,
+          essential: true
+        });
+      },
+
+      zoomIn() { if (map) map.zoomIn(); },
+      zoomOut() { if (map) map.zoomOut(); },
+
+      resize() { if (map) map.resize(); }
+    };
+
+    // ==========================================================
+    // WELCOME MODAL
+    // ==========================================================
+
+    function showWelcomeModal() {
+      dom.welcomeModal.classList.add('visible');
+      setTimeout(() => dom.welcomeSearchInput.focus(), 300);
+    }
+
+    function hideWelcomeModal() {
+      dom.welcomeModal.classList.remove('visible');
+    }
+
+    // Welcome search
+    let welcomeSearchTimer;
+    dom.welcomeSearchInput.addEventListener('input', (e) => {
+      const q = e.target.value.trim();
+      if (q.length < 3) {
+        dom.welcomeResults.classList.remove('visible');
+        return;
+      }
+      clearTimeout(welcomeSearchTimer);
+      welcomeSearchTimer = setTimeout(() => doSearch(q, dom.welcomeResults, (result) => {
+        hideWelcomeModal();
+        mapController.flyTo(parseFloat(result.lon), parseFloat(result.lat), 13);
+        state.title = result.display_name.split(',')[0];
+        state.subtitle = formatCoords(parseFloat(result.lat), parseFloat(result.lon));
+        dom.textTitle.value = state.title;
+        dom.textSubtitle.value = state.subtitle;
+        poster.update();
+        saveSettings();
+        if (window.CL) CL.toast('Location found');
+      }), 500);
+    });
+
+    // Geolocation
+    dom.welcomeGeoBtn.addEventListener('click', () => {
+      if (!navigator.geolocation) {
+        if (window.CL) CL.toast('Geolocation not supported by your browser', false);
+        return;
+      }
+      if (window.CL) CL.toast('Getting your location...');
+      hideWelcomeModal();
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const { latitude, longitude } = pos.coords;
+          mapController.flyTo(longitude, latitude, 13);
+          state.title = 'My Location';
+          state.subtitle = formatCoords(latitude, longitude);
+          dom.textTitle.value = state.title;
+          dom.textSubtitle.value = state.subtitle;
+          state.center = [longitude, latitude];
+          state.zoom = 13;
+          poster.update();
+          saveSettings();
+          if (window.CL) CL.toast('Found your location');
+        },
+        (err) => {
+          console.error('Geolocation error:', err);
+          if (window.CL) CL.toast('Could not get your location. Please search instead.', false);
+          showWelcomeModal();
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    });
+
+    // ==========================================================
+    // MAP SEARCH BAR
+    // ==========================================================
+
+    let mapSearchTimer;
+    dom.mapSearchInput.addEventListener('input', (e) => {
+      const q = e.target.value.trim();
+      if (q.length < 3) {
+        dom.mapSearchResults.classList.remove('visible');
+        return;
+      }
+      clearTimeout(mapSearchTimer);
+      mapSearchTimer = setTimeout(() => doSearch(q, dom.mapSearchResults, (result) => {
+        mapController.flyTo(parseFloat(result.lon), parseFloat(result.lat), 13);
+        state.title = result.display_name.split(',')[0];
+        state.subtitle = formatCoords(parseFloat(result.lat), parseFloat(result.lon));
+        dom.textTitle.value = state.title;
+        dom.textSubtitle.value = state.subtitle;
+        poster.update();
+        saveSettings();
+        dom.mapSearchResults.classList.remove('visible');
+        dom.mapSearchInput.value = '';
+        if (window.CL) CL.toast('Location found');
+      }), 500);
+    });
+
+    // Close search results on outside click
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.map-search-bar') && !e.target.closest('.welcome-search')) {
+        dom.mapSearchResults.classList.remove('visible');
+        dom.welcomeResults.classList.remove('visible');
+      }
+    });
+
+    // ==========================================================
+    // SEARCH (Nominatim)
+    // ==========================================================
+
+    async function doSearch(query, resultsEl, callback) {
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=6&addressdetails=1`,
+          { headers: { 'Accept-Language': 'en' } }
+        );
+        const results = await res.json();
+        showSearchResults(results, resultsEl, callback);
+      } catch (err) {
+        console.error('Search error:', err);
+        if (window.CL) CL.toast('Search failed', false);
+      }
+    }
+
+    function showSearchResults(results, el, callback) {
+      if (!results || results.length === 0) {
+        el.innerHTML = '<div class="welcome-result" style="cursor:default;"><div class="welcome-result-meta">No results found</div></div>';
+        el.classList.add('visible');
+        return;
+      }
+
+      el.innerHTML = results.map((r, i) => {
+        const name = r.display_name.split(',')[0];
+        const meta = r.display_name.split(',').slice(1, 4).join(',').trim();
+        return `<div class="welcome-result" data-idx="${i}">
+          <div class="welcome-result-name">${escapeHtml(name)}</div>
+          <div class="welcome-result-meta">${escapeHtml(meta)}</div>
+        </div>`;
+      }).join('');
+
+      el.classList.add('visible');
+
+      el.querySelectorAll('.welcome-result').forEach((elem, i) => {
+        elem.addEventListener('click', () => callback(results[i]));
+      });
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function formatCoords(lat, lon) {
+      const latStr = `${Math.abs(lat).toFixed(4)} ${lat >= 0 ? 'N' : 'S'}`;
+      const lonStr = `${Math.abs(lon).toFixed(4)} ${lon >= 0 ? 'E' : 'W'}`;
+      return `${latStr} ${lonStr}`;
+    }
+
+    // ==========================================================
+    // POSTER PREVIEW
+    // ==========================================================
+
+    const poster = {
+      update() {
+        // Orientation
+        dom.posterFrame.classList.toggle('landscape', state.orientation === 'landscape');
+
+        // Text content
+        dom.posterTitle.textContent = state.title || '';
+        dom.posterSubtitle.textContent = state.subtitle || '';
+
+        // Font
+        const fontStack = FONTS[state.fontFamily] || FONTS['Inter'];
+        dom.posterTitle.style.fontFamily = fontStack;
+        dom.posterSubtitle.style.fontFamily = fontStack;
+        dom.posterTitle.style.fontWeight = state.fontWeight;
+        dom.posterSubtitle.style.fontWeight = Math.min(state.fontWeight, 600);
+
+        // Title size
+        dom.posterTitle.style.fontSize = `clamp(${state.titleSize * 0.6}px, ${state.titleSize / 16}rem, ${state.titleSize * 1.5}px)`;
+        dom.posterSubtitle.style.fontSize = `clamp(${state.titleSize * 0.35}px, ${state.titleSize / 28}rem, ${state.titleSize * 0.6}px)`;
+
+        // Alignment + position
+        dom.posterText.className = `poster-text ${state.pos} align-${state.align}`;
+
+        // Colors
+        dom.posterFrame.style.background = state.bgColor;
+        dom.posterTitle.style.color = state.textColor;
+        dom.posterSubtitle.style.color = state.textColor;
+
+        // Credit
+        dom.posterCredit.classList.toggle('hide-credit', !state.showCoords);
+
+        // Value displays
+        dom.fontWeightVal.textContent = state.fontWeight;
+        dom.titleSizeVal.textContent = state.titleSize;
+        dom.swatchBg.style.background = state.bgColor;
+        dom.codeBg.textContent = state.bgColor.toUpperCase();
+        dom.swatchText.style.background = state.textColor;
+        dom.codeText.textContent = state.textColor.toUpperCase();
+
+        // Map filters
+        mapController.applyFilters();
+
+        // Resize map
+        setTimeout(() => mapController.resize(), 50);
+      },
+
+      toggleFullscreen() {
+        const frame = dom.posterFrame;
+        if (!document.fullscreenElement) {
+          frame.requestFullscreen?.() || frame.webkitRequestFullscreen?.();
+          dom.ctrlFullscreen.classList.add('active');
+        } else {
+          document.exitFullscreen?.() || document.webkitExitFullscreen?.();
+          dom.ctrlFullscreen.classList.remove('active');
+        }
+        setTimeout(() => mapController.resize(), 300);
+      }
+    };
+
+    // ==========================================================
+    // COORDINATES
+    // ==========================================================
+
+    function updateCoordinates() {
+      if (!map || !mapReady) return;
+      const c = map.getCenter();
+      const coordStr = formatCoords(c.lat, c.lng);
+      // Only auto-update subtitle if it looks like coordinates
+      if (state.subtitle.includes('N') || state.subtitle.includes('S') || state.subtitle === '') {
+        state.subtitle = coordStr;
+        dom.textSubtitle.value = state.subtitle;
+        dom.posterSubtitle.textContent = state.subtitle;
+      }
+    }
+
+    // ==========================================================
+    // SETTINGS
+    // ==========================================================
+
+    function saveSettings() {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+    }
+
+    function loadSettings() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) return Object.assign(JSON.parse(JSON.stringify(defaults)), JSON.parse(saved));
+      } catch (e) {}
+      return null;
+    }
+
+    // ==========================================================
+    // PALETTE GRID
+    // ==========================================================
+
+    function buildPaletteGrid() {
+      dom.paletteGrid.innerHTML = '';
+      Object.entries(PALETTES).forEach(([key, p]) => {
+        const card = document.createElement('div');
+        card.className = 'palette-card' + (state.palette === key ? ' active' : '');
+        card.dataset.palette = key;
+        card.innerHTML = `<div class="palette-preview" style="background:${p.preview};"></div><div class="palette-name">${p.name}</div>`;
+        card.addEventListener('click', () => {
+          state.palette = key;
+          state.bgColor = p.bg;
+          state.textColor = p.text;
+          dom.colorBg.value = p.bg;
+          dom.colorText.value = p.text;
+          dom.paletteGrid.querySelectorAll('.palette-card').forEach(c => c.classList.remove('active'));
+          card.classList.add('active');
+          poster.update();
+          saveSettings();
+        });
+        dom.paletteGrid.appendChild(card);
+      });
+    }
+
+    // ==========================================================
+    // CONTROL BINDING
+    // ==========================================================
+
+    function bindControls() {
+      // Style pills
+      dom.stylePills.querySelectorAll('.style-pill').forEach(pill => {
+        pill.addEventListener('click', () => mapController.setStyle(pill.dataset.style));
+      });
+
+      // Language
+      dom.languageSelect.addEventListener('change', (e) => {
+        state.language = e.target.value;
+        mapController.applyLanguage(state.language);
+        saveSettings();
+      });
+
+      // Layer toggles
+      const layerMap = { labels: dom.toggleLabels, roads: dom.toggleRoads, buildings: dom.toggleBuildings, parks: dom.toggleParks, water: dom.toggleWater };
+      Object.entries(layerMap).forEach(([key, el]) => {
+        el.addEventListener('change', (e) => {
+          state.layers[key] = e.target.checked;
+          mapController.applyLayerVisibility();
+          mapController.applyFilters();
+          saveSettings();
+        });
+      });
+
+      // Sliders
+      dom.lineThickness.addEventListener('input', (e) => {
+        state.lineThickness = parseInt(e.target.value, 10);
+        mapController.applyFilters();
+      });
+      dom.lineThickness.addEventListener('change', saveSettings);
+
+      dom.fontWeight.addEventListener('input', (e) => {
+        state.fontWeight = parseInt(e.target.value, 10);
+        poster.update();
+      });
+      dom.fontWeight.addEventListener('change', saveSettings);
+
+      dom.titleSize.addEventListener('input', (e) => {
+        state.titleSize = parseInt(e.target.value, 10);
+        poster.update();
+      });
+      dom.titleSize.addEventListener('change', saveSettings);
+
+      // Colors
+      dom.colorBg.addEventListener('input', (e) => { state.bgColor = e.target.value; poster.update(); });
+      dom.colorBg.addEventListener('change', saveSettings);
+      dom.colorText.addEventListener('input', (e) => { state.textColor = e.target.value; poster.update(); });
+      dom.colorText.addEventListener('change', saveSettings);
+
+      // Text
+      dom.textTitle.addEventListener('input', (e) => { state.title = e.target.value; dom.posterTitle.textContent = state.title; });
+      dom.textTitle.addEventListener('change', saveSettings);
+      dom.textSubtitle.addEventListener('input', (e) => { state.subtitle = e.target.value; dom.posterSubtitle.textContent = state.subtitle; });
+      dom.textSubtitle.addEventListener('change', saveSettings);
+
+      // Font family
+      dom.fontFamily.addEventListener('change', (e) => { state.fontFamily = e.target.value; poster.update(); saveSettings(); });
+
+      // Segmented controls
+      [dom.alignGroup, dom.posGroup, dom.orientGroup].forEach(group => {
+        group.querySelectorAll('.seg-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const key = group === dom.alignGroup ? 'align' : group === dom.posGroup ? 'pos' : 'orientation';
+            state[key] = btn.dataset[key];
+            group.querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            poster.update();
+            if (key === 'orientation') setTimeout(() => mapController.resize(), 450);
+            saveSettings();
+          });
+        });
+      });
+
+      // Paper size
+      dom.paperSize.addEventListener('change', (e) => { state.paperSize = e.target.value; saveSettings(); });
+
+      // Coords toggle
+      dom.toggleCoords.addEventListener('change', (e) => { state.showCoords = e.target.checked; poster.update(); saveSettings(); });
+
+      // Map controls
+      dom.ctrlZoomIn.addEventListener('click', () => mapController.zoomIn());
+      dom.ctrlZoomOut.addEventListener('click', () => mapController.zoomOut());
+      dom.ctrlFullscreen.addEventListener('click', () => poster.toggleFullscreen());
+
+      // Export
+      dom.exportPng.addEventListener('click', () => exporter.png());
+      dom.exportSvg.addEventListener('click', () => exporter.svg());
+      dom.exportPdf.addEventListener('click', () => exporter.pdf());
+    }
+
+    function syncUIFromState() {
+      dom.stylePills.querySelectorAll('.style-pill').forEach(p => p.classList.toggle('active', p.dataset.style === state.style));
+      dom.languageSelect.value = state.language;
+      dom.toggleLabels.checked = state.layers.labels;
+      dom.toggleRoads.checked = state.layers.roads;
+      dom.toggleBuildings.checked = state.layers.buildings;
+      dom.toggleParks.checked = state.layers.parks;
+      dom.toggleWater.checked = state.layers.water;
+      dom.toggleCoords.checked = state.showCoords;
+      dom.lineThickness.value = state.lineThickness;
+      dom.fontWeight.value = state.fontWeight;
+      dom.titleSize.value = state.titleSize;
+      dom.colorBg.value = state.bgColor;
+      dom.colorText.value = state.textColor;
+      dom.textTitle.value = state.title;
+      dom.textSubtitle.value = state.subtitle;
+      dom.fontFamily.value = state.fontFamily;
+      dom.alignGroup.querySelectorAll('.seg-btn').forEach(b => b.classList.toggle('active', b.dataset.align === state.align));
+      dom.posGroup.querySelectorAll('.seg-btn').forEach(b => b.classList.toggle('active', b.dataset.pos === state.pos));
+      dom.orientGroup.querySelectorAll('.seg-btn').forEach(b => b.classList.toggle('active', b.dataset.orient === state.orientation));
+      dom.paperSize.value = state.paperSize;
+    }
+
+    // ==========================================================
+    // EXPORT
+    // ==========================================================
+
+    const exporter = {
+      loadScript(url) {
+        return new Promise((resolve, reject) => {
+          if (document.querySelector(`script[src="${url}"]`)) { resolve(); return; }
+          const s = document.createElement('script');
+          s.src = url; s.onload = resolve; s.onerror = () => reject(new Error('Load failed: ' + url));
+          document.head.appendChild(s);
+        });
+      },
+
+      showLoading(msg) {
+        dom.loadingText.textContent = msg;
+        dom.loadingOverlay.classList.add('visible');
+      },
+      hideLoading() { dom.loadingOverlay.classList.remove('visible'); },
+
+      async captureMap() {
+        if (!map || !mapReady) throw new Error('Map not ready');
+
+        // Wait for map to be fully loaded (idle = no pending tiles)
+        await new Promise((resolve) => {
+          if (map.isStyleLoaded() && !map.isMoving() && !map.isEasing()) {
+            resolve();
+          } else {
+            map.once('idle', resolve);
+            setTimeout(resolve, 3000); // timeout fallback
+          }
+        });
+
+        // Extra wait for tiles to settle
+        await new Promise(r => setTimeout(r, 400));
+
+        // Force a render and wait
+        map.triggerRepaint();
+        await new Promise(r => setTimeout(r, 300));
+
+        // Get a fresh canvas reference (MapLibre may swap canvases)
+        const canvas = map.getCanvas();
+        if (!canvas || canvas.width === 0 || canvas.height === 0) {
+          throw new Error('Map canvas is empty');
+        }
+        return canvas;
+      },
+
+      async png() {
+        try {
+          this.showLoading('Capturing map...');
+          const mapCanvas = await this.captureMap();
+
+          // Create a composite canvas with poster frame dimensions
+          const frame = dom.posterFrame;
+          const rect = frame.getBoundingClientRect();
+          const scale = 2;
+          const w = rect.width * scale;
+          const h = rect.height * scale;
+
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+
+          // Background
+          ctx.fillStyle = state.bgColor;
+          ctx.fillRect(0, 0, w, h);
+
+          // Draw map canvas (scaled to fit)
+          ctx.drawImage(mapCanvas, 0, 0, w, h);
+
+          // Draw text overlay
+          this.drawTextOverlay(ctx, w, h, scale);
+
+          canvas.toBlob((blob) => {
+            this.downloadBlob(blob, `roadlaps-${Date.now()}.png`);
+            this.hideLoading();
+            if (window.CL) CL.toast('PNG downloaded');
+          }, 'image/png');
+        } catch (err) {
+          console.error(err);
+          this.hideLoading();
+          if (window.CL) CL.toast('Export failed: ' + (err.message || 'unknown'), false);
+        }
+      },
+
+      async svg() {
+        try {
+          this.showLoading('Building SVG...');
+          const mapCanvas = await this.captureMap();
+          const imgData = mapCanvas.toDataURL('image/jpeg', 0.92);
+          const frame = dom.posterFrame;
+          const rect = frame.getBoundingClientRect();
+          const w = rect.width * 2;
+          const h = rect.height * 2;
+
+          const fontStack = FONTS[state.fontFamily] || FONTS['Inter'];
+          const padding = w * 0.04;
+          const titleY = state.pos === 'top' ? padding * 1.5 : h - padding * 1.8;
+          const subY = state.pos === 'top' ? padding * 2.2 : h - padding * 0.9;
+          let textX = w / 2, anchor = 'middle';
+          if (state.align === 'left') { textX = padding; anchor = 'start'; }
+          if (state.align === 'right') { textX = w - padding; anchor = 'end'; }
+
+          const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+  <rect width="${w}" height="${h}" fill="${state.bgColor}"/>
+  <image href="${imgData}" width="${w}" height="${h}" preserveAspectRatio="xMidYMid slice"/>
+  <text x="${textX}" y="${titleY}" font-family='${fontStack}' font-weight="${state.fontWeight}" font-size="${state.titleSize * 1.6}" fill="${state.textColor}" text-anchor="${anchor}">${this.escapeXml(state.title)}</text>
+  <text x="${textX}" y="${subY}" font-family='${fontStack}' font-weight="${Math.min(state.fontWeight, 600)}" font-size="${state.titleSize * 0.8}" fill="${state.textColor}" opacity="0.85" text-anchor="${anchor}">${this.escapeXml(state.subtitle)}</text>
+  ${state.showCoords ? `<text x="${w - padding * 0.5}" y="${h - padding * 0.3}" font-family="'JetBrains Mono',monospace" font-size="${w * 0.012}" fill="${state.textColor}" opacity="0.5" text-anchor="end">${this.escapeXml('OpenFreeMap | OpenStreetMap | Contoura Labs')}</text>` : ''}
+</svg>`;
+
+          const blob = new Blob([svg], { type: 'image/svg+xml' });
+          this.downloadBlob(blob, `roadlaps-${Date.now()}.svg`);
+          this.hideLoading();
+          if (window.CL) CL.toast('SVG downloaded');
+        } catch (err) {
+          console.error(err);
+          this.hideLoading();
+          if (window.CL) CL.toast('SVG export failed', false);
+        }
+      },
+
+      async pdf() {
+        try {
+          this.showLoading('Loading PDF library...');
+          await this.loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+          this.showLoading('Building PDF...');
+
+          const mapCanvas = await this.captureMap();
+          const { jsPDF } = window.jspdf;
+          const pdf = new jsPDF({ orientation: state.orientation, unit: 'mm', format: state.paperSize, compress: true });
+          const pdfW = pdf.internal.pageSize.getWidth();
+          const pdfH = pdf.internal.pageSize.getHeight();
+
+          // Background
+          pdf.setFillColor(state.bgColor);
+          pdf.rect(0, 0, pdfW, pdfH, 'F');
+
+          // Map image
+          const imgData = mapCanvas.toDataURL('image/jpeg', 0.95);
+          pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, pdfH, undefined, 'FAST');
+
+          // Text
+          const fontKey = state.fontFamily === 'Playfair Display' ? 'times' : state.fontFamily === 'JetBrains Mono' ? 'courier' : 'helvetica';
+          const fontStyle = state.fontWeight >= 700 ? 'bold' : 'normal';
+          const titleSize = state.titleSize * 0.35;
+          const subSize = state.titleSize * 0.2;
+          const padding = 10;
+          const titleY = state.pos === 'top' ? padding + titleSize : pdfH - padding - subSize - titleSize;
+          const subY = state.pos === 'top' ? titleY + subSize + 2 : pdfH - padding;
+          let textX = pdfW / 2, align = 'center';
+          if (state.align === 'left') { textX = padding; align = 'left'; }
+          if (state.align === 'right') { textX = pdfW - padding; align = 'right'; }
+
+          pdf.setFont(fontKey, fontStyle);
+          pdf.setFontSize(titleSize);
+          pdf.setTextColor(state.textColor);
+          pdf.text(state.title || '', textX, titleY, { align });
+
+          pdf.setFont(fontKey, 'normal');
+          pdf.setFontSize(subSize);
+          pdf.text(state.subtitle || '', textX, subY, { align });
+
+          pdf.save(`roadlaps-${Date.now()}.pdf`);
+          this.hideLoading();
+          if (window.CL) CL.toast('PDF downloaded');
+        } catch (err) {
+          console.error(err);
+          this.hideLoading();
+          if (window.CL) CL.toast('PDF export failed', false);
+        }
+      },
+
+      drawTextOverlay(ctx, w, h, scale) {
+        const fontStack = FONTS[state.fontFamily] || FONTS['Inter'];
+        const padding = w * 0.04;
+        const titleSize = state.titleSize * 1.4 * scale;
+        const subSize = state.titleSize * 0.7 * scale;
+        const titleY = state.pos === 'top' ? padding * 1.5 + titleSize : h - padding * 1.8;
+        const subY = state.pos === 'top' ? padding * 2.2 + titleSize + subSize : h - padding * 0.9;
+        let textX = w / 2, align = 'center';
+        if (state.align === 'left') { textX = padding; align = 'left'; }
+        if (state.align === 'right') { textX = w - padding; align = 'right'; }
+
+        ctx.textAlign = align;
+        ctx.fillStyle = state.textColor;
+        ctx.shadowColor = 'rgba(0,0,0,0.7)';
+        ctx.shadowBlur = 12;
+        ctx.shadowOffsetY = 2;
+
+        ctx.font = `${state.fontWeight} ${titleSize}px ${fontStack}`;
+        ctx.fillText(state.title || '', textX, titleY);
+
+        ctx.font = `${Math.min(state.fontWeight, 600)} ${subSize}px ${fontStack}`;
+        ctx.globalAlpha = 0.85;
+        ctx.fillText(state.subtitle || '', textX, subY);
+
+        ctx.globalAlpha = 1;
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetY = 0;
+      },
+
+      downloadBlob(blob, filename) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = filename;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      },
+
+      escapeXml(str) {
+        if (!str) return '';
+        return str.replace(/[<>&'"]/g, c => ({ '<':'&lt;','>':'&gt;','&':'&amp;',"'":'&apos;','"':'&quot;' }[c]));
+      }
+    };
+
+    // ==========================================================
+    // KEYBOARD SHORTCUTS
+    // ==========================================================
+
+    document.addEventListener('keydown', (e) => {
+      const tag = e.target.tagName.toLowerCase();
+      if (tag === 'input' || tag === 'textarea' || tag === 'select') {
+        if (e.key === 'Escape') e.target.blur();
+        return;
+      }
+
+      switch (e.key.toLowerCase()) {
+        case 'f': e.preventDefault(); poster.toggleFullscreen(); break;
+        case 'l': e.preventDefault(); dom.toggleLabels.checked = !dom.toggleLabels.checked; dom.toggleLabels.dispatchEvent(new Event('change')); break;
+        case '+': case '=': e.preventDefault(); mapController.zoomIn(); break;
+        case '-': e.preventDefault(); mapController.zoomOut(); break;
+        case '/': e.preventDefault(); dom.mapSearchInput.focus(); break;
+        case 'escape':
+          if (document.fullscreenElement) poster.toggleFullscreen();
+          break;
+      }
+    });
+
+    // ==========================================================
+    // INIT
+    // ==========================================================
+
+    function init() {
+      buildPaletteGrid();
+      syncUIFromState();
+      mapController.init();
+      bindControls();
+      poster.update();
+
+      // Resize on window resize
+      let resizeTimer;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => mapController.resize(), 150);
+      });
+
+      setTimeout(() => {
+        if (window.CL) CL.toast('Roadlaps ready. Search any location to begin.');
+      }, 1500);
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  })();
+  </script>
+
+  <footer class="py-8 border-t border-gray-100 dark:border-white/5">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p class="text-xs text-gray-400">2025 Contoura Labs. Map data OpenStreetMap, OpenFreeMap.</p>
+      <a href="index.html" class="text-xs text-brand-orange hover:text-brand-red transition-colors">Back to all tools</a>
+    </div>
+  </footer>
+
+</body>
+</html>

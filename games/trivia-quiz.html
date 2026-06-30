@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Trivia Quiz — Contoura Labs</title>
-  <meta name="description" content="10-question trivia quiz across six categories. Pick a category from the carousel and test your knowledge with multiple-choice questions.">
+  <meta name="description" content="10-question trivia quiz across twelve categories. Pick a category from the carousel and test your knowledge with multiple-choice questions.">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 73 28 A 32 32 0 0 0 27 28' stroke='%23FF6B35' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 24 32 A 32 32 0 0 0 24 68' stroke='%23E8384F' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 27 72 A 32 32 0 0 0 73 72' stroke='%2300B8A9' stroke-width='9' fill='none' stroke-linecap='round'/></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -188,7 +188,7 @@
       <header class="tool-header">
         <span class="badge mb-3">Games</span>
         <h1 class="tool-title">Trivia Quiz</h1>
-        <p class="tool-subtitle">Ten questions, six categories. Pick one from the carousel and test your knowledge against the Open Trivia DB.</p>
+        <p class="tool-subtitle">Ten questions, twelve categories. Pick one from the carousel and test your knowledge against the Open Trivia DB.</p>
       </header>
 
       <div class="tool-card">
@@ -272,12 +272,18 @@
 
     // ---- Category metadata ----
     const CATEGORIES = [
-      { id: 9,  name: 'General',  emoji: '🧠', desc: 'A bit of everything — mixed general knowledge for all-rounders.' },
-      { id: 17, name: 'Science',  emoji: '🔬', desc: 'Biology, chemistry, physics and nature. Lab coats optional.' },
-      { id: 23, name: 'History',  emoji: '📜', desc: 'Ancient empires, world wars, and the people who shaped our world.' },
-      { id: 22, name: 'Geography',emoji: '🌍', desc: 'Capitals, rivers, mountains and borders across every continent.' },
-      { id: 11, name: 'Movies',   emoji: '🎬', desc: 'Blockbusters, Oscar winners, directors, and unforgettable lines.' },
-      { id: 21, name: 'Sports',   emoji: '⚽', desc: 'Football, basketball, Olympics, records and the legends who set them.' }
+      { id: 9,  name: 'General',    emoji: '🧠', desc: 'A bit of everything — mixed general knowledge for all-rounders.' },
+      { id: 17, name: 'Science',    emoji: '🔬', desc: 'Biology, chemistry, physics and nature. Lab coats optional.' },
+      { id: 23, name: 'History',    emoji: '📜', desc: 'Ancient empires, world wars, and the people who shaped our world.' },
+      { id: 22, name: 'Geography',  emoji: '🌍', desc: 'Capitals, rivers, mountains and borders across every continent.' },
+      { id: 11, name: 'Movies',     emoji: '🎬', desc: 'Blockbusters, Oscar winners, directors, and unforgettable lines.' },
+      { id: 21, name: 'Sports',     emoji: '⚽', desc: 'Football, basketball, Olympics, records and the legends who set them.' },
+      { id: 18, name: 'Computers',  emoji: '💻', desc: 'Hardware, software, the web, and the pioneers who built it.' },
+      { id: 12, name: 'Music',      emoji: '🎵', desc: 'Genres, artists, albums, and the songs you can'\''t get out of your head.' },
+      { id: 14, name: 'TV',         emoji: '📺', desc: 'Sitcoms, dramas, streaming hits, and the characters we love.' },
+      { id: 10, name: 'Books',      emoji: '📚', desc: 'Novels, authors, classics, and the lines that became legend.' },
+      { id: 24, name: 'Politics',   emoji: '🏛️', desc: 'Leaders, parties, systems of government, and landmark laws.' },
+      { id: 25, name: 'Art',        emoji: '🎨', desc: 'Painters, movements, masterpieces, and the museums that hold them.' }
     ];
     const CATEGORY_NAMES = {};
     CATEGORIES.forEach(c => CATEGORY_NAMES[c.id] = c.name);
@@ -355,6 +361,78 @@
         { q: "In which sport is the 'Wimbledon' championship played?", correct: "Tennis", wrong: ["Golf","Cricket","Badminton"] },
         { q: "What is the maximum score possible in a single frame of ten-pin bowling?", correct: "30", wrong: ["10","20","300"] },
         { q: "Which boxer was famously known as 'The Greatest'?", correct: "Muhammad Ali", wrong: ["Mike Tyson","Joe Frazier","George Foreman"] }
+      ],
+      18: [
+        { q: "What does 'CPU' stand for?", correct: "Central Processing Unit", wrong: ["Computer Personal Unit","Central Process Unit","Computer Processing Unit"] },
+        { q: "Which company developed the JavaScript language?", correct: "Netscape", wrong: ["Microsoft","Google","Sun Microsystems"] },
+        { q: "What does 'HTTP' stand for?", correct: "HyperText Transfer Protocol", wrong: ["HyperText Transmission Protocol","High Transfer Text Protocol","HyperText Transfer Process"] },
+        { q: "Which file extension is used for JavaScript files?", correct: ".js", wrong: [".javascript",".jv",".jc"] },
+        { q: "What is the binary representation of the decimal number 10?", correct: "1010", wrong: ["1100","1001","0110"] },
+        { q: "Which company created the Android operating system?", correct: "Google", wrong: ["Apple","Microsoft","Samsung"] },
+        { q: "What does 'RAM' stand for?", correct: "Random Access Memory", wrong: ["Read Access Memory","Rapid Access Memory","Run Access Memory"] },
+        { q: "Which programming language is primarily used for iOS development?", correct: "Swift", wrong: ["Java","Kotlin","Python"] },
+        { q: "What does 'URL' stand for?", correct: "Uniform Resource Locator", wrong: ["Universal Resource Locator","Uniform Reference Link","Universal Reference Locator"] },
+        { q: "Which company developed the TypeScript language?", correct: "Microsoft", wrong: ["Google","Facebook","Apple"] }
+      ],
+      12: [
+        { q: "Which band released the album 'Abbey Road'?", correct: "The Beatles", wrong: ["The Rolling Stones","The Who","Pink Floyd"] },
+        { q: "What instrument did Jimi Hendrix famously play?", correct: "Guitar", wrong: ["Piano","Drums","Saxophone"] },
+        { q: "Which singer is known as the 'Queen of Pop'?", correct: "Madonna", wrong: ["Beyoncé","Lady Gaga","Whitney Houston"] },
+        { q: "What genre of music did Bob Marley popularize?", correct: "Reggae", wrong: ["Jazz","Blues","Ska"] },
+        { q: "Which composer wrote the 'Symphony No. 9'?", correct: "Beethoven", wrong: ["Mozart","Bach","Tchaikovsky"] },
+        { q: "What is the highest vocal range for a female singer?", correct: "Soprano", wrong: ["Alto","Tenor","Bass"] },
+        { q: "Which band's lead singer is Freddie Mercury?", correct: "Queen", wrong: ["Led Zeppelin","The Who","Deep Purple"] },
+        { q: "What does 'DJ' stand for?", correct: "Disc Jockey", wrong: ["Disk Jockey","Disc Jock","Disk Joint"] },
+        { q: "Which instrument has 88 keys?", correct: "Piano", wrong: ["Organ","Harpsichord","Accordion"] },
+        { q: "In which city did jazz originate?", correct: "New Orleans", wrong: ["New York","Chicago","Memphis"] }
+      ],
+      14: [
+        { q: "In which TV show would you find the character Walter White?", correct: "Breaking Bad", wrong: ["The Wire","Better Call Saul","Mad Men"] },
+        { q: "What is the name of the coffee shop in 'Friends'?", correct: "Central Perk", wrong: ["Central Park","Coffee House","Perk Central"] },
+        { q: "Which TV series features the Stark family?", correct: "Game of Thrones", wrong: ["The Crown","Vikings","The Witcher"] },
+        { q: "Who played the character of Michael Scott in 'The Office'?", correct: "Steve Carell", wrong: ["Rainn Wilson","John Krasinski","B.J. Novak"] },
+        { q: "What is the name of the spaceship in 'Star Trek'?", correct: "USS Enterprise", wrong: ["USS Voyager","USS Discovery","USS Defiant"] },
+        { q: "Which animated series features the Simpson family?", correct: "The Simpsons", wrong: ["Family Guy","South Park","Futurama"] },
+        { q: "In 'Stranger Things', what is the name of the alternate dimension?", correct: "The Upside Down", wrong: ["The Other Side","The Nether","The Below"] },
+        { q: "Who is the main character in 'Sherlock'?", correct: "Sherlock Holmes", wrong: ["John Watson","Mycroft Holmes","Greg Lestrade"] },
+        { q: "What color is the TARDIS in 'Doctor Who'?", correct: "Blue", wrong: ["Red","Green","White"] },
+        { q: "Which streaming service produced 'Stranger Things'?", correct: "Netflix", wrong: ["Amazon Prime","Disney+","HBO Max"] }
+      ],
+      10: [
+        { q: "Who wrote 'Romeo and Juliet'?", correct: "William Shakespeare", wrong: ["Charles Dickens","Jane Austen","Mark Twain"] },
+        { q: "What is the first book of the 'Harry Potter' series?", correct: "Philosopher's Stone", wrong: ["Chamber of Secrets","Prisoner of Azkaban","Goblet of Fire"] },
+        { q: "Who wrote '1984'?", correct: "George Orwell", wrong: ["Aldous Huxley","Ray Bradbury","H.G. Wells"] },
+        { q: "What is the name of the hobbit in 'The Lord of the Rings'?", correct: "Frodo Baggins", wrong: ["Bilbo Baggins","Sam Gamgee","Merry Brandybuck"] },
+        { q: "Who wrote 'Pride and Prejudice'?", correct: "Jane Austen", wrong: ["Charlotte Brontë","Emily Dickinson","Mary Shelley"] },
+        { q: "What is the longest novel ever written?", correct: "In Search of Lost Time", wrong: ["War and Peace","Les Misérables","Ulysses"] },
+        { q: "Who wrote 'The Great Gatsby'?", correct: "F. Scott Fitzgerald", wrong: ["Ernest Hemingway","John Steinbeck","William Faulkner"] },
+        { q: "What is the name of the wizard school in 'Harry Potter'?", correct: "Hogwarts", wrong: ["Durmstrang","Beauxbatons","Ilvermorny"] },
+        { q: "Who wrote 'To Kill a Mockingbird'?", correct: "Harper Lee", wrong: ["Truman Capote","Tennessee Williams","Flannery O'Connor"] },
+        { q: "What is the name of the whale in 'Moby Dick'?", correct: "Moby Dick", wrong: ["Shamu","Willy","Nemo"] }
+      ],
+      24: [
+        { q: "What is the supreme law of the United States?", correct: "The Constitution", wrong: ["The Bill of Rights","The Declaration of Independence","The Federalist Papers"] },
+        { q: "How many branches of government does the US have?", correct: "3", wrong: ["2","4","5"] },
+        { q: "Who is the head of state in the United Kingdom?", correct: "The Monarch", wrong: ["The Prime Minister","Parliament","The Lord Chancellor"] },
+        { q: "What does 'democracy' literally mean?", correct: "Rule by the people", wrong: ["Rule by the rich","Rule by the strong","Rule by the wise"] },
+        { q: "How many US senators are there?", correct: "100", wrong: ["50","435","200"] },
+        { q: "What is the minimum age to be US President?", correct: "35", wrong: ["25","30","40"] },
+        { q: "Which document established the principle of 'innocent until proven guilty'?", correct: "Magna Carta", wrong: ["US Constitution","Bill of Rights","Code of Hammurabi"] },
+        { q: "How long is a US presidential term?", correct: "4 years", wrong: ["2 years","6 years","8 years"] },
+        { q: "What is the lower house of the UK Parliament called?", correct: "House of Commons", wrong: ["House of Lords","House of Representatives","Senate"] },
+        { q: "Which country is the birthplace of democracy?", correct: "Greece", wrong: ["Rome","Egypt","Persia"] }
+      ],
+      25: [
+        { q: "Who painted the Mona Lisa?", correct: "Leonardo da Vinci", wrong: ["Michelangelo","Raphael","Caravaggio"] },
+        { q: "Which art movement is Salvador Dalí associated with?", correct: "Surrealism", wrong: ["Cubism","Impressionism","Pop Art"] },
+        { q: "Where is the Louvre Museum located?", correct: "Paris", wrong: ["London","Rome","New York"] },
+        { q: "Who sculpted 'David'?", correct: "Michelangelo", wrong: ["Donatello","Bernini","Rodin"] },
+        { q: "Which artist cut off his own ear?", correct: "Vincent van Gogh", wrong: ["Pablo Picasso","Claude Monet","Paul Cézanne"] },
+        { q: "What is the most expensive painting ever sold?", correct: "Salvator Mundi", wrong: ["The Starry Night","The Scream","Girl with a Pearl Earring"] },
+        { q: "Which art movement is Claude Monet associated with?", correct: "Impressionism", wrong: ["Expressionism","Realism","Romanticism"] },
+        { q: "Who painted 'The Persistence of Memory'?", correct: "Salvador Dalí", wrong: ["Pablo Picasso","René Magritte","Max Ernst"] },
+        { q: "What color did Yves Klein famously patent?", correct: "Blue", wrong: ["Red","Yellow","Green"] },
+        { q: "Which museum houses the Sistine Chapel ceiling?", correct: "Vatican Museums", wrong: ["Louvre","Metropolitan Museum","British Museum"] }
       ]
     };
 

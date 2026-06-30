@@ -4,793 +4,771 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Hangman — Contoura Labs</title>
-  <meta name="description" content="Guess the secret word letter by letter before you run out of attempts. Multiple categories.">
+  <meta name="description" content="Play Hangman in your browser. Pick a category from the carousel, guess letters, use hints wisely, and try to reveal the word before the hangman is fully drawn. 12 categories.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 73 28 A 32 32 0 0 0 27 28' stroke='%23FF6B35' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 24 32 A 32 32 0 0 0 24 68' stroke='%23E8384F' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 27 72 A 32 32 0 0 0 73 72' stroke='%2300B8A9' stroke-width='9' fill='none' stroke-linecap='round'/></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: {
+        colors: {
+          brand: { orange: '#FF6B35', red: '#E8384F', teal: '#00B8A9' },
+          surface: { light: '#F8F9FA', dark: '#0A0A0A', card: '#1A1A1A', alt: '#111111' }
+        },
+        fontFamily: { sans: ['Inter', 'sans-serif'] }
+      }}
+    }
+  </script>
+  <link rel="stylesheet" href="../assets/css/common.css">
   <style>
-    :root {
-      --brand-orange: #FF6B35;
-      --brand-red: #E8384F;
-      --brand-teal: #00B8A9;
-      --bg: #ffffff;
-      --bg-card: #f8f9fa;
-      --bg-alt: #f1f3f5;
-      --text: #111111;
-      --text-muted: #6b7280;
-      --border: #e5e7eb;
-    }
-    .dark {
-      --bg: #0a0a0a;
-      --bg-card: #1a1a1a;
-      --bg-alt: #111111;
-      --text: #f3f4f6;
-      --text-muted: #9ca3af;
-      --border: rgba(255,255,255,0.08);
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Inter', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      transition: background 0.3s, color 0.3s;
-    }
-
-    /* NAV */
-    nav {
-      padding: 1rem 1.5rem;
-      display: flex; align-items: center; justify-content: space-between;
-      border-bottom: 1px solid var(--border);
-      position: sticky; top: 0; z-index: 40;
-      background: var(--bg);
-      backdrop-filter: blur(10px);
-    }
-    .nav-logo {
-      font-size: 1.1rem; font-weight: 800;
-      background: linear-gradient(135deg, #FF6B35, #E8384F, #00B8A9);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    .nav-right { display: flex; align-items: center; gap: 0.75rem; }
-    .theme-btn {
-      width: 36px; height: 36px; border-radius: 50%;
-      border: 1px solid var(--border);
-      background: var(--bg-alt); color: var(--text);
-      cursor: pointer; font-size: 1rem;
-      display: flex; align-items: center; justify-content: center;
-      transition: all 0.2s;
-    }
-    .theme-btn:hover { background: var(--bg-card); }
-
-    /* MAIN */
-    main { max-width: 800px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
-    header { text-align: center; margin-bottom: 2rem; }
-    .badge {
-      display: inline-block; padding: 0.25rem 0.75rem;
-      border-radius: 9999px; font-size: 0.75rem; font-weight: 600;
-      background: linear-gradient(135deg, #FF6B35, #E8384F, #00B8A9);
-      color: #fff; margin-bottom: 0.75rem;
-    }
-    h1 { font-size: 2.25rem; font-weight: 800; margin-bottom: 0.5rem; }
-    .subtitle { color: var(--text-muted); font-size: 0.9375rem; max-width: 420px; margin: 0 auto; }
-
-    /* CARD */
-    .card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 1.25rem;
-      padding: 2rem 1.5rem;
-    }
-
-    /* CATEGORIES */
-    .cat-scroll {
-      display: flex; gap: 0.5rem; overflow-x: auto;
-      padding-bottom: 0.5rem; margin-bottom: 1.5rem;
-      scrollbar-width: thin; scrollbar-color: var(--border) transparent;
-    }
-    .cat-btn {
-      flex-shrink: 0;
-      padding: 0.4rem 0.9rem; border-radius: 9999px;
-      font-size: 0.8125rem; font-weight: 600;
-      border: 1px solid var(--border);
-      background: var(--bg); color: var(--text-muted);
-      cursor: pointer; transition: all 0.2s ease; white-space: nowrap;
-    }
-    .cat-btn:hover { border-color: var(--brand-orange); color: var(--brand-orange); }
-    .cat-btn.active {
-      background: linear-gradient(135deg, #FF6B35, #E8384F, #00B8A9);
-      color: #fff; border-color: transparent;
-    }
-
-    /* GAME LAYOUT */
-    .game-layout {
+    /* ===== Hangman-specific styles (use brand tokens, no custom palette) ===== */
+    .hm-stage {
       display: grid;
-      grid-template-columns: 220px 1fr;
-      gap: 2rem;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
       align-items: start;
     }
-    @media (max-width: 580px) {
-      .game-layout { grid-template-columns: 1fr; }
-      .hangman-wrap { display: flex; justify-content: center; }
-    }
+    @media (max-width: 720px) { .hm-stage { grid-template-columns: 1fr; } }
 
-    /* HANGMAN SVG */
-    .hangman-wrap { position: relative; }
-    #hangman-svg {
-      width: 200px; height: 220px;
+    /* SVG gallows */
+    .hm-svg {
+      width: 100%;
+      max-width: 260px;
+      height: auto;
       display: block;
+      margin: 0 auto;
     }
-    #hangman-svg .gallows { stroke: var(--text); stroke-width: 4; fill: none; stroke-linecap: round; }
-    #hangman-svg .body-part {
-      stroke: var(--brand-red); stroke-width: 4; fill: none;
+    .hm-svg .gallows {
+      stroke: var(--brand-teal);
+      stroke-width: 4;
       stroke-linecap: round;
+      fill: none;
+    }
+    .hm-svg .part {
+      stroke: var(--brand-red);
+      stroke-width: 4;
+      stroke-linecap: round;
+      fill: none;
       opacity: 0;
-      transition: opacity 0.35s ease, stroke-dashoffset 0.4s ease;
+      transition: opacity 0.35s ease;
     }
-    #hangman-svg .body-part.show { opacity: 1; }
-
-    /* RIGHT PANEL */
-    .right-panel {}
-
-    /* META */
-    .game-meta {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 1rem;
+    .hm-svg .part.show { opacity: 1; }
+    .hm-svg .face {
+      stroke: var(--brand-red);
+      stroke-width: 2;
+      fill: none;
+      opacity: 0;
+      transition: opacity 0.35s ease 0.2s;
     }
-    .cat-label { font-size: 0.8125rem; color: var(--text-muted); }
-    .cat-label strong { color: var(--text); }
-    .wrong-count {
-      font-size: 0.8125rem; font-weight: 700;
-      color: var(--brand-red);
-    }
+    .hm-svg .face.show { opacity: 1; }
 
-    /* WORD DISPLAY */
-    .word-display {
-      display: flex; justify-content: center; gap: 0.35rem;
-      flex-wrap: wrap; margin: 1rem 0;
+    /* Letter slots */
+    .hm-slots {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      justify-content: center;
+      margin: 1rem 0 1.5rem;
+      min-height: 3rem;
     }
     .letter-slot {
-      width: 2rem; height: 2.75rem;
-      display: flex; align-items: flex-end; justify-content: center;
-      padding-bottom: 0.2rem;
-      border-bottom: 3px solid var(--text-muted);
-      font-size: 1.375rem; font-weight: 800;
-      text-transform: uppercase; line-height: 1;
+      width: 2rem;
+      height: 2.6rem;
+      border-bottom: 3px solid #d1d5db;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--brand-teal);
+      padding-bottom: 0.1rem;
+      transition: border-color 0.3s ease;
     }
-    .letter-slot.space { border-bottom: none; width: 0.75rem; }
-    .letter-slot.revealed { border-bottom-color: var(--brand-teal); color: var(--brand-teal); }
-    .letter-slot.missed { color: var(--brand-red); opacity: 0.7; border-bottom-color: var(--brand-red); }
+    .dark .letter-slot { border-bottom-color: #374151; }
+    .letter-slot.revealed { border-bottom-color: var(--brand-teal); }
+    .letter-slot .ch {
+      display: inline-block;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .letter-slot.revealed .ch { opacity: 1; transform: translateY(0); }
+    .letter-slot.space { border: none; width: 0.8rem; }
 
-    /* HINT */
-    .hint-section { margin: 0.75rem 0; }
-    .hint-btn {
-      display: flex; align-items: center; gap: 0.5rem;
-      padding: 0.45rem 0.85rem; border-radius: 8px;
-      border: 1px dashed var(--border);
-      background: transparent; color: var(--text-muted);
-      font-size: 0.8125rem; font-weight: 600;
-      cursor: pointer; transition: all 0.2s;
-      font-family: 'Inter', sans-serif;
+    /* Keyboard */
+    .hm-keys {
+      display: grid;
+      grid-template-columns: repeat(13, 1fr);
+      gap: 0.35rem;
+      max-width: 540px;
+      margin: 0 auto;
     }
-    .hint-btn:hover:not(:disabled) { border-color: var(--brand-orange); color: var(--brand-orange); }
-    .hint-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-    .hint-text {
-      margin-top: 0.6rem; padding: 0.65rem 0.85rem;
-      background: var(--bg-alt); border-radius: 8px;
-      border-left: 3px solid var(--brand-orange);
-      font-size: 0.8125rem; color: var(--text); line-height: 1.5;
-      display: none;
-    }
-    .hint-text.show { display: block; }
-
-    /* KEYBOARD */
-    .keyboard {
-      display: flex; flex-wrap: wrap; justify-content: center;
-      gap: 0.3rem; margin-top: 1rem;
+    @media (max-width: 540px) {
+      .hm-keys { grid-template-columns: repeat(7, 1fr); }
     }
     .key {
-      width: 34px; height: 40px;
+      aspect-ratio: 1 / 1;
+      border-radius: 0.5rem;
+      border: 1px solid #e5e7eb;
+      background: #fff;
+      color: #374151;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .dark .key { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); color: #e5e7eb; }
+    .key:hover:not(:disabled) {
+      border-color: var(--brand-orange);
+      color: var(--brand-orange);
+      transform: translateY(-2px);
+    }
+    .key:disabled { cursor: not-allowed; opacity: 0.5; }
+    .key.correct {
+      background: rgba(0,184,169,0.15);
+      border-color: var(--brand-teal);
+      color: var(--brand-teal);
+    }
+    .key.wrong {
+      background: rgba(232,56,79,0.12);
+      border-color: var(--brand-red);
+      color: var(--brand-red);
+      text-decoration: line-through;
+    }
+
+    /* Hint button — uses btn-secondary tokens */
+    .hint-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .hint-count {
+      background: rgba(255,107,53,0.15);
+      color: var(--brand-orange);
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 0.1rem 0.45rem;
+      border-radius: 999px;
+    }
+
+    /* Progress bar — reuse .progress-bar from common.css */
+    .hm-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+
+    /* Modal — uses .tool-card tokens */
+    #hm-modal {
+      position: fixed; inset: 0; z-index: 100;
+      background: rgba(0,0,0,0.55);
+      backdrop-filter: blur(6px);
       display: flex; align-items: center; justify-content: center;
-      font-weight: 700; font-size: 0.8125rem;
-      text-transform: uppercase;
-      background: var(--bg-alt); color: var(--text);
-      border-radius: 6px; border: 1px solid var(--border);
-      cursor: pointer; user-select: none;
-      transition: background 0.12s ease, transform 0.08s ease;
-      font-family: 'Inter', sans-serif;
+      opacity: 0; visibility: hidden;
+      transition: opacity 0.25s ease, visibility 0.25s ease;
+      padding: 1rem;
     }
-    .key:hover:not(:disabled) { border-color: var(--brand-orange); color: var(--brand-orange); }
-    .key:active:not(:disabled) { transform: scale(0.88); }
-    .key.correct { background: var(--brand-teal); color: #fff; border-color: var(--brand-teal); }
-    .key.wrong { background: #9ca3af; color: #fff; border-color: transparent; }
-    .key:disabled { cursor: not-allowed; opacity: 0.7; }
+    #hm-modal.show { opacity: 1; visibility: visible; }
+    .hm-modal-card {
+      background: #fff;
+      border-radius: 1rem;
+      padding: 2rem 2.5rem;
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+      transform: scale(0.9);
+      transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
+      border: 1px solid rgba(0,0,0,0.05);
+    }
+    .dark .hm-modal-card { background: #1A1A1A; border-color: rgba(255,255,255,0.08); }
+    #hm-modal.show .hm-modal-card { transform: scale(1); }
+    .hm-modal-emoji { font-size: 3rem; line-height: 1; margin-bottom: 0.5rem; }
+    .hm-modal-title { font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem; }
+    .hm-modal-word {
+      font-size: 1.1rem;
+      color: #6b7280;
+      margin-bottom: 1.5rem;
+    }
+    .dark .hm-modal-word { color: #9ca3af; }
+    .hm-modal-word strong { color: var(--brand-teal); font-weight: 700; }
 
-    /* MODAL */
-    #modal-backdrop {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 60;
-      display: flex; align-items: center; justify-content: center; padding: 1.5rem;
-      opacity: 0; visibility: hidden; transition: opacity 0.25s, visibility 0.25s;
+    /* Screen transitions */
+    .hm-screen { animation: hmFadeIn 0.4s cubic-bezier(0.16,1,0.3,1) both; }
+    @keyframes hmFadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
-    #modal-backdrop.show { opacity: 1; visibility: visible; }
-    #modal {
-      background: var(--bg-card); border: 1px solid var(--border);
-      border-radius: 1.25rem; padding: 2rem 1.75rem;
-      max-width: 360px; width: 100%; text-align: center;
-      transform: translateY(18px) scale(0.97);
-      transition: transform 0.25s ease;
-      box-shadow: 0 24px 60px rgba(0,0,0,0.25);
-    }
-    #modal-backdrop.show #modal { transform: translateY(0) scale(1); }
-    .modal-emoji { font-size: 3.5rem; margin-bottom: 0.75rem; }
-    .modal-title { font-size: 1.375rem; font-weight: 800; margin-bottom: 0.5rem; }
-    .modal-sub { font-size: 0.875rem; color: var(--text-muted); margin-bottom: 0.35rem; }
-    .modal-word {
-      font-size: 1.75rem; font-weight: 900; letter-spacing: 0.08em;
-      background: linear-gradient(135deg, #FF6B35, #E8384F, #00B8A9);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      background-clip: text; margin-bottom: 1.5rem;
-    }
-    .play-again-btn {
-      display: block; width: 100%; padding: 0.75rem;
-      border-radius: 0.75rem; border: none; cursor: pointer;
-      font-size: 1rem; font-weight: 700; font-family: 'Inter', sans-serif;
-      background: linear-gradient(135deg, #FF6B35, #E8384F, #00B8A9);
-      color: #fff; transition: opacity 0.2s;
-    }
-    .play-again-btn:hover { opacity: 0.9; }
-
-    /* FOOTER */
-    footer {
-      text-align: center; padding: 2rem;
-      border-top: 1px solid var(--border);
-      color: var(--text-muted); font-size: 0.8125rem; margin-top: 3rem;
-    }
-    footer a { color: var(--brand-orange); text-decoration: none; }
-
-    /* TOAST */
-    #toast {
-      position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(80px);
-      background: var(--text); color: var(--bg);
-      padding: 0.625rem 1.25rem; border-radius: 999px;
-      font-size: 0.875rem; font-weight: 600;
-      z-index: 99; transition: transform 0.3s ease, opacity 0.3s ease;
-      opacity: 0; white-space: nowrap; pointer-events: none;
-    }
-    #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-
-    .keyboard-tip { text-align: center; font-size: 0.75rem; color: var(--text-muted); margin-top: 0.75rem; }
-
-    /* Progress bar */
-    .progress-bar-wrap { height: 4px; border-radius: 2px; background: var(--bg-alt); margin-bottom: 1.25rem; overflow: hidden; }
-    .progress-bar { height: 100%; border-radius: 2px; background: linear-gradient(90deg, #FF6B35, #E8384F); transition: width 0.4s ease; }
+    .hm-hidden { display: none !important; }
   </style>
 </head>
-<body>
+<body class="font-sans bg-white text-gray-900 dark:bg-surface-dark dark:text-gray-100 antialiased">
 
-<nav>
-  <span class="nav-logo">Contoura Labs</span>
-  <div class="nav-right">
-    <button class="theme-btn" id="theme-toggle" title="Toggle dark mode">🌙</button>
-  </div>
-</nav>
+  <div id="navbar-mount"></div>
 
-<main>
-  <header>
-    <div class="badge">Games</div>
-    <h1>Hangman</h1>
-    <p class="subtitle">Guess the secret word letter by letter. You've got 6 wrong guesses before it's over.</p>
-  </header>
+  <main class="tool-page">
+    <div class="tool-container">
+      <header class="tool-header">
+        <span class="badge mb-3">Games</span>
+        <h1 class="tool-title">Hangman</h1>
+        <p class="tool-subtitle">Pick a category, guess letters one at a time, and reveal the word before the gallows fills in. 12 categories, 2 hints per word.</p>
+      </header>
 
-  <div class="card">
+      <div class="tool-card">
 
-    <!-- CATEGORIES -->
-    <div class="cat-scroll" id="cat-scroll">
-      <button class="cat-btn active" data-cat="animals">🐾 Animals</button>
-      <button class="cat-btn" data-cat="countries">🌍 Countries</button>
-      <button class="cat-btn" data-cat="food">🍕 Food</button>
-      <button class="cat-btn" data-cat="tech">💻 Tech</button>
-      <button class="cat-btn" data-cat="cars">🚗 Cars</button>
-      <button class="cat-btn" data-cat="superheroes">🦸 Superheroes</button>
-      <button class="cat-btn" data-cat="videogames">🎮 Video Games</button>
-      <button class="cat-btn" data-cat="colors">🎨 Colors & Shapes</button>
-      <button class="cat-btn" data-cat="science">🔬 Science & Nature</button>
-      <button class="cat-btn" data-cat="vocab">📚 Vocabulary</button>
-      <button class="cat-btn" data-cat="literature">📖 Literature</button>
-    </div>
+        <!-- ===== SETUP SCREEN: Category Carousel ===== -->
+        <div id="setup-screen" class="hm-screen">
+          <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3 text-center">Choose a category — scroll or use the arrows</h3>
 
-    <!-- GAME AREA -->
-    <div class="game-layout">
+          <div class="cat-carousel-wrap">
+            <button class="cat-carousel-btn prev" id="cat-prev" aria-label="Scroll left">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            </button>
+            <div class="cat-carousel-track" id="cat-track"></div>
+            <button class="cat-carousel-btn next" id="cat-next" aria-label="Scroll right">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+            </button>
+          </div>
 
-      <!-- HANGMAN DRAWING -->
-      <div class="hangman-wrap">
-        <svg id="hangman-svg" viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg">
-          <!-- Gallows -->
-          <line class="gallows" x1="20" y1="210" x2="180" y2="210"/>
-          <line class="gallows" x1="60" y1="210" x2="60" y2="20"/>
-          <line class="gallows" x1="60" y1="20" x2="130" y2="20"/>
-          <line class="gallows" x1="130" y1="20" x2="130" y2="45"/>
-          <!-- Body parts (revealed one at a time) -->
-          <!-- Head -->
-          <circle id="bp-0" class="body-part" cx="130" cy="62" r="17"/>
-          <!-- Body -->
-          <line id="bp-1" class="body-part" x1="130" y1="79" x2="130" y2="140"/>
-          <!-- Left Arm -->
-          <line id="bp-2" class="body-part" x1="130" y1="95" x2="105" y2="120"/>
-          <!-- Right Arm -->
-          <line id="bp-3" class="body-part" x1="130" y1="95" x2="155" y2="120"/>
-          <!-- Left Leg -->
-          <line id="bp-4" class="body-part" x1="130" y1="140" x2="105" y2="170"/>
-          <!-- Right Leg -->
-          <line id="bp-5" class="body-part" x1="130" y1="140" x2="155" y2="170"/>
-        </svg>
+          <div class="flex justify-center mt-5">
+            <button class="btn-primary hidden" id="start-game-btn" style="min-width:14rem;">Start Game →</button>
+          </div>
+          <p id="select-hint" class="text-xs text-gray-400 text-center mt-3">Select a category to begin</p>
+
+          <div class="mt-5 p-4 rounded-lg bg-gray-50 dark:bg-white/5 text-xs text-gray-500 leading-relaxed">
+            <p><strong>How to play:</strong> Click letter keys or type on your keyboard. Each wrong guess draws another part of the hangman — 6 wrong guesses and you lose. You get <strong class="text-brand-orange">2 hints</strong> per word; each hint reveals one random letter.</p>
+          </div>
+        </div>
+
+        <!-- ===== GAME SCREEN ===== -->
+        <div id="game-screen" class="hm-screen hm-hidden">
+          <!-- Meta row -->
+          <div class="hm-meta">
+            <span class="badge" id="cat-badge">Animals</span>
+            <div class="flex items-center gap-3">
+              <span class="text-xs text-gray-400 font-semibold uppercase tracking-wider">Wrong</span>
+              <span class="text-sm font-bold" id="wrong-count">0 / 6</span>
+            </div>
+            <button class="btn-secondary hint-btn" id="hint-btn">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z"/></svg>
+              Hint
+              <span class="hint-count" id="hint-count">2</span>
+            </button>
+          </div>
+
+          <!-- Progress bar (reuses .progress-bar from common.css) -->
+          <div class="progress-bar mb-5"><div class="progress-bar-fill" id="wrong-bar" style="width:0%"></div></div>
+
+          <!-- Stage: SVG + slots -->
+          <div class="hm-stage">
+            <div>
+              <svg class="hm-svg" viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg">
+                <!-- Gallows (always visible) -->
+                <line class="gallows" x1="10" y1="210" x2="120" y2="210"/>
+                <line class="gallows" x1="40" y1="210" x2="40" y2="10"/>
+                <line class="gallows" x1="40" y1="10" x2="140" y2="10"/>
+                <line class="gallows" x1="140" y1="10" x2="140" y2="35"/>
+                <!-- Body parts (revealed one at a time) -->
+                <circle class="part" id="part-head" cx="140" cy="55" r="20"/>
+                <line class="part" id="part-body" x1="140" y1="75" x2="140" y2="140"/>
+                <line class="part" id="part-arm-l" x1="140" y1="95" x2="115" y2="115"/>
+                <line class="part" id="part-arm-r" x1="140" y1="95" x2="165" y2="115"/>
+                <line class="part" id="part-leg-l" x1="140" y1="140" x2="115" y2="175"/>
+                <line class="part" id="part-leg-r" x1="140" y1="140" x2="165" y2="175"/>
+                <!-- Face (only shown when fully drawn / lost) -->
+                <line class="face" id="face-eye-l" x1="132" y1="50" x2="136" y2="54"/>
+                <line class="face" id="face-eye-r" x1="144" y1="50" x2="148" y2="54"/>
+                <line class="face" id="face-eye-l2" x1="136" y1="50" x2="132" y2="54"/>
+                <line class="face" id="face-eye-r2" x1="148" y1="50" x2="144" y2="54"/>
+                <path class="face" id="face-mouth" d="M 130 65 Q 140 60 150 65" />
+              </svg>
+            </div>
+            <div>
+              <div class="hm-slots" id="slots"></div>
+              <p class="text-center text-xs text-gray-400 mb-4" id="hint-text"></p>
+            </div>
+          </div>
+
+          <!-- Keyboard -->
+          <div class="hm-keys" id="keys"></div>
+
+          <!-- Controls -->
+          <div class="flex flex-wrap justify-center gap-3 mt-7">
+            <button class="btn-primary" id="new-word-btn">New Word</button>
+            <button class="btn-secondary" id="change-cat-btn">Change Category</button>
+          </div>
+
+          <p class="text-xs text-gray-400 text-center mt-5">
+            Pick letters by clicking keys or typing on your keyboard. You have <strong class="text-brand-orange">2 hints</strong> per word — each hint reveals one random letter.
+          </p>
+        </div>
+
       </div>
+    </div>
+  </main>
 
-      <!-- RIGHT PANEL -->
-      <div class="right-panel">
-
-        <div class="game-meta">
-          <span class="cat-label">Category: <strong id="cat-label">Animals</strong></span>
-          <span class="wrong-count" id="wrong-count">0 / 6 wrong</span>
-        </div>
-
-        <div class="progress-bar-wrap">
-          <div class="progress-bar" id="progress-bar" style="width: 0%"></div>
-        </div>
-
-        <div class="word-display" id="word-display"></div>
-
-        <!-- HINT -->
-        <div class="hint-section">
-          <button class="hint-btn" id="hint-btn">💡 Show Hint</button>
-          <div class="hint-text" id="hint-text"></div>
-        </div>
-
-        <div class="keyboard" id="keyboard"></div>
-        <p class="keyboard-tip">Click a letter or use your keyboard</p>
-
+  <!-- Win/Lose Modal -->
+  <div id="hm-modal">
+    <div class="hm-modal-card">
+      <div class="hm-modal-emoji" id="modal-emoji">🎉</div>
+      <h3 class="hm-modal-title" id="modal-title">You won!</h3>
+      <p class="hm-modal-word">The word was: <strong id="modal-word"></strong></p>
+      <div class="flex justify-center gap-3">
+        <button class="btn-primary" id="modal-play-again">Play Again</button>
+        <button class="btn-secondary" id="modal-close">Close</button>
       </div>
     </div>
-
   </div>
-</main>
 
-<!-- MODAL -->
-<div id="modal-backdrop">
-  <div id="modal">
-    <div class="modal-emoji" id="modal-emoji">🎉</div>
-    <h3 class="modal-title" id="modal-title">You got it!</h3>
-    <p class="modal-sub">The word was</p>
-    <p class="modal-word" id="modal-word">WORD</p>
-    <button class="play-again-btn" id="modal-btn">Play Again</button>
-  </div>
-</div>
+  <footer class="py-8 border-t border-gray-100 dark:border-white/5 mt-12">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p class="text-xs text-gray-400">© 2025 Contoura Labs</p>
+      <a href="index.html" class="text-xs text-brand-orange hover:text-brand-red transition-colors">← Back to all games</a>
+    </div>
+  </footer>
 
-<div id="toast"></div>
+  <script src="../assets/js/common.js"></script>
+  <script>
+  (function () {
+    'use strict';
 
-<footer>
-  <p>© 2025 Contoura Labs · <a href="index.html">← Back to all games</a></p>
-</footer>
+    // ===== Word lists by category — 12 categories =====
+    const CATEGORIES = {
+      'Animals': {
+        icon: '🐾',
+        desc: ' Creatures from across the animal kingdom.',
+        words: [
+          { w: 'ELEPHANT', h: 'Largest land mammal with a trunk' },
+          { w: 'GIRAFFE',  h: 'Tallest animal in the world' },
+          { w: 'PENGUIN',  h: 'Flightless bird that swims' },
+          { w: 'KANGAROO', h: 'Australian marsupial that hops' },
+          { w: 'DOLPHIN',  h: 'Intelligent ocean mammal' },
+          { w: 'OCTOPUS',  h: 'Sea creature with eight arms' },
+          { w: 'CHEETAH',  h: 'Fastest land animal' },
+          { w: 'PANDA',    h: 'Black and white bear from China' },
+          { w: 'OWL',      h: 'Nocturnal bird of prey' },
+          { w: 'CROCODILE',h: 'Large reptile with sharp teeth' }
+        ]
+      },
+      'Countries': {
+        icon: '🌍',
+        desc: ' Nations from every continent.',
+        words: [
+          { w: 'BRAZIL',     h: 'Largest country in South America' },
+          { w: 'JAPAN',      h: 'Island nation in East Asia' },
+          { w: 'CANADA',     h: 'Second-largest country by area' },
+          { w: 'EGYPT',      h: 'Home of the ancient pyramids' },
+          { w: 'AUSTRALIA',  h: 'Continent and country' },
+          { w: 'MOROCCO',    h: 'North African country with Marrakech' },
+          { w: 'NORWAY',     h: 'Scandinavian land of fjords' },
+          { w: 'THAILAND',   h: 'Southeast Asian country with temples' },
+          { w: 'ARGENTINA',  h: 'Home of tango and Messi' },
+          { w: 'PORTUGAL',   h: 'Iberian country famous for port wine' }
+        ]
+      },
+      'Movies': {
+        icon: '🎬',
+        desc: ' Blockbusters and Oscar winners.',
+        words: [
+          { w: 'INCEPTION',   h: 'Dream-within-a-dream heist film' },
+          { w: 'GLADIATOR',   h: 'Russell Crowe Roman epic' },
+          { w: 'TITANIC',     h: 'Ship that sank in 1997 film' },
+          { w: 'AVATAR',      h: 'Blue aliens on Pandora' },
+          { w: 'INTERSTELLAR',h: 'Christopher Nolan space travel film' },
+          { w: 'JURASSIC',    h: 'Park full of cloned dinosaurs' },
+          { w: 'MATRIX',      h: 'Red pill or blue pill?' },
+          { w: 'FROZEN',      h: 'Disney film with Let It Go' },
+          { w: 'JOKER',       h: '2019 Joaquin Phoenix film' },
+          { w: 'AVENGERS',    h: 'Marvel superhero team' }
+        ]
+      },
+      'Tech': {
+        icon: '💻',
+        desc: ' Programming, hardware, and the internet.',
+        words: [
+          { w: 'JAVASCRIPT', h: 'Language of the web' },
+          { w: 'KEYBOARD',   h: 'Input device with keys' },
+          { w: 'ALGORITHM',  h: 'Step-by-step procedure' },
+          { w: 'DATABASE',   h: 'Organized data storage' },
+          { w: 'BROWSER',    h: 'App that renders web pages' },
+          { w: 'FIREWALL',   h: 'Network security barrier' },
+          { w: 'PIXEL',      h: 'Smallest unit of a screen' },
+          { w: 'CIPHER',     h: 'Code for encrypting text' },
+          { w: 'BACKEND',    h: 'Server side of an app' },
+          { w: 'COMPILER',   h: 'Translates source code to machine code' }
+        ]
+      },
+      'Food': {
+        icon: '🍔',
+        desc: ' Dishes and ingredients from around the world.',
+        words: [
+          { w: 'PIZZA',     h: 'Italian flatbread with toppings' },
+          { w: 'SUSHI',     h: 'Japanese rice and seafood dish' },
+          { w: 'BURRITO',   h: 'Mexican wrapped tortilla' },
+          { w: 'PANCAKE',   h: 'Flat breakfast cake' },
+          { w: 'CROISSANT', h: 'French buttery crescent pastry' },
+          { w: 'SPAGHETTI', h: 'Long thin Italian pasta' },
+          { w: 'CHOCOLATE', h: 'Sweet treat from cocoa' },
+          { w: 'SANDWICH',  h: 'Fillings between two bread slices' },
+          { w: 'PINEAPPLE', h: 'Tropical spiky fruit' },
+          { w: 'HAMBURGER', h: 'Beef patty in a bun' }
+        ]
+      },
+      'Superheroes': {
+        icon: '🦸',
+        desc: ' Heroes and villains from comics.',
+        words: [
+          { w: 'SUPERMAN',     h: 'Man of Steel from Krypton' },
+          { w: 'BATMAN',       h: 'Caped crusader of Gotham' },
+          { w: 'SPIDERMAN',    h: 'Web-slinging teen hero' },
+          { w: 'WONDERWOMAN',  h: 'Amazonian princess warrior' },
+          { w: 'IRONMAN',      h: 'Tony Stark in a suit' },
+          { w: 'THOR',         h: 'Asgardian god of thunder' },
+          { w: 'HULK',         h: 'Bruce Banner when angry' },
+          { w: 'FLASH',        h: 'Fastest man alive' },
+          { w: 'AQUAMAN',      h: 'King of Atlantis' },
+          { w: 'BLACKWIDOW',   h: 'Natasha Romanoff, Avenger and spy' }
+        ]
+      },
+      'Cars': {
+        icon: '🚗',
+        desc: ' Brands, models, and automotive culture.',
+        words: [
+          { w: 'FERRARI',    h: 'Italian luxury sports car maker' },
+          { w: 'LAMBORGHINI',h: 'Italian supercar with scissor doors' },
+          { w: 'PORSCHE',    h: 'German maker of the 911' },
+          { w: 'TESLA',      h: 'Electric car company by Musk' },
+          { w: 'BUGATTI',    h: 'French maker of the Veyron' },
+          { w: 'MUSTANG',    h: 'Ford pony car since 1964' },
+          { w: 'CORVETTE',   h: 'Chevrolet sports car' },
+          { w: 'BENTLEY',    h: 'British luxury automobile' },
+          { w: 'MASERATI',   h: 'Italian luxury maker with trident logo' },
+          { w: 'KOENIGSEGG', h: 'Swedish hypercar maker' }
+        ]
+      },
+      'Languages': {
+        icon: '🗣️',
+        desc: ' Spoken and programming languages.',
+        words: [
+          { w: 'ENGLISH',    h: 'Most widely spoken second language' },
+          { w: 'MANDARIN',   h: 'Most native speakers worldwide' },
+          { w: 'SPANISH',    h: 'Romance language of Spain and Latin America' },
+          { w: 'ARABIC',     h: 'Semitic language written right-to-left' },
+          { w: 'HINDI',      h: 'Official language of India' },
+          { w: 'PORTUGUESE', h: 'Language of Brazil and Portugal' },
+          { w: 'RUSSIAN',    h: 'Slavic language using Cyrillic' },
+          { w: 'JAPANESE',   h: 'Language using three writing systems' },
+          { w: 'PYTHON',     h: 'Programming language named after a snake' },
+          { w: 'RUST',       h: 'Modern systems programming language' }
+        ]
+      },
+      'Science': {
+        icon: '🔬',
+        desc: ' Biology, chemistry, physics, and nature.',
+        words: [
+          { w: 'GRAVITY',     h: 'Force that pulls objects together' },
+          { w: 'PHOTOSYNTHESIS', h: 'How plants make food from sunlight' },
+          { w: 'MITOCHONDRIA',h: 'Powerhouse of the cell' },
+          { w: 'MOLECULE',    h: 'Group of bonded atoms' },
+          { w: 'VELOCITY',    h: 'Speed in a given direction' },
+          { w: 'NEUTRON',     h: 'Neutral subatomic particle' },
+          { w: 'EVOLUTION',   h: 'Darwin theory of species change' },
+          { w: 'ENZYME',      h: 'Biological catalyst protein' },
+          { w: 'GALAXY',      h: 'Vast system of stars' },
+          { w: 'OSMOSIS',     h: 'Water moving across a membrane' }
+        ]
+      },
+      'Sports': {
+        icon: '⚽',
+        desc: ' Games, athletes, and legends.',
+        words: [
+          { w: 'BASKETBALL',  h: 'Sport with hoops and a orange ball' },
+          { w: 'FOOTBALL',    h: 'Global sport with a spherical ball' },
+          { w: 'TENNIS',      h: 'Racquet sport with love and deuce' },
+          { w: 'CRICKET',     h: 'Bat-and-ball sport with wickets' },
+          { w: 'OLYMPICS',    h: 'Quadrennial global sporting event' },
+          { w: 'MARATHON',    h: '26.2 mile foot race' },
+          { w: 'SURFING',     h: 'Riding waves on a board' },
+          { w: 'BOXING',      h: 'Combat sport with gloves' },
+          { w: 'HOCKEY',      h: 'Sport with sticks and a puck' },
+          { w: 'RUGBY',       h: 'Contact sport with an oval ball' }
+        ]
+      },
+      'Music': {
+        icon: '🎵',
+        desc: ' Genres, instruments, and artists.',
+        words: [
+          { w: 'PIANO',       h: 'Keyboard instrument with 88 keys' },
+          { w: 'GUITAR',      h: 'Six-stringed instrument' },
+          { w: 'VIOLIN',      h: 'Bowed string instrument' },
+          { w: 'TRUMPET',     h: 'Brass horn with three valves' },
+          { w: 'REGGAE',      h: 'Jamaican genre made famous by Bob Marley' },
+          { w: 'JAZZ',        h: 'Improvisational genre from New Orleans' },
+          { w: 'OPERA',       h: 'Theatrical work set to music' },
+          { w: 'SYMPHONY',    h: 'Long musical composition for orchestra' },
+          { w: 'BEATLES',     h: 'Fab Four from Liverpool' },
+          { w: 'DRUMS',       h: 'Percussion kit with sticks' }
+        ]
+      },
+      'History': {
+        icon: '📜',
+        desc: ' Empires, leaders, and turning points.',
+        words: [
+          { w: 'NAPOLEON',    h: 'French emperor who conquered Europe' },
+          { w: 'PYRAMIDS',    h: 'Ancient Egyptian tombs at Giza' },
+          { w: 'COLOSSEUM',   h: 'Roman amphitheatre' },
+          { w: 'RENAISSANCE', h: 'European cultural rebirth' },
+          { w: 'VIKINGS',     h: 'Norse seafarers and raiders' },
+          { w: 'SAMURAI',     h: 'Japanese warrior class' },
+          { w: 'PHARAOH',     h: 'Ancient Egyptian ruler' },
+          { w: 'GLADIATOR',   h: 'Roman arena fighter' },
+          { w: 'CRUSADES',    h: 'Medieval religious wars' },
+          { w: 'EMPIRE',      h: 'Large multi-ethnic political entity' }
+        ]
+      }
+    };
 
-<script>
-(function () {
-  'use strict';
+    const PARTS_ORDER = ['part-head','part-body','part-arm-l','part-arm-r','part-leg-l','part-leg-r'];
+    const MAX_WRONG = 6;
+    const ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
-  /* ── DATA ── */
-  const DATA = {
-    animals: {
-      label: '🐾 Animals',
-      words: [
-        { word: 'ELEPHANT', hint: 'The largest land animal on Earth, known for its long trunk.' },
-        { word: 'GIRAFFE', hint: 'Has the longest neck of any living animal.' },
-        { word: 'DOLPHIN', hint: 'A highly intelligent marine mammal that loves to leap out of water.' },
-        { word: 'PENGUIN', hint: 'A flightless bird that lives mainly in Antarctica.' },
-        { word: 'KANGAROO', hint: 'A marsupial native to Australia that carries its young in a pouch.' },
-        { word: 'OCTOPUS', hint: 'An eight-armed sea creature known for its intelligence and ink.' },
-        { word: 'CHEETAH', hint: 'The fastest land animal, reaching up to 70 mph.' },
-        { word: 'FLAMINGO', hint: 'A pink wading bird that stands on one leg.' },
-        { word: 'HEDGEHOG', hint: 'A small spiny mammal that rolls into a ball when threatened.' },
-        { word: 'RACCOON', hint: 'A North American mammal with a distinctive black mask marking.' },
-        { word: 'PEACOCK', hint: 'A bird famous for its spectacular, colorful tail feathers.' },
-        { word: 'SQUIRREL', hint: 'A bushy-tailed rodent known for hoarding nuts.' },
-        { word: 'CROCODILE', hint: 'A large reptile that hasn\'t changed much in 200 million years.' },
-        { word: 'GORILLA', hint: 'The largest primate, closely related to humans.' },
-        { word: 'CHAMELEON', hint: 'A lizard that can change its skin color to match its surroundings.' },
-      ]
-    },
-    countries: {
-      label: '🌍 Countries',
-      words: [
-        { word: 'CANADA', hint: 'The second largest country in the world, famous for maple syrup.' },
-        { word: 'BRAZIL', hint: 'Home to the Amazon Rainforest and five-time World Cup winner.' },
-        { word: 'JAPAN', hint: 'An island nation known for sushi, anime, and Mount Fuji.' },
-        { word: 'EGYPT', hint: 'Home to the pyramids and the Nile River.' },
-        { word: 'FRANCE', hint: 'Known for the Eiffel Tower and being Europe\'s largest country.' },
-        { word: 'GERMANY', hint: 'Famous for Oktoberfest, the Berlin Wall, and BMW.' },
-        { word: 'ARGENTINA', hint: 'South American country that produced Lionel Messi.' },
-        { word: 'THAILAND', hint: 'Southeast Asian nation famous for temples and street food.' },
-        { word: 'PORTUGAL', hint: 'Western European country, birthplace of explorer Vasco da Gama.' },
-        { word: 'NORWAY', hint: 'A Scandinavian country famous for the Northern Lights.' },
-        { word: 'GREECE', hint: 'The birthplace of democracy and the Olympic Games.' },
-        { word: 'MOROCCO', hint: 'African country famous for its medinas, spices, and desert dunes.' },
-        { word: 'ICELAND', hint: 'An island nation where fire and ice coexist — volcanoes and glaciers.' },
-        { word: 'MEXICO', hint: 'North American country famous for tacos, pyramids, and Mariachi.' },
-        { word: 'VIETNAM', hint: 'Southeast Asian country famous for pho and the Mekong Delta.' },
-      ]
-    },
-    food: {
-      label: '🍕 Food',
-      words: [
-        { word: 'PIZZA', hint: 'A flatbread dish that originated in Naples, Italy.' },
-        { word: 'SUSHI', hint: 'A Japanese dish of seasoned rice with fish or vegetables.' },
-        { word: 'PANCAKE', hint: 'A flat, round cake cooked on a griddle, often topped with syrup.' },
-        { word: 'LASAGNA', hint: 'An Italian baked dish of layered pasta, meat, and cheese.' },
-        { word: 'BURRITO', hint: 'A Mexican dish of a flour tortilla wrapped around fillings.' },
-        { word: 'SANDWICH', hint: 'Named after an English Earl who invented it so he could eat while gambling.' },
-        { word: 'SPAGHETTI', hint: 'Long, thin Italian pasta that goes well with meatballs.' },
-        { word: 'WAFFLE', hint: 'A batter-based food cooked in a patterned iron, common in Belgium.' },
-        { word: 'DUMPLING', hint: 'Small dough pockets stuffed with meat or vegetables, popular in Asia.' },
-        { word: 'BAGUETTE', hint: 'A long, crusty bread that is a symbol of French cuisine.' },
-        { word: 'CROISSANT', hint: 'A buttery, flaky, crescent-shaped pastry from France.' },
-        { word: 'NACHOS', hint: 'Tortilla chips topped with cheese and various toppings, from Mexico.' },
-        { word: 'PRETZEL', hint: 'A baked bread product twisted into a distinctive knot shape, from Germany.' },
-        { word: 'OMELETTE', hint: 'Beaten eggs cooked in a pan, often folded around fillings.' },
-        { word: 'BURGER', hint: 'A sandwich consisting of a cooked ground beef patty in a bun.' },
-      ]
-    },
-    tech: {
-      label: '💻 Tech',
-      words: [
-        { word: 'KEYBOARD', hint: 'The primary input device for typing on a computer.' },
-        { word: 'MONITOR', hint: 'The screen that displays the output of a computer.' },
-        { word: 'INTERNET', hint: 'A global network connecting billions of devices worldwide.' },
-        { word: 'SOFTWARE', hint: 'The programs and operating information used by a computer.' },
-        { word: 'BLUETOOTH', hint: 'A wireless technology standard for short-range data exchange.' },
-        { word: 'ALGORITHM', hint: 'A step-by-step procedure for solving a problem — the heart of all programs.' },
-        { word: 'DATABASE', hint: 'An organized collection of structured data, often accessed electronically.' },
-        { word: 'PROCESSOR', hint: 'The brain of a computer — it carries out instructions.' },
-        { word: 'FIREWALL', hint: 'A network security system that monitors incoming and outgoing traffic.' },
-        { word: 'JAVASCRIPT', hint: 'The most popular programming language for making websites interactive.' },
-        { word: 'BANDWIDTH', hint: 'The maximum rate of data transfer across a network.' },
-        { word: 'ENCRYPTION', hint: 'The process of converting data into a coded form to prevent unauthorized access.' },
-        { word: 'ROUTER', hint: 'A device that forwards data packets between computer networks.' },
-        { word: 'BROWSER', hint: 'An application used to access and navigate the World Wide Web.' },
-        { word: 'LAPTOP', hint: 'A portable computer that can be used on your lap.' },
-      ]
-    },
-    cars: {
-      label: '🚗 Cars',
-      words: [
-        { word: 'FERRARI', hint: 'An iconic Italian supercar brand whose trademark color is red.' },
-        { word: 'LAMBORGHINI', hint: 'An Italian luxury car brand famous for its bull logo and angular designs.' },
-        { word: 'PORSCHE', hint: 'A German sports car brand famous for the 911 model.' },
-        { word: 'BUGATTI', hint: 'A French hypercar brand known for setting speed records.' },
-        { word: 'MUSTANG', hint: 'A legendary Ford pony car first released in 1964, named after a horse.' },
-        { word: 'MCLAREN', hint: 'A British supercar manufacturer that started in Formula 1 racing.' },
-        { word: 'BENTLEY', hint: 'A British luxury car brand, founded in 1919, known for handcrafted cars.' },
-        { word: 'CHEVROLET', hint: 'An American car brand, part of GM, known for the Corvette.' },
-        { word: 'ROLLS ROYCE', hint: 'A British luxury car brand whose hood ornament is called the Spirit of Ecstasy.' },
-        { word: 'TESLA', hint: 'An American electric vehicle company founded by Elon Musk.' },
-        { word: 'MASERATI', hint: 'An Italian luxury car brand whose logo features a trident.' },
-        { word: 'ASTON MARTIN', hint: 'A British luxury car brand famous for being James Bond\'s car of choice.' },
-        { word: 'KOENIGSEGG', hint: 'A Swedish hypercar manufacturer known for breaking speed records.' },
-        { word: 'PAGANI', hint: 'An Italian supercar brand known for the Huayra and Zonda models.' },
-        { word: 'JAGUAR', hint: 'A British luxury car brand named after a big cat.' },
-      ]
-    },
-    superheroes: {
-      label: '🦸 Superheroes',
-      words: [
-        { word: 'SUPERMAN', hint: 'A Kryptonian hero who is vulnerable to kryptonite.' },
-        { word: 'SPIDERMAN', hint: 'A hero who was bitten by a radioactive spider and can swing through New York.' },
-        { word: 'BATMAN', hint: 'A billionaire who fights crime in Gotham City with no superpowers.' },
-        { word: 'WOLVERINE', hint: 'An X-Men with a regenerative healing factor and retractable adamantium claws.' },
-        { word: 'IRONMAN', hint: 'A genius billionaire who built a suit of powered armor.' },
-        { word: 'THOR', hint: 'An Asgardian god who wields a magical hammer called Mjolnir.' },
-        { word: 'WONDERWOMAN', hint: 'An Amazonian princess and warrior from the DC universe.' },
-        { word: 'HULK', hint: 'A scientist who turns into a giant green monster when angry.' },
-        { word: 'AQUAMAN', hint: 'The king of Atlantis who can breathe underwater and talk to sea creatures.' },
-        { word: 'DEADPOOL', hint: 'A wise-cracking mercenary with a healing factor, known for breaking the 4th wall.' },
-        { word: 'BLACKPANTHER', hint: 'The king of Wakanda, Africa\'s most technologically advanced nation.' },
-        { word: 'FLASH', hint: 'The Fastest Man Alive — a DC hero who can run at superhuman speeds.' },
-        { word: 'CAPTAINAMERICA', hint: 'A World War II super-soldier who carries a vibranium shield.' },
-        { word: 'DAREDEVIL', hint: 'A blind lawyer who fights crime at night using enhanced senses.' },
-        { word: 'GREENLANTERN', hint: 'A hero powered by a ring that can construct anything from green light.' },
-      ]
-    },
-    videogames: {
-      label: '🎮 Video Games',
-      words: [
-        { word: 'MINECRAFT', hint: 'A sandbox game where you mine resources and build structures from blocks.' },
-        { word: 'FORTNITE', hint: 'A battle royale game known for its building mechanics and seasonal events.' },
-        { word: 'ZELDA', hint: 'A Nintendo adventure game series where a hero named Link saves Princess Zelda.' },
-        { word: 'POKEMON', hint: 'A franchise where you catch and battle creatures in a world of 1000+ species.' },
-        { word: 'MARIO', hint: 'Nintendo\'s mascot — an Italian plumber who rescues Princess Peach.' },
-        { word: 'HALO', hint: 'A first-person shooter franchise featuring a super-soldier called Master Chief.' },
-        { word: 'WITCHER', hint: 'A role-playing game based on a fantasy book series about monster hunters.' },
-        { word: 'OVERWATCH', hint: 'A team-based hero shooter game by Blizzard Entertainment.' },
-        { word: 'CYBERPUNK', hint: 'A futuristic RPG set in Night City, a dystopian open world.' },
-        { word: 'STARCRAFT', hint: 'A real-time strategy game set in the far future with three alien races.' },
-        { word: 'DIABLO', hint: 'A dark fantasy action RPG about battling demons in dungeons.' },
-        { word: 'BATTLEFIELD', hint: 'A military first-person shooter series featuring large-scale combat.' },
-        { word: 'SPLATOON', hint: 'A Nintendo shooter where players ink turf with colorful paint.' },
-        { word: 'SKYRIM', hint: 'An open-world RPG where you play as a Dragonborn who can shout magic words.' },
-        { word: 'PACMAN', hint: 'A classic arcade game where you eat dots and avoid ghosts.' },
-      ]
-    },
-    colors: {
-      label: '🎨 Colors & Shapes',
-      words: [
-        { word: 'CRIMSON', hint: 'A deep, rich shade of red.' },
-        { word: 'TURQUOISE', hint: 'A blue-green color named after the gemstone.' },
-        { word: 'OCTAGON', hint: 'A polygon with exactly eight sides — like a stop sign.' },
-        { word: 'HEXAGON', hint: 'A shape with six sides — like cells in a honeycomb.' },
-        { word: 'INDIGO', hint: 'A deep blue-purple color — one of the seven colors of the rainbow.' },
-        { word: 'RHOMBUS', hint: 'A parallelogram with four equal sides, also called a diamond shape.' },
-        { word: 'MAGENTA', hint: 'A vivid purplish-red color used in printing inks.' },
-        { word: 'ELLIPSE', hint: 'A flattened, oval-shaped closed curve.' },
-        { word: 'CHARTREUSE', hint: 'A yellow-green color named after a French liqueur.' },
-        { word: 'TRAPEZOID', hint: 'A quadrilateral with exactly one pair of parallel sides.' },
-        { word: 'VERMILLION', hint: 'A brilliant orange-red pigment historically made from mercury sulfide.' },
-        { word: 'PENTAGON', hint: 'A polygon with five sides and five angles.' },
-        { word: 'CERULEAN', hint: 'A bright, sky-blue color.' },
-        { word: 'PARALLELOGRAM', hint: 'A four-sided figure where opposite sides are parallel and equal.' },
-        { word: 'MAUVE', hint: 'A pale, grayish-purple color — the first synthetic dye ever made.' },
-      ]
-    },
-    science: {
-      label: '🔬 Science & Nature',
-      words: [
-        { word: 'HYDROGEN', hint: 'The lightest and most abundant element in the universe — atomic number 1.' },
-        { word: 'JUPITER', hint: 'The largest planet in our solar system, known for its Great Red Spot.' },
-        { word: 'PHOTOSYNTHESIS', hint: 'The process plants use to convert sunlight into food.' },
-        { word: 'NEUTRON', hint: 'A subatomic particle with no charge found in the nucleus of an atom.' },
-        { word: 'CHLOROPHYLL', hint: 'The green pigment in plants that captures sunlight for photosynthesis.' },
-        { word: 'MITOSIS', hint: 'The process of a cell dividing to produce two identical daughter cells.' },
-        { word: 'SUPERNOVA', hint: 'A massive stellar explosion that briefly outshines an entire galaxy.' },
-        { word: 'OSMOSIS', hint: 'The movement of water through a semi-permeable membrane from a dilute to a concentrated solution.' },
-        { word: 'TECTONIC', hint: 'Relating to the plates that make up Earth\'s crust and cause earthquakes.' },
-        { word: 'URANIUM', hint: 'A radioactive element used as fuel in nuclear reactors — atomic number 92.' },
-        { word: 'CHROMOSOME', hint: 'A thread-like structure in cells that carries genetic information (DNA).' },
-        { word: 'NEBULA', hint: 'A giant cloud of gas and dust in space where new stars are born.' },
-        { word: 'ECOSYSTEM', hint: 'A community of living organisms interacting with their physical environment.' },
-        { word: 'CATALYST', hint: 'A substance that speeds up a chemical reaction without being consumed.' },
-        { word: 'NUCLEUS', hint: 'The central part of an atom, or the control center of a cell.' },
-      ]
-    },
-    vocab: {
-      label: '📚 Vocabulary',
-      words: [
-        { word: 'EPHEMERAL', hint: 'Lasting for a very short time — like a mayfly that lives for only a day.' },
-        { word: 'LOQUACIOUS', hint: 'Tending to talk a great deal — the opposite of quiet.' },
-        { word: 'AMBIGUOUS', hint: 'Open to more than one interpretation; not clear or definite.' },
-        { word: 'SERENDIPITY', hint: 'The occurrence of finding pleasant things by chance or luck.' },
-        { word: 'UBIQUITOUS', hint: 'Present, appearing, or found everywhere at the same time.' },
-        { word: 'ELOQUENT', hint: 'Fluent, persuasive, and well-expressed in speech or writing.' },
-        { word: 'CACOPHONY', hint: 'A harsh, discordant mixture of sounds — the opposite of harmony.' },
-        { word: 'MELANCHOLY', hint: 'A feeling of pensive sadness, typically with no obvious cause.' },
-        { word: 'TENACIOUS', hint: 'Holding firmly to something; not giving up — extremely persistent.' },
-        { word: 'PRAGMATIC', hint: 'Dealing with things sensibly and realistically, not theoretically.' },
-        { word: 'VERBOSE', hint: 'Using more words than needed — someone who never gets to the point.' },
-        { word: 'PARADOX', hint: 'A seemingly absurd statement that when investigated is actually true.' },
-        { word: 'BENEVOLENT', hint: 'Well-meaning and kindly; wishing good things for others.' },
-        { word: 'NONCHALANT', hint: 'Feeling or appearing casually calm and relaxed; not anxious.' },
-        { word: 'JUXTAPOSE', hint: 'To place two things close together to highlight differences.' },
-      ]
-    },
-    literature: {
-      label: '📖 Literature',
-      words: [
-        { word: 'SHAKESPEARE', hint: 'The Bard of Avon — wrote Hamlet, Romeo and Juliet, and Macbeth.' },
-        { word: 'HOBBIT', hint: 'J.R.R. Tolkien\'s novel about Bilbo Baggins and his unexpected journey.' },
-        { word: 'ODYSSEY', hint: 'Homer\'s ancient Greek epic about Odysseus\'s long journey home after Troy.' },
-        { word: 'DRACULA', hint: 'Bram Stoker\'s 1897 Gothic horror novel about a Transylvanian vampire.' },
-        { word: 'FITZGERALD', hint: 'The author of The Great Gatsby — F. Scott ___.' },
-        { word: 'MOBY DICK', hint: 'Herman Melville\'s novel about Captain Ahab\'s obsession with a white whale.' },
-        { word: 'FRANKENSTEIN', hint: 'Mary Shelley\'s 1818 novel about a scientist who creates a living creature.' },
-        { word: 'HEMINGWAY', hint: 'American author known for minimalist prose and The Old Man and the Sea.' },
-        { word: 'ORWELL', hint: 'Author of 1984 and Animal Farm — George ___.' },
-        { word: 'GATSBY', hint: 'The mysterious millionaire at the heart of Fitzgerald\'s most famous novel.' },
-        { word: 'DOSTOEVSKY', hint: 'Russian author of Crime and Punishment and The Brothers Karamazov.' },
-        { word: 'ILIAD', hint: 'Homer\'s epic poem about the Trojan War and the wrath of Achilles.' },
-        { word: 'AUSTEN', hint: 'English author of Pride and Prejudice — Jane ___.' },
-        { word: 'QUIXOTE', hint: 'The delusional knight-errant hero of Cervantes\'s masterpiece — Don ___.' },
-        { word: 'TOLKIEN', hint: 'The author who created Middle-earth and wrote The Lord of the Rings.' },
-      ]
+    // ===== State =====
+    let state = {
+      category: '',
+      word: '',
+      hint: '',
+      guessed: new Set(),
+      wrong: 0,
+      hintsLeft: 2,
+      gameOver: false,
+      won: false,
+      recent: []
+    };
+
+    // ===== DOM refs =====
+    const $ = (id) => document.getElementById(id);
+    const setupScreen  = $('setup-screen');
+    const gameScreen   = $('game-screen');
+    const catTrack     = $('cat-track');
+    const startBtn     = $('start-game-btn');
+    const selectHint   = $('select-hint');
+    const catBadge     = $('cat-badge');
+    const slotsEl      = $('slots');
+    const hintText     = $('hint-text');
+    const keysEl       = $('keys');
+    const wrongCount   = $('wrong-count');
+    const wrongBar     = $('wrong-bar');
+    const hintBtn      = $('hint-btn');
+    const hintCountEl  = $('hint-count');
+    const modal        = $('hm-modal');
+
+    // ===== Build category carousel =====
+    function buildCategoryCarousel() {
+      catTrack.innerHTML = '';
+      Object.keys(CATEGORIES).forEach(cat => {
+        const c = CATEGORIES[cat];
+        const card = document.createElement('div');
+        card.className = 'cat-carousel-card';
+        card.dataset.category = cat;
+        card.innerHTML = `
+          <div class="cc-icon">${c.icon}</div>
+          <div class="cc-name">${cat}</div>
+          <div class="cc-desc">${c.desc}</div>
+          <div class="cc-meta">${c.words.length} words</div>
+        `;
+        card.addEventListener('click', () => selectCategory(cat));
+        catTrack.appendChild(card);
+      });
     }
-  };
 
-  const MAX_WRONG = 6;
+    function selectCategory(cat) {
+      state.category = cat;
+      // Update selected state on all cards
+      catTrack.querySelectorAll('.cat-carousel-card').forEach(card => {
+        card.classList.toggle('selected', card.dataset.category === cat);
+      });
+      // Scroll selected into view
+      const sel = catTrack.querySelector('.cat-carousel-card.selected');
+      if (sel) sel.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      // Show start button
+      startBtn.classList.remove('hidden');
+      selectHint.textContent = `Selected: ${CATEGORIES[cat].icon} ${cat} — click Start to begin`;
+    }
 
-  /* ── STATE ── */
-  let category = 'animals';
-  let word = '';
-  let hint = '';
-  let guessed = new Set();
-  let wrongCount = 0;
-  let gameOver = false;
-  let hintUsed = false;
-
-  /* ── ELEMENTS ── */
-  const wordEl = document.getElementById('word-display');
-  const keyboardEl = document.getElementById('keyboard');
-  const catLabelEl = document.getElementById('cat-label');
-  const wrongCountEl = document.getElementById('wrong-count');
-  const progressBar = document.getElementById('progress-bar');
-  const modalBackdrop = document.getElementById('modal-backdrop');
-  const modalEmoji = document.getElementById('modal-emoji');
-  const modalTitle = document.getElementById('modal-title');
-  const modalWord = document.getElementById('modal-word');
-  const modalBtn = document.getElementById('modal-btn');
-  const hintBtn = document.getElementById('hint-btn');
-  const hintText = document.getElementById('hint-text');
-  const toastEl = document.getElementById('toast');
-
-  /* ── HANGMAN SVG PARTS ── */
-  const bodyParts = [
-    document.getElementById('bp-0'),
-    document.getElementById('bp-1'),
-    document.getElementById('bp-2'),
-    document.getElementById('bp-3'),
-    document.getElementById('bp-4'),
-    document.getElementById('bp-5'),
-  ];
-
-  function updateHangman() {
-    bodyParts.forEach((part, i) => {
-      part.classList.toggle('show', i < wrongCount);
+    // ===== Start the game =====
+    startBtn.addEventListener('click', () => {
+      if (!state.category) return;
+      setupScreen.classList.add('hm-hidden');
+      gameScreen.classList.remove('hm-hidden');
+      newWord();
     });
-  }
 
-  /* ── WORD RENDERING ── */
-  function renderWord() {
-    wordEl.innerHTML = '';
-    word.split('').forEach(ch => {
-      const slot = document.createElement('div');
-      if (ch === ' ') {
-        slot.className = 'letter-slot space';
+    // ===== Pick a new word =====
+    function newWord() {
+      const pool = CATEGORIES[state.category].words;
+      let candidates = pool.filter(p => !state.recent.includes(p.w));
+      if (candidates.length === 0) {
+        state.recent = [];
+        candidates = pool;
+      }
+      const pick = candidates[Math.floor(Math.random() * candidates.length)];
+      state.word = pick.w;
+      state.hint = pick.h;
+      state.guessed = new Set();
+      state.wrong = 0;
+      state.hintsLeft = 2;
+      state.gameOver = false;
+      state.won = false;
+      state.recent.push(pick.w);
+      if (state.recent.length > pool.length - 1) state.recent.shift();
+
+      catBadge.textContent = CATEGORIES[state.category].icon + ' ' + state.category;
+      hintText.textContent = '';
+      hideModal();
+      render();
+    }
+
+    // ===== Render =====
+    function render() {
+      // Slots
+      slotsEl.innerHTML = '';
+      for (const ch of state.word) {
+        const slot = document.createElement('div');
+        if (ch === ' ') {
+          slot.className = 'letter-slot space';
+        } else {
+          slot.className = 'letter-slot';
+          const revealed = state.gameOver || state.guessed.has(ch);
+          if (revealed) slot.classList.add('revealed');
+          slot.innerHTML = '<span class="ch">' + (revealed ? ch : '') + '</span>';
+        }
+        slotsEl.appendChild(slot);
+      }
+
+      // Keyboard
+      keysEl.innerHTML = '';
+      for (const L of ALPHA) {
+        const btn = document.createElement('button');
+        btn.className = 'key';
+        btn.textContent = L;
+        if (state.guessed.has(L)) {
+          if (state.word.includes(L)) btn.classList.add('correct');
+          else btn.classList.add('wrong');
+          btn.disabled = true;
+        }
+        if (state.gameOver) btn.disabled = true;
+        btn.addEventListener('click', () => guess(L));
+        keysEl.appendChild(btn);
+      }
+
+      // Wrong counter + bar
+      wrongCount.textContent = state.wrong + ' / ' + MAX_WRONG;
+      wrongBar.style.width = (state.wrong / MAX_WRONG * 100) + '%';
+
+      // Hint button
+      hintCountEl.textContent = state.hintsLeft;
+      hintBtn.disabled = state.hintsLeft === 0 || state.gameOver;
+
+      // Hangman parts
+      PARTS_ORDER.forEach((id, i) => {
+        const el = document.getElementById(id);
+        if (i < state.wrong) el.classList.add('show');
+        else el.classList.remove('show');
+      });
+
+      // Face (only on loss)
+      ['face-eye-l','face-eye-r','face-eye-l2','face-eye-r2','face-mouth'].forEach(id => {
+        const el = document.getElementById(id);
+        if (state.gameOver && !state.won) el.classList.add('show');
+        else el.classList.remove('show');
+      });
+    }
+
+    // ===== Guess a letter =====
+    function guess(letter) {
+      if (state.gameOver || state.guessed.has(letter)) return;
+      state.guessed.add(letter);
+      if (state.word.includes(letter)) {
+        const allGuessed = [...state.word].every(ch => ch === ' ' || state.guessed.has(ch));
+        if (allGuessed) {
+          state.gameOver = true;
+          state.won = true;
+          setTimeout(() => showModal(true), 400);
+        }
       } else {
-        slot.className = 'letter-slot';
-        if (guessed.has(ch)) {
-          slot.textContent = ch;
-          slot.classList.add('revealed');
-        } else if (gameOver) {
-          slot.textContent = ch;
-          slot.classList.add('missed');
+        state.wrong++;
+        if (state.wrong >= MAX_WRONG) {
+          state.gameOver = true;
+          state.won = false;
+          setTimeout(() => showModal(false), 500);
         }
       }
-      wordEl.appendChild(slot);
-    });
-  }
-
-  /* ── KEYBOARD ── */
-  function buildKeyboard() {
-    keyboardEl.innerHTML = '';
-    'QWERTYUIOPASDFGHJKLZXCVBNM'.split('').forEach(letter => {
-      const btn = document.createElement('button');
-      btn.className = 'key';
-      btn.textContent = letter;
-      btn.dataset.letter = letter;
-      btn.addEventListener('click', () => guessLetter(letter));
-      keyboardEl.appendChild(btn);
-    });
-  }
-
-  /* ── GUESS ── */
-  function guessLetter(letter) {
-    if (gameOver || guessed.has(letter)) return;
-    guessed.add(letter);
-    const btn = keyboardEl.querySelector(`[data-letter="${letter}"]`);
-
-    if (word.includes(letter)) {
-      if (btn) { btn.classList.add('correct'); btn.disabled = true; }
-      renderWord();
-      checkWin();
-    } else {
-      wrongCount++;
-      if (btn) { btn.classList.add('wrong'); btn.disabled = true; }
-      updateHangman();
-      updateMeta();
-      if (wrongCount >= MAX_WRONG) endGame(false);
+      render();
     }
-  }
 
-  function updateMeta() {
-    wrongCountEl.textContent = `${wrongCount} / ${MAX_WRONG} wrong`;
-    progressBar.style.width = `${(wrongCount / MAX_WRONG) * 100}%`;
-  }
-
-  function checkWin() {
-    const allGuessed = word.split('').every(ch => ch === ' ' || guessed.has(ch));
-    if (allGuessed) endGame(true);
-  }
-
-  /* ── END GAME ── */
-  function endGame(won) {
-    gameOver = true;
-    renderWord();
-    keyboardEl.querySelectorAll('.key').forEach(b => b.disabled = true);
-    modalEmoji.textContent = won ? '🎉' : '💀';
-    modalTitle.textContent = won ? 'You got it!' : 'Out of guesses!';
-    modalWord.textContent = word;
-    setTimeout(() => modalBackdrop.classList.add('show'), 450);
-    showToast(won ? `🎉 You guessed it — ${word}!` : `The word was ${word}`);
-  }
-
-  /* ── HINT ── */
-  hintBtn.addEventListener('click', () => {
-    if (hintUsed || gameOver) return;
-    hintUsed = true;
-    hintText.textContent = `💡 ${hint}`;
-    hintText.classList.add('show');
-    hintBtn.disabled = true;
-    hintBtn.textContent = '💡 Hint used';
-  });
-
-  /* ── NEW GAME ── */
-  function newGame() {
-    const list = DATA[category].words;
-    const entry = list[Math.floor(Math.random() * list.length)];
-    word = entry.word;
-    hint = entry.hint;
-    guessed = new Set();
-    wrongCount = 0;
-    gameOver = false;
-    hintUsed = false;
-
-    catLabelEl.textContent = DATA[category].label.split(' ').slice(1).join(' ');
-    updateMeta();
-    updateHangman();
-    renderWord();
-    buildKeyboard();
-    modalBackdrop.classList.remove('show');
-    hintBtn.disabled = false;
-    hintBtn.textContent = '💡 Show Hint';
-    hintText.textContent = '';
-    hintText.classList.remove('show');
-  }
-
-  /* ── TOAST ── */
-  let toastTimer;
-  function showToast(msg) {
-    clearTimeout(toastTimer);
-    toastEl.textContent = msg;
-    toastEl.classList.add('show');
-    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 3000);
-  }
-
-  /* ── EVENTS ── */
-  document.addEventListener('keydown', (e) => {
-    const key = e.key.toUpperCase();
-    if (/^[A-Z]$/.test(key)) guessLetter(key);
-  });
-
-  document.querySelectorAll('.cat-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      category = btn.dataset.cat;
-      newGame();
+    // ===== Hint =====
+    hintBtn.addEventListener('click', () => {
+      if (state.hintsLeft === 0 || state.gameOver) return;
+      const unguessed = [...new Set([...state.word])].filter(ch => ch !== ' ' && !state.guessed.has(ch));
+      if (unguessed.length === 0) return;
+      const reveal = unguessed[Math.floor(Math.random() * unguessed.length)];
+      state.guessed.add(reveal);
+      state.hintsLeft--;
+      hintText.textContent = 'Hint revealed: ' + reveal + ' — ' + state.hint;
+      const allGuessed = [...state.word].every(ch => ch === ' ' || state.guessed.has(ch));
+      if (allGuessed) {
+        state.gameOver = true;
+        state.won = true;
+        setTimeout(() => showModal(true), 400);
+      }
+      render();
     });
-  });
 
-  modalBtn.addEventListener('click', newGame);
+    // ===== Modal =====
+    function showModal(won) {
+      $('modal-emoji').textContent = won ? '🎉' : '💀';
+      $('modal-title').textContent = won ? 'You won!' : 'Game over';
+      $('modal-title').style.color = won ? 'var(--brand-teal)' : 'var(--brand-red)';
+      $('modal-word').textContent = state.word;
+      modal.classList.add('show');
+    }
+    function hideModal() { modal.classList.remove('show'); }
 
-  /* ── DARK MODE ── */
-  const themeBtn = document.getElementById('theme-toggle');
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  if (prefersDark) document.documentElement.classList.add('dark');
-  themeBtn.textContent = document.documentElement.classList.contains('dark') ? '☀️' : '🌙';
+    $('modal-play-again').addEventListener('click', () => { hideModal(); newWord(); });
+    $('modal-close').addEventListener('click', hideModal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) hideModal(); });
 
-  themeBtn.addEventListener('click', () => {
-    document.documentElement.classList.toggle('dark');
-    themeBtn.textContent = document.documentElement.classList.contains('dark') ? '☀️' : '🌙';
-  });
+    // ===== New word / change category =====
+    $('new-word-btn').addEventListener('click', newWord);
+    $('change-cat-btn').addEventListener('click', () => {
+      gameScreen.classList.add('hm-hidden');
+      setupScreen.classList.remove('hm-hidden');
+      hideModal();
+    });
 
-  /* ── INIT ── */
-  newGame();
-})();
-</script>
+    // ===== Keyboard input =====
+    document.addEventListener('keydown', (e) => {
+      if (modal.classList.contains('show')) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); hideModal(); newWord(); }
+        return;
+      }
+      if (gameScreen.classList.contains('hm-hidden')) return; // ignore typing on setup screen
+      const L = e.key.toUpperCase();
+      if (L.length === 1 && L >= 'A' && L <= 'Z') guess(L);
+    });
 
+    // ===== Init =====
+    buildCategoryCarousel();
+    // common.js wires the carousel arrows automatically via wireCategoryCarousels()
+  })();
+  </script>
 </body>
 </html>

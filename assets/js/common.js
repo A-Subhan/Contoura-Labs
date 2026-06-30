@@ -21,9 +21,18 @@
   const isIndividualPage = inSubdir && !isHubPage;
 
   // ===== 1. AUTO-INJECT NAVBAR (always visible with solid background) =====
+  // All links same color; active page highlighted with brand orange + underline
   function injectNavbar() {
     const mount = document.getElementById('navbar-mount');
     if (!mount) return;
+
+    // Determine which nav item is active based on current path
+    const isHome = !inSubdir;
+    const isTools = inToolsDir;
+    const isGames = inGamesDir;
+
+    const activeClass = 'text-brand-orange font-semibold';
+    const inactiveClass = 'text-gray-700 dark:text-gray-300 hover:text-brand-orange dark:hover:text-brand-orange font-medium';
 
     mount.innerHTML = `
       <nav id="navbar" class="fixed top-0 left-0 right-0 z-50 nav-scrolled">
@@ -37,9 +46,9 @@
             <span class="font-bold text-base tracking-tight">Contoura Labs</span>
           </a>
           <div class="hidden md:flex items-center gap-7">
-            <a href="${prefix}index.html" class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-brand-orange dark:hover:text-brand-orange transition-colors">Home</a>
-            <a href="${prefix}tools/index.html" class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-brand-orange dark:hover:text-brand-orange transition-colors">Tools</a>
-            <a href="${prefix}games/index.html" class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-brand-teal dark:hover:text-brand-teal transition-colors">Games</a>
+            <a href="${prefix}index.html" class="text-sm transition-colors ${isHome ? activeClass : inactiveClass}" style="${isHome ? 'border-bottom: 2px solid #FF6B35; padding-bottom: 2px;' : ''}">Home</a>
+            <a href="${prefix}tools/index.html" class="text-sm transition-colors ${isTools ? activeClass : inactiveClass}" style="${isTools ? 'border-bottom: 2px solid #FF6B35; padding-bottom: 2px;' : ''}">Tools</a>
+            <a href="${prefix}games/index.html" class="text-sm transition-colors ${isGames ? activeClass : inactiveClass}" style="${isGames ? 'border-bottom: 2px solid #FF6B35; padding-bottom: 2px;' : ''}">Games</a>
             <a href="${prefix}index.html#contact" class="btn-gradient text-white text-sm font-semibold px-5 py-2.5 rounded-full">Contact</a>
           </div>
           <button id="menu-btn" class="md:hidden w-9 h-9 rounded-full flex items-center justify-center bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/15 transition-colors z-50" aria-label="Open menu">
@@ -56,9 +65,9 @@
         <button id="menu-close" class="absolute top-4 right-4 w-9 h-9 rounded-full flex items-center justify-center bg-gray-100 dark:bg-white/10" aria-label="Close menu">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
-        <a href="${prefix}index.html" class="mobile-link text-lg font-medium text-gray-800 dark:text-gray-200 py-3 border-b border-gray-100 dark:border-white/10">Home</a>
-        <a href="${prefix}tools/index.html" class="mobile-link text-lg font-medium text-gray-800 dark:text-gray-200 py-3 border-b border-gray-100 dark:border-white/10">Tools</a>
-        <a href="${prefix}games/index.html" class="mobile-link text-lg font-medium text-gray-800 dark:text-gray-200 py-3 border-b border-gray-100 dark:border-white/10">Games</a>
+        <a href="${prefix}index.html" class="mobile-link text-lg py-3 border-b border-gray-100 dark:border-white/10 ${isHome ? 'text-brand-orange font-semibold' : 'text-gray-800 dark:text-gray-200 font-medium'}">Home</a>
+        <a href="${prefix}tools/index.html" class="mobile-link text-lg py-3 border-b border-gray-100 dark:border-white/10 ${isTools ? 'text-brand-orange font-semibold' : 'text-gray-800 dark:text-gray-200 font-medium'}">Tools</a>
+        <a href="${prefix}games/index.html" class="mobile-link text-lg py-3 border-b border-gray-100 dark:border-white/10 ${isGames ? 'text-brand-orange font-semibold' : 'text-gray-800 dark:text-gray-200 font-medium'}">Games</a>
         <a href="${prefix}index.html#contact" class="mobile-link btn-gradient text-white text-center font-semibold px-5 py-3 rounded-full mt-6">Contact</a>
       </div>
     `;
@@ -87,24 +96,32 @@
 
   // ===== 2. AUTO-INJECT BACK-NAVIGATION BREADCRUMBS =====
   // On individual tool/game pages, add "Back to Home" + "Back to All Tools/Games"
+  // breadcrumb AND a visible "Go to all tools/games" button near the top.
   function injectBackNav() {
     if (!isIndividualPage) return;
 
     const hubName = pageType === 'tool' ? 'All Tools' : 'All Games';
+    const hubNameShort = pageType === 'tool' ? 'All Tools' : 'All Games';
     const hubUrl = pageType === 'tool' ? '../tools/index.html' : '../games/index.html';
-    const hubColor = pageType === 'tool' ? 'brand-orange' : 'brand-teal';
 
+    // --- Slim breadcrumb banner (Home › All Tools/Games) ---
     const banner = document.createElement('div');
     banner.className = 'back-nav-banner';
     banner.innerHTML = `
-      <a href="${prefix}index.html" class="back-nav-btn back-nav-home">
-        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0h6m-6 0v-5a1 1 0 011-1h4a1 1 0 011 1v5"/></svg>
-        <span>Home</span>
-      </a>
-      <span class="back-nav-sep">›</span>
-      <a href="${hubUrl}" class="back-nav-btn back-nav-hub">
+      <div class="back-nav-crumbs">
+        <a href="${prefix}index.html" class="back-nav-btn back-nav-home">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0h6m-6 0v-5a1 1 0 011-1h4a1 1 0 011 1v5"/></svg>
+          <span>Home</span>
+        </a>
+        <span class="back-nav-sep">›</span>
+        <a href="${hubUrl}" class="back-nav-btn back-nav-hub">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+          <span>${hubNameShort}</span>
+        </a>
+      </div>
+      <a href="${hubUrl}" class="back-nav-cta">
         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
-        <span>${hubName}</span>
+        Go to ${hubNameShort}
       </a>
     `;
     document.body.insertBefore(banner, document.body.firstChild);
@@ -216,7 +233,85 @@
     }
   };
 
-  // ===== 8. INIT ON DOM READY =====
+  // ===== 8. WIRE CATEGORY CAROUSEL ARROWS =====
+  // Generic — any .cat-carousel-wrap with .prev/.next buttons + .cat-carousel-track
+  // Auto-disables arrows at scroll edges.
+  function wireCategoryCarousels() {
+    document.querySelectorAll('.cat-carousel-wrap').forEach(wrap => {
+      const track = wrap.querySelector('.cat-carousel-track');
+      const prev  = wrap.querySelector('.cat-carousel-btn.prev');
+      const next  = wrap.querySelector('.cat-carousel-btn.next');
+      if (!track) return;
+
+      const scrollBy = (dir) => {
+        // Scroll by ~80% of visible width
+        const amt = track.clientWidth * 0.8 * dir;
+        track.scrollBy({ left: amt, behavior: 'smooth' });
+      };
+      if (prev) prev.addEventListener('click', () => scrollBy(-1));
+      if (next) next.addEventListener('click', () => scrollBy(1));
+
+      // Edge-state management
+      const updateBtns = () => {
+        if (!prev || !next) return;
+        const maxScroll = track.scrollWidth - track.clientWidth - 2;
+        const x = track.scrollLeft;
+        prev.disabled = x <= 2;
+        next.disabled = x >= maxScroll;
+      };
+      track.addEventListener('scroll', updateBtns, { passive: true });
+      // Run after layout settles
+      setTimeout(updateBtns, 50);
+      window.addEventListener('resize', updateBtns, { passive: true });
+    });
+  }
+
+  // ===== 9. WIRE MARQUEE — duplicate track contents for seamless loop =====
+  // Any .marquee-track gets its children cloned once so the -50% translate is seamless.
+  function wireMarquees() {
+    document.querySelectorAll('.marquee-track').forEach(track => {
+      // Only clone once
+      if (track.dataset.duplicated === '1') return;
+      const children = Array.from(track.children);
+      children.forEach(child => {
+        const clone = child.cloneNode(true);
+        clone.setAttribute('aria-hidden', 'true');
+        track.appendChild(clone);
+      });
+      track.dataset.duplicated = '1';
+    });
+  }
+
+  // ===== 10. AUTO-INJECT FOOTER (permanent on every page) =====
+  function injectFooter() {
+    // Don't inject if page already has any footer
+    if (document.querySelector('footer')) return;
+
+    const year = new Date().getFullYear();
+    const footer = document.createElement('footer');
+    footer.className = 'cl-footer py-8 border-t border-gray-100 dark:border-white/5';
+    footer.innerHTML = `
+      <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div class="flex items-center gap-2">
+          <svg width="24" height="24" viewBox="0 0 100 100" fill="none">
+            <path d="M 73 28 A 32 32 0 0 0 27 28" stroke="#FF6B35" stroke-width="9" fill="none" stroke-linecap="round"/>
+            <path d="M 24 32 A 32 32 0 0 0 24 68" stroke="#E8384F" stroke-width="9" fill="none" stroke-linecap="round"/>
+            <path d="M 27 72 A 32 32 0 0 0 73 72" stroke="#00B8A9" stroke-width="9" fill="none" stroke-linecap="round"/>
+          </svg>
+          <span class="text-xs text-gray-400">${year} Contoura Labs. All rights reserved.</span>
+        </div>
+        <div class="flex items-center gap-5 text-xs text-gray-400">
+          <a href="${prefix}index.html" class="hover:text-brand-orange transition-colors">Home</a>
+          <a href="${prefix}tools/index.html" class="hover:text-brand-orange transition-colors">Tools</a>
+          <a href="${prefix}games/index.html" class="hover:text-brand-teal transition-colors">Games</a>
+          <a href="${prefix}index.html#contact" class="hover:text-brand-orange transition-colors">Contact</a>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(footer);
+  }
+
+  // ===== 11. INIT ON DOM READY =====
   function init() {
     injectBackNav();
     injectNavbar();
@@ -224,6 +319,9 @@
     injectToast();
     wireNavbarScroll();
     wireReveal();
+    wireCategoryCarousels();
+    wireMarquees();
+    injectFooter();
   }
 
   if (document.readyState === 'loading') {
