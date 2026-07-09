@@ -453,7 +453,7 @@ textarea {
 .text-center { text-align: center; }
 .text-muted { color: #6b7280; }
 .dark .text-muted { color: #9ca3af; }
-.hidden { display: none; }
+.hidden { display: none !important; }
 .mt-1 { margin-top: 0.25rem; } .mt-2 { margin-top: 0.5rem; } .mt-3 { margin-top: 0.75rem; }
 .mt-4 { margin-top: 1rem; } .mt-6 { margin-top: 1.5rem; } .mt-8 { margin-top: 2rem; }
 .mb-2 { margin-bottom: 0.5rem; } .mb-4 { margin-bottom: 1rem; } .mb-6 { margin-bottom: 1.5rem; }
@@ -873,4 +873,78 @@ textarea {
 .cat-carousel-btn.next { right: -8px; }
 @media (max-width: 640px) {
   .cat-carousel-btn { display: none; }
+}
+
+/* ==========================================================
+   GAME RESULT MODAL — shared across all games
+   Shows on game end with Play Again + Return to All Games buttons
+   ========================================================== */
+.cl-game-result {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,0.65); backdrop-filter: blur(8px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 1rem;
+  opacity: 0; visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+.cl-game-result.visible { opacity: 1; visibility: visible; }
+.cl-game-result-card {
+  background: #fff; border-radius: 1.25rem;
+  padding: 2.5rem 2.25rem; max-width: 400px; width: 100%;
+  text-align: center;
+  transform: scale(0.9) translateY(20px);
+  transition: transform 0.35s cubic-bezier(0.16,1,0.3,1);
+  box-shadow: 0 30px 80px rgba(0,0,0,0.4);
+  border: 1px solid rgba(0,0,0,0.05);
+}
+.dark .cl-game-result-card {
+  background: #1A1A1A; border-color: rgba(255,255,255,0.08);
+}
+.cl-game-result.visible .cl-game-result-card {
+  transform: scale(1) translateY(0);
+}
+.cl-game-result-emoji {
+  font-size: 3.5rem; line-height: 1; margin-bottom: 0.75rem;
+}
+.cl-game-result-title {
+  font-size: 1.6rem; font-weight: 800; margin-bottom: 0.5rem;
+  color: #111;
+}
+.dark .cl-game-result-title { color: #fff; }
+.cl-game-result-message {
+  font-size: 0.95rem; color: #6b7280; margin-bottom: 1.75rem;
+  line-height: 1.5;
+}
+.dark .cl-game-result-message { color: #9ca3af; }
+.cl-game-result-message strong {
+  color: var(--brand-teal); font-weight: 700;
+}
+.cl-game-result-buttons {
+  display: flex; flex-direction: column; gap: 0.625rem;
+}
+.cl-game-result-btn {
+  display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+  padding: 0.8rem 1.5rem; border-radius: 0.75rem; border: none;
+  font-size: 0.875rem; font-weight: 600; cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  font-family: 'Inter', sans-serif; text-decoration: none;
+  width: 100%;
+}
+.cl-game-result-btn-play {
+  background: linear-gradient(135deg, #FF6B35, #E8384F, #00B8A9);
+  background-size: 200% 200%; color: #fff;
+  animation: gradientShift 4s ease infinite;
+}
+.cl-game-result-btn-play:hover {
+  transform: translateY(-2px); box-shadow: 0 8px 20px rgba(255,107,53,0.3);
+}
+.cl-game-result-btn-return {
+  background: #f3f4f6; color: #374151; border: 1px solid #e5e7eb;
+}
+.dark .cl-game-result-btn-return {
+  background: rgba(255,255,255,0.05); color: #e5e7eb; border-color: rgba(255,255,255,0.1);
+}
+.cl-game-result-btn-return:hover {
+  border-color: var(--brand-orange); color: var(--brand-orange);
+  transform: translateY(-1px);
 }

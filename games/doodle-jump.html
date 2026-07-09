@@ -235,8 +235,14 @@
         bestEl.textContent = Math.floor(best);
       }
       overlayHeight.textContent = Math.floor(maxHeight);
-      setTimeout(() => overlay.classList.add('show'), 300);
       CL.toast(maxHeight >= best ? `🏆 New best: ${Math.floor(maxHeight)}m!` : `You fell at ${Math.floor(maxHeight)}m`, maxHeight > 0);
+      // Show the standardized result modal
+      CL.showGameResult({
+        emoji: '🦘',
+        title: 'Game Over',
+        message: 'Score: <strong>' + Math.floor(maxHeight) + '</strong> · Best: <strong>' + Math.floor(best) + '</strong>',
+        onPlayAgain: function () { resetGame(); }
+      });
     }
 
     function draw() {

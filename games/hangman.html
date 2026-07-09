@@ -315,18 +315,7 @@
     </div>
   </main>
 
-  <!-- Win/Lose Modal -->
-  <div id="hm-modal">
-    <div class="hm-modal-card">
-      <div class="hm-modal-emoji" id="modal-emoji">🎉</div>
-      <h3 class="hm-modal-title" id="modal-title">You won!</h3>
-      <p class="hm-modal-word">The word was: <strong id="modal-word"></strong></p>
-      <div class="flex justify-center gap-3">
-        <button class="btn-primary" id="modal-play-again">Play Again</button>
-        <button class="btn-secondary" id="modal-close">Close</button>
-      </div>
-    </div>
-  </div>
+  <!-- Win/Lose modal is now provided by common.js CL.showGameResult() -->
 
   <footer class="py-8 border-t border-gray-100 dark:border-white/5 mt-12">
     <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
@@ -568,7 +557,6 @@
     const wrongBar     = $('wrong-bar');
     const hintBtn      = $('hint-btn');
     const hintCountEl  = $('hint-count');
-    const modal        = $('hm-modal');
 
     // ===== Build category carousel =====
     function buildCategoryCarousel() {
@@ -732,19 +720,16 @@
       render();
     });
 
-    // ===== Modal =====
+    // ===== Result modal — delegate to shared CL.showGameResult() =====
     function showModal(won) {
-      $('modal-emoji').textContent = won ? '🎉' : '💀';
-      $('modal-title').textContent = won ? 'You won!' : 'Game over';
-      $('modal-title').style.color = won ? 'var(--brand-teal)' : 'var(--brand-red)';
-      $('modal-word').textContent = state.word;
-      modal.classList.add('show');
+      CL.showGameResult({
+        emoji: won ? '🎉' : '💀',
+        title: won ? 'You Won!' : 'Game Over',
+        message: 'The word was: <strong>' + state.word + '</strong>',
+        onPlayAgain: newWord
+      });
     }
-    function hideModal() { modal.classList.remove('show'); }
-
-    $('modal-play-again').addEventListener('click', () => { hideModal(); newWord(); });
-    $('modal-close').addEventListener('click', hideModal);
-    modal.addEventListener('click', (e) => { if (e.target === modal) hideModal(); });
+    function hideModal() { /* no-op — shared modal manages its own lifecycle */ }
 
     // ===== New word / change category =====
     $('new-word-btn').addEventListener('click', newWord);
@@ -756,10 +741,8 @@
 
     // ===== Keyboard input =====
     document.addEventListener('keydown', (e) => {
-      if (modal.classList.contains('show')) {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); hideModal(); newWord(); }
-        return;
-      }
+      // Ignore letter typing while the shared result modal is open
+      if (document.getElementById('cl-game-result-modal')) return;
       if (gameScreen.classList.contains('hm-hidden')) return; // ignore typing on setup screen
       const L = e.key.toUpperCase();
       if (L.length === 1 && L >= 'A' && L <= 'Z') guess(L);

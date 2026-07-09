@@ -231,6 +231,21 @@
     function endGame() {
       state = 'gameover';
       CL.toast(`Game over! Score: ${score}`, score >= best && score > 0);
+
+      // Show standardized result modal (shared from common.js)
+      const finalScore = score;
+      const finalBest = best;
+      setTimeout(() => {
+        CL.showGameResult({
+          emoji: '🐦',
+          title: 'Game Over',
+          message: `Score: <strong>${finalScore}</strong> · Best: <strong>${finalBest}</strong>`,
+          onPlayAgain: function () {
+            resetGame();
+            state = 'ready';
+          }
+        });
+      }, 250);
     }
 
     function drawBackground() {
@@ -413,6 +428,8 @@
 
     // ---- Input ----
     function onInput(e) {
+      // Ignore flaps while the shared result modal is open
+      if (document.getElementById('cl-game-result-modal')) return;
       if (e && e.type === 'keydown' && e.code !== 'Space') return;
       if (e) e.preventDefault();
       flap();

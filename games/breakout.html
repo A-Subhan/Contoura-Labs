@@ -223,8 +223,23 @@
       overlayEmoji.textContent = didWin ? '🏆' : '💥';
       overlayTitle.textContent = didWin ? 'You Win!' : 'Game Over';
       overlayScore.textContent = score;
-      setTimeout(() => overlay.classList.add('show'), 300);
       CL.toast(didWin ? `🏆 Cleared all levels! Score: ${score}` : `Game over — Score: ${score}`, didWin);
+      // Show the standardized result modal
+      if (didWin) {
+        CL.showGameResult({
+          emoji: '🎉',
+          title: 'You Cleared All Bricks!',
+          message: 'Score: <strong>' + score + '</strong>',
+          onPlayAgain: function () { resetGame(); }
+        });
+      } else {
+        CL.showGameResult({
+          emoji: '🎮',
+          title: 'Game Over',
+          message: 'Score: <strong>' + score + '</strong> · Lives: <strong>' + Math.max(0, lives) + '</strong>',
+          onPlayAgain: function () { resetGame(); }
+        });
+      }
     }
 
     function update() {

@@ -613,16 +613,20 @@
     function showFinal() {
       show(finalScreen);
       document.getElementById('final-score-circle').textContent = `${score}/10`;
-      let msg, stats;
-      const pct = score / 10;
-      if (pct === 1) msg = 'Perfect score! 🏆';
-      else if (pct >= 0.8) msg = 'Excellent work! 🌟';
-      else if (pct >= 0.6) msg = 'Good job! 👍';
-      else if (pct >= 0.4) msg = 'Not bad — try again!';
-      else msg = 'Keep practicing!';
-      stats = `Category: ${CATEGORY_NAMES[selectedCatId]} · ${score} correct out of 10`;
-      document.getElementById('final-message').textContent = msg;
-      document.getElementById('final-stats').textContent = stats;
+
+      // Standardized result modal
+      let emoji, title;
+      if (score >= 8) { emoji = '🏆'; title = 'Excellent!'; }
+      else if (score >= 5) { emoji = '👍'; title = 'Good Job!'; }
+      else { emoji = '📚'; title = 'Keep Practicing!'; }
+
+      CL.showGameResult({
+        emoji: emoji,
+        title: title,
+        message: `You scored <strong>${score}/10</strong> in ${CATEGORY_NAMES[selectedCatId]}`,
+        onPlayAgain: function () { startQuiz(selectedCatId); }
+      });
+
       CL.toast(`Quiz complete: ${score}/10`, score >= 6);
     }
 

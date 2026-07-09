@@ -311,6 +311,56 @@
     document.body.appendChild(footer);
   }
 
+  // ===== 10b. SHOW GAME RESULT MODAL =====
+  // Shared result dialog for all games.
+  // Usage: CL.showGameResult({ emoji, title, message, onPlayAgain })
+  // The "Return to All Games" button always links to the games hub.
+  window.CL.showGameResult = function (opts) {
+    // Remove any existing result modal
+    const existing = document.getElementById('cl-game-result-modal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'cl-game-result-modal';
+    modal.className = 'cl-game-result';
+    modal.innerHTML = `
+      <div class="cl-game-result-card">
+        <div class="cl-game-result-emoji">${opts.emoji || '🎮'}</div>
+        <h2 class="cl-game-result-title">${opts.title || 'Game Over'}</h2>
+        <p class="cl-game-result-message">${opts.message || ''}</p>
+        <div class="cl-game-result-buttons">
+          <button class="cl-game-result-btn cl-game-result-btn-play" id="cl-gr-play">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 3l14 9-14 9V3z"/></svg>
+            Play Again
+          </button>
+          <a class="cl-game-result-btn cl-game-result-btn-return" href="${prefix}games/index.html">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            Return to All Games
+          </a>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    // Trigger animation
+    requestAnimationFrame(() => modal.classList.add('visible'));
+
+    // Wire Play Again
+    document.getElementById('cl-gr-play').addEventListener('click', () => {
+      modal.classList.remove('visible');
+      setTimeout(() => modal.remove(), 300);
+      if (typeof opts.onPlayAgain === 'function') opts.onPlayAgain();
+    });
+
+    // Close on backdrop click
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        modal.classList.remove('visible');
+        setTimeout(() => modal.remove(), 300);
+      }
+    });
+  };
+
   // ===== 11. INIT ON DOM READY =====
   function init() {
     injectBackNav();

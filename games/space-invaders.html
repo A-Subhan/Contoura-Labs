@@ -293,8 +293,14 @@
       overlayEmoji.textContent = '👾';
       overlayTitle.textContent = 'Game Over';
       overlayScore.textContent = score;
-      setTimeout(() => overlay.classList.add('show'), 300);
       CL.toast(`Game over — Score: ${score}`, false);
+      // Show the standardized result modal
+      CL.showGameResult({
+        emoji: '👾',
+        title: 'Game Over',
+        message: 'Score: <strong>' + score + '</strong> · Wave: <strong>' + wave + '</strong>',
+        onPlayAgain: function () { resetGame(); }
+      });
     }
 
     function draw() {

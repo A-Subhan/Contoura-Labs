@@ -369,6 +369,17 @@
       setTimeout(() => {
         turnText.textContent = result.winner === 'draw' ? "Draw — click New Round" : (result.winner === HUMAN ? 'You won! 🎉' : 'AI won. Try again?');
       }, 100);
+
+      // Show standardized result modal (shared from common.js)
+      setTimeout(() => {
+        if (result.winner === HUMAN) {
+          CL.showGameResult({ emoji: '🎉', title: 'You Won!', message: 'You beat the AI!', onPlayAgain: newRound });
+        } else if (result.winner === AI) {
+          CL.showGameResult({ emoji: '🤖', title: 'AI Wins', message: 'Better luck next time!', onPlayAgain: newRound });
+        } else {
+          CL.showGameResult({ emoji: '🤝', title: "It's a Draw", message: 'Well played!', onPlayAgain: newRound });
+        }
+      }, 600);
     }
 
     function updateScores() {

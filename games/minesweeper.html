@@ -393,6 +393,26 @@
       } else {
         CL.toast(`💥 Boom! Hit a mine at ${timer}s`, false);
       }
+
+      // Show standardized result modal (shared from common.js)
+      const finalTime = timer;
+      setTimeout(() => {
+        if (won) {
+          CL.showGameResult({
+            emoji: '🎉',
+            title: 'You Cleared It!',
+            message: `Time: <strong>${finalTime}s</strong>`,
+            onPlayAgain: () => initGame(currentDiff)
+          });
+        } else {
+          CL.showGameResult({
+            emoji: '💥',
+            title: 'Boom!',
+            message: 'You hit a mine!',
+            onPlayAgain: () => initGame(currentDiff)
+          });
+        }
+      }, 600);
     }
 
     // ---- Input handlers (event delegation) ----

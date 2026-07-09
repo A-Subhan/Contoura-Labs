@@ -335,6 +335,18 @@
       const correctNow = currentCorrectCount();
       const finalWpm = elapsedMin > 0 ? Math.round((correctNow / 5) / elapsedMin) : 0;
       const finalAcc = totalKeystrokes > 0 ? Math.round((correctKeystrokes / totalKeystrokes) * 100) : 100;
+
+      // Standardized result modal
+      CL.showGameResult({
+        emoji: '⌨️',
+        title: 'Test Complete!',
+        message: `WPM: <strong>${finalWpm}</strong> · Accuracy: <strong>${finalAcc}%</strong>`,
+        onPlayAgain: function () {
+          resetTest(false);
+          inputEl.focus();
+        }
+      });
+
       CL.toast(`Done! ${finalWpm} WPM · ${finalAcc}% accuracy`, finalWpm >= 40);
     }
 

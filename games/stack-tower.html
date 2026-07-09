@@ -196,8 +196,14 @@
       }
       overlayTitle.textContent = score > 0 ? 'Tower Collapsed!' : 'Missed Completely!';
       overlayHeight.textContent = score;
-      setTimeout(() => overlay.classList.add('show'), 250);
       CL.toast(score >= best && score > 0 ? `🏆 New best: ${score} blocks!` : `Tower fell at ${score} blocks`, score > 0);
+      // Show the standardized result modal
+      CL.showGameResult({
+        emoji: '🏗️',
+        title: 'Game Over',
+        message: 'Tower Height: <strong>' + score + '</strong> floors',
+        onPlayAgain: function () { resetGame(); }
+      });
     }
 
     function update() {

@@ -725,6 +725,14 @@
       document.getElementById('result-tagline').textContent = tagline;
       document.getElementById('result-summary').textContent = summary;
 
+      // Standardized result modal
+      CL.showGameResult({
+        emoji: '📊',
+        title: 'Results',
+        message: `You chose Option A <strong>${votesA}</strong> times and Option B <strong>${votesB}</strong> times`,
+        onPlayAgain: function () { show(setupScreen); }
+      });
+
       CL.toast(`Game complete: ${votesA} A vs ${votesB} B`, true);
     }
 
