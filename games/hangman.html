@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Hangman — Contoura Labs</title>
-  <meta name="description" content="Play Hangman in your browser. Pick a category from the carousel, guess letters, use hints wisely, and try to reveal the word before the hangman is fully drawn. 12 categories.">
+  <meta name="description" content="Play Hangman in your browser. 12 categories, 300+ words, 3 difficulty levels, scoring system, and hints. Pick a category from the carousel and start guessing.">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 73 28 A 32 32 0 0 0 27 28' stroke='%23FF6B35' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 24 32 A 32 32 0 0 0 24 68' stroke='%23E8384F' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 27 72 A 32 32 0 0 0 73 72' stroke='%2300B8A9' stroke-width='9' fill='none' stroke-linecap='round'/></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -24,190 +24,66 @@
   </script>
   <link rel="stylesheet" href="../assets/css/common.css">
   <style>
-    /* ===== Hangman-specific styles (use brand tokens, no custom palette) ===== */
-    .hm-stage {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1.5rem;
-      align-items: start;
-    }
+    .hm-stage { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: start; }
     @media (max-width: 720px) { .hm-stage { grid-template-columns: 1fr; } }
-
-    /* SVG gallows */
-    .hm-svg {
-      width: 100%;
-      max-width: 260px;
-      height: auto;
-      display: block;
-      margin: 0 auto;
-    }
-    .hm-svg .gallows {
-      stroke: var(--brand-teal);
-      stroke-width: 4;
-      stroke-linecap: round;
-      fill: none;
-    }
-    .hm-svg .part {
-      stroke: var(--brand-red);
-      stroke-width: 4;
-      stroke-linecap: round;
-      fill: none;
-      opacity: 0;
-      transition: opacity 0.35s ease;
-    }
-    .hm-svg .part.show { opacity: 1; }
-    .hm-svg .face {
-      stroke: var(--brand-red);
-      stroke-width: 2;
-      fill: none;
-      opacity: 0;
-      transition: opacity 0.35s ease 0.2s;
-    }
+    .hm-svg { width: 100%; max-width: 260px; height: auto; display: block; margin: 0 auto; }
+    .hm-svg .gallows { stroke: var(--brand-teal); stroke-width: 5; stroke-linecap: round; fill: none; }
+    .hm-svg .gallows-base { stroke: var(--brand-teal); stroke-width: 6; stroke-linecap: round; fill: none; }
+    .hm-svg .rope { stroke: #9ca3af; stroke-width: 2; stroke-linecap: round; fill: none; stroke-dasharray: 4 3; }
+    .hm-svg .part { stroke: var(--brand-red); stroke-width: 4; stroke-linecap: round; fill: none; opacity: 0; transition: opacity 0.35s ease; }
+    .hm-svg .part-fill { fill: var(--brand-red); opacity: 0; transition: opacity 0.35s ease; }
+    .hm-svg .part.show, .hm-svg .part-fill.show { opacity: 1; }
+    .hm-svg .face { stroke: #1a1a1a; stroke-width: 2; fill: none; opacity: 0; transition: opacity 0.35s ease 0.2s; }
     .hm-svg .face.show { opacity: 1; }
+    .hm-svg .face-happy { stroke: var(--brand-teal); stroke-width: 2; fill: none; opacity: 0; transition: opacity 0.35s ease 0.2s; }
+    .hm-svg .face-happy.show { opacity: 1; }
 
-    /* Letter slots */
-    .hm-slots {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.4rem;
-      justify-content: center;
-      margin: 1rem 0 1.5rem;
-      min-height: 3rem;
-    }
-    .letter-slot {
-      width: 2rem;
-      height: 2.6rem;
-      border-bottom: 3px solid #d1d5db;
-      display: flex;
-      align-items: flex-end;
-      justify-content: center;
-      font-size: 1.4rem;
-      font-weight: 700;
-      color: var(--brand-teal);
-      padding-bottom: 0.1rem;
-      transition: border-color 0.3s ease;
-    }
+    .cat-btn { padding: 0.55rem 1rem; border-radius: 9999px; font-size: 0.8125rem; font-weight: 600; border: 1px solid #e5e7eb; background: #fff; color: #6b7280; cursor: pointer; transition: all 0.2s ease; }
+    .dark .cat-btn { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.1); color: #9ca3af; }
+    .cat-btn:hover { border-color: rgba(255,107,53,0.4); color: var(--brand-orange); }
+    .cat-btn.active { background: linear-gradient(135deg, var(--brand-orange), var(--brand-red), var(--brand-teal)); color: #fff; border-color: transparent; box-shadow: 0 6px 18px rgba(255,107,53,0.25); }
+
+    .difficulty-tabs { display: flex; gap: 0.4rem; justify-content: center; margin-bottom: 1rem; }
+    .diff-btn { padding: 0.45rem 1.2rem; border-radius: 9999px; font-size: 0.8125rem; font-weight: 600; border: 1px solid #e5e7eb; background: #fff; color: #6b7280; cursor: pointer; transition: all 0.2s ease; }
+    .dark .diff-btn { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.1); color: #9ca3af; }
+    .diff-btn:hover { border-color: var(--brand-orange); color: var(--brand-orange); }
+    .diff-btn.active.easy { background: #00B8A9; color: #fff; border-color: transparent; }
+    .diff-btn.active.medium { background: #FF6B35; color: #fff; border-color: transparent; }
+    .diff-btn.active.hard { background: #E8384F; color: #fff; border-color: transparent; }
+
+    .hm-slots { display: flex; flex-wrap: wrap; gap: 0.4rem; justify-content: center; margin: 1rem 0 1.5rem; min-height: 3rem; }
+    .letter-slot { width: 2rem; height: 2.6rem; border-bottom: 3px solid #d1d5db; display: flex; align-items: flex-end; justify-content: center; font-size: 1.4rem; font-weight: 700; color: var(--brand-teal); padding-bottom: 0.1rem; transition: border-color 0.3s ease; }
     .dark .letter-slot { border-bottom-color: #374151; }
     .letter-slot.revealed { border-bottom-color: var(--brand-teal); }
-    .letter-slot .ch {
-      display: inline-block;
-      opacity: 0;
-      transform: translateY(8px);
-      transition: opacity 0.3s ease, transform 0.3s ease;
-    }
+    .letter-slot .ch { display: inline-block; opacity: 0; transform: translateY(8px); transition: opacity 0.3s ease, transform 0.3s ease; }
     .letter-slot.revealed .ch { opacity: 1; transform: translateY(0); }
     .letter-slot.space { border: none; width: 0.8rem; }
 
-    /* Keyboard */
-    .hm-keys {
-      display: grid;
-      grid-template-columns: repeat(13, 1fr);
-      gap: 0.35rem;
-      max-width: 540px;
-      margin: 0 auto;
-    }
-    @media (max-width: 540px) {
-      .hm-keys { grid-template-columns: repeat(7, 1fr); }
-    }
-    .key {
-      aspect-ratio: 1 / 1;
-      border-radius: 0.5rem;
-      border: 1px solid #e5e7eb;
-      background: #fff;
-      color: #374151;
-      font-weight: 700;
-      font-size: 0.95rem;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+    .hm-keys { display: grid; grid-template-columns: repeat(13, 1fr); gap: 0.35rem; max-width: 540px; margin: 0 auto; }
+    @media (max-width: 540px) { .hm-keys { grid-template-columns: repeat(7, 1fr); } }
+    .key { aspect-ratio: 1 / 1; border-radius: 0.5rem; border: 1px solid #e5e7eb; background: #fff; color: #374151; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: all 0.15s ease; display: flex; align-items: center; justify-content: center; }
     .dark .key { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); color: #e5e7eb; }
-    .key:hover:not(:disabled) {
-      border-color: var(--brand-orange);
-      color: var(--brand-orange);
-      transform: translateY(-2px);
-    }
+    .key:hover:not(:disabled) { border-color: var(--brand-orange); color: var(--brand-orange); transform: translateY(-2px); }
     .key:disabled { cursor: not-allowed; opacity: 0.5; }
-    .key.correct {
-      background: rgba(0,184,169,0.15);
-      border-color: var(--brand-teal);
-      color: var(--brand-teal);
-    }
-    .key.wrong {
-      background: rgba(232,56,79,0.12);
-      border-color: var(--brand-red);
-      color: var(--brand-red);
-      text-decoration: line-through;
-    }
+    .key.correct { background: rgba(0,184,169,0.15); border-color: var(--brand-teal); color: var(--brand-teal); }
+    .key.wrong { background: rgba(232,56,79,0.12); border-color: var(--brand-red); color: var(--brand-red); text-decoration: line-through; }
 
-    /* Hint button — uses btn-secondary tokens */
-    .hint-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-    }
-    .hint-count {
-      background: rgba(255,107,53,0.15);
-      color: var(--brand-orange);
-      font-size: 0.7rem;
-      font-weight: 700;
-      padding: 0.1rem 0.45rem;
-      border-radius: 999px;
-    }
+    .hint-btn { display: inline-flex; align-items: center; gap: 0.4rem; }
+    .hint-count { background: rgba(255,107,53,0.15); color: var(--brand-orange); font-size: 0.7rem; font-weight: 700; padding: 0.1rem 0.45rem; border-radius: 999px; }
 
-    /* Progress bar — reuse .progress-bar from common.css */
-    .hm-meta {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-      flex-wrap: wrap;
-      margin-bottom: 1rem;
-    }
-
-    /* Modal — uses .tool-card tokens */
-    #hm-modal {
-      position: fixed; inset: 0; z-index: 100;
-      background: rgba(0,0,0,0.55);
-      backdrop-filter: blur(6px);
-      display: flex; align-items: center; justify-content: center;
-      opacity: 0; visibility: hidden;
-      transition: opacity 0.25s ease, visibility 0.25s ease;
-      padding: 1rem;
-    }
-    #hm-modal.show { opacity: 1; visibility: visible; }
-    .hm-modal-card {
-      background: #fff;
-      border-radius: 1rem;
-      padding: 2rem 2.5rem;
-      max-width: 420px;
-      width: 100%;
-      text-align: center;
-      transform: scale(0.9);
-      transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
-      border: 1px solid rgba(0,0,0,0.05);
-    }
-    .dark .hm-modal-card { background: #1A1A1A; border-color: rgba(255,255,255,0.08); }
-    #hm-modal.show .hm-modal-card { transform: scale(1); }
-    .hm-modal-emoji { font-size: 3rem; line-height: 1; margin-bottom: 0.5rem; }
-    .hm-modal-title { font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem; }
-    .hm-modal-word {
-      font-size: 1.1rem;
-      color: #6b7280;
-      margin-bottom: 1.5rem;
-    }
-    .dark .hm-modal-word { color: #9ca3af; }
-    .hm-modal-word strong { color: var(--brand-teal); font-weight: 700; }
-
-    /* Screen transitions */
+    .hm-meta { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
     .hm-screen { animation: hmFadeIn 0.4s cubic-bezier(0.16,1,0.3,1) both; }
-    @keyframes hmFadeIn {
-      from { opacity: 0; transform: translateY(12px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
+    @keyframes hmFadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
     .hm-hidden { display: none !important; }
+
+    .score-board { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; margin-bottom: 1rem; }
+    .score-card { text-align: center; padding: 0.6rem 0.3rem; border-radius: 0.6rem; background: rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.05); }
+    .dark .score-card { background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.05); }
+    .score-num { font-size: 1.3rem; font-weight: 800; line-height: 1; }
+    .score-label { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.05em; color: #9ca3af; margin-top: 0.2rem; font-weight: 600; }
+    .score-pct { text-align: center; margin-bottom: 0.75rem; font-size: 0.8rem; color: #6b7280; }
+    .dark .score-pct { color: #9ca3af; }
+    .score-pct strong { color: var(--brand-teal); font-size: 1.1rem; }
   </style>
 </head>
 <body class="font-sans bg-white text-gray-900 dark:bg-surface-dark dark:text-gray-100 antialiased">
@@ -219,15 +95,21 @@
       <header class="tool-header">
         <span class="badge mb-3">Games</span>
         <h1 class="tool-title">Hangman</h1>
-        <p class="tool-subtitle">Pick a category, guess letters one at a time, and reveal the word before the gallows fills in. 12 categories, 2 hints per word.</p>
+        <p class="tool-subtitle">Pick a category and difficulty, guess letters, and reveal the word before the gallows fills in. 12 categories, 300+ words, scoring system.</p>
       </header>
 
       <div class="tool-card">
 
-        <!-- ===== SETUP SCREEN: Category Carousel ===== -->
+        <!-- ===== SETUP SCREEN: Category Carousel + Difficulty ===== -->
         <div id="setup-screen" class="hm-screen">
-          <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3 text-center">Choose a category — scroll or use the arrows</h3>
+          <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3 text-center">Choose a difficulty</h3>
+          <div class="difficulty-tabs" id="diff-tabs">
+            <button class="diff-btn active easy" data-diff="easy">Easy</button>
+            <button class="diff-btn medium" data-diff="medium">Medium</button>
+            <button class="diff-btn hard" data-diff="hard">Hard</button>
+          </div>
 
+          <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3 text-center mt-4">Choose a category</h3>
           <div class="cat-carousel-wrap">
             <button class="cat-carousel-btn prev" id="cat-prev" aria-label="Scroll left">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
@@ -239,56 +121,84 @@
           </div>
 
           <div class="flex justify-center mt-5">
-            <button class="btn-primary hidden" id="start-game-btn" style="min-width:14rem;">Start Game →</button>
+            <button class="btn-primary hidden" id="start-game-btn" style="min-width:14rem;">Start Game</button>
           </div>
           <p id="select-hint" class="text-xs text-gray-400 text-center mt-3">Select a category to begin</p>
 
           <div class="mt-5 p-4 rounded-lg bg-gray-50 dark:bg-white/5 text-xs text-gray-500 leading-relaxed">
-            <p><strong>How to play:</strong> Click letter keys or type on your keyboard. Each wrong guess draws another part of the hangman — 6 wrong guesses and you lose. You get <strong class="text-brand-orange">2 hints</strong> per word; each hint reveals one random letter.</p>
+            <p><strong>How to play:</strong> Click letter keys or type on your keyboard. Each wrong guess draws another part. Easy = 8 wrong allowed + 3 hints. Medium = 6 wrong + 2 hints. Hard = 4 wrong + 1 hint.</p>
           </div>
         </div>
 
         <!-- ===== GAME SCREEN ===== -->
         <div id="game-screen" class="hm-screen hm-hidden">
+          <!-- Score board -->
+          <div class="score-board" id="score-board">
+            <div class="score-card"><div class="score-num text-brand-teal" id="sb-won">0</div><div class="score-label">Won</div></div>
+            <div class="score-card"><div class="score-num text-brand-red" id="sb-lost">0</div><div class="score-label">Lost</div></div>
+            <div class="score-card"><div class="score-num text-brand-orange" id="sb-hints">0</div><div class="score-label">Hints Used</div></div>
+            <div class="score-card"><div class="score-num text-gray-400" id="sb-wrong">0</div><div class="score-label">Wrong Letters</div></div>
+          </div>
+          <div class="score-pct" id="score-pct">Overall: <strong>0%</strong></div>
+
           <!-- Meta row -->
           <div class="hm-meta">
             <span class="badge" id="cat-badge">Animals</span>
+            <span class="badge" id="diff-badge" style="background:rgba(0,184,169,0.1);color:#00B8A9;">Easy</span>
             <div class="flex items-center gap-3">
               <span class="text-xs text-gray-400 font-semibold uppercase tracking-wider">Wrong</span>
-              <span class="text-sm font-bold" id="wrong-count">0 / 6</span>
+              <span class="text-sm font-bold" id="wrong-count">0 / 8</span>
             </div>
             <button class="btn-secondary hint-btn" id="hint-btn">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z"/></svg>
               Hint
-              <span class="hint-count" id="hint-count">2</span>
+              <span class="hint-count" id="hint-count">3</span>
             </button>
           </div>
 
-          <!-- Progress bar (reuses .progress-bar from common.css) -->
           <div class="progress-bar mb-5"><div class="progress-bar-fill" id="wrong-bar" style="width:0%"></div></div>
 
           <!-- Stage: SVG + slots -->
           <div class="hm-stage">
             <div>
-              <svg class="hm-svg" viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg">
-                <!-- Gallows (always visible) -->
-                <line class="gallows" x1="10" y1="210" x2="120" y2="210"/>
-                <line class="gallows" x1="40" y1="210" x2="40" y2="10"/>
-                <line class="gallows" x1="40" y1="10" x2="140" y2="10"/>
-                <line class="gallows" x1="140" y1="10" x2="140" y2="35"/>
-                <!-- Body parts (revealed one at a time) -->
-                <circle class="part" id="part-head" cx="140" cy="55" r="20"/>
-                <line class="part" id="part-body" x1="140" y1="75" x2="140" y2="140"/>
-                <line class="part" id="part-arm-l" x1="140" y1="95" x2="115" y2="115"/>
-                <line class="part" id="part-arm-r" x1="140" y1="95" x2="165" y2="115"/>
-                <line class="part" id="part-leg-l" x1="140" y1="140" x2="115" y2="175"/>
-                <line class="part" id="part-leg-r" x1="140" y1="140" x2="165" y2="175"/>
-                <!-- Face (only shown when fully drawn / lost) -->
-                <line class="face" id="face-eye-l" x1="132" y1="50" x2="136" y2="54"/>
-                <line class="face" id="face-eye-r" x1="144" y1="50" x2="148" y2="54"/>
-                <line class="face" id="face-eye-l2" x1="136" y1="50" x2="132" y2="54"/>
-                <line class="face" id="face-eye-r2" x1="148" y1="50" x2="144" y2="54"/>
-                <path class="face" id="face-mouth" d="M 130 65 Q 140 60 150 65" />
+              <svg class="hm-svg" viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg">
+                <!-- Ground -->
+                <ellipse class="gallows-base" cx="60" cy="215" rx="50" ry="5" fill="rgba(0,184,169,0.1)" stroke="none"/>
+                <!-- Gallows base -->
+                <line class="gallows-base" x1="10" y1="215" x2="110" y2="215"/>
+                <!-- Post -->
+                <line class="gallows" x1="40" y1="215" x2="40" y2="15"/>
+                <!-- Top beam -->
+                <line class="gallows" x1="40" y1="15" x2="140" y2="15"/>
+                <!-- Diagonal support -->
+                <line class="gallows" x1="40" y1="35" x2="60" y2="15"/>
+                <!-- Rope -->
+                <line class="rope" x1="140" y1="15" x2="140" y2="40"/>
+
+                <!-- Head (circle) -->
+                <circle class="part" id="part-head" cx="140" cy="58" r="18"/>
+                <!-- Body (torso with slight curve) -->
+                <path class="part" id="part-body" d="M 140 76 Q 138 100 140 130"/>
+                <!-- Left arm -->
+                <path class="part" id="part-arm-l" d="M 140 90 Q 125 100 112 110"/>
+                <!-- Right arm -->
+                <path class="part" id="part-arm-r" d="M 140 90 Q 155 100 168 110"/>
+                <!-- Left leg -->
+                <path class="part" id="part-leg-l" d="M 140 130 Q 128 150 115 175"/>
+                <!-- Right leg -->
+                <path class="part" id="part-leg-r" d="M 140 130 Q 152 150 165 175"/>
+
+                <!-- Sad face (shown on loss) -->
+                <line class="face" id="face-eye-l" x1="132" y1="53" x2="136" y2="57"/>
+                <line class="face" id="face-eye-r" x1="144" y1="53" x2="148" y2="57"/>
+                <line class="face" id="face-eye-l2" x1="136" y1="53" x2="132" y2="57"/>
+                <line class="face" id="face-eye-r2" x1="148" y1="53" x2="144" y2="57"/>
+                <path class="face" id="face-mouth" d="M 130 67 Q 140 62 150 67"/>
+
+                <!-- Happy face (shown on win) -->
+                <circle class="face-happy" id="happy-eye-l" cx="133" cy="55" r="2" fill="var(--brand-teal)" stroke="none"/>
+                <circle class="face-happy" id="happy-eye-r" cx="147" cy="55" r="2" fill="var(--brand-teal)" stroke="none"/>
+                <path class="face-happy" id="happy-mouth" d="M 130 62 Q 140 70 150 62"/>
               </svg>
             </div>
             <div>
@@ -305,22 +215,16 @@
             <button class="btn-primary" id="new-word-btn">New Word</button>
             <button class="btn-secondary" id="change-cat-btn">Change Category</button>
           </div>
-
-          <p class="text-xs text-gray-400 text-center mt-5">
-            Pick letters by clicking keys or typing on your keyboard. You have <strong class="text-brand-orange">2 hints</strong> per word — each hint reveals one random letter.
-          </p>
         </div>
 
       </div>
     </div>
   </main>
 
-  <!-- Win/Lose modal is now provided by common.js CL.showGameResult() -->
-
   <footer class="py-8 border-t border-gray-100 dark:border-white/5 mt-12">
     <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-      <p class="text-xs text-gray-400">© 2025 Contoura Labs</p>
-      <a href="index.html" class="text-xs text-brand-orange hover:text-brand-red transition-colors">← Back to all games</a>
+      <p class="text-xs text-gray-400">2025 Contoura Labs</p>
+      <a href="index.html" class="text-xs text-brand-orange hover:text-brand-red transition-colors">Back to all games</a>
     </div>
   </footer>
 
@@ -329,234 +233,165 @@
   (function () {
     'use strict';
 
-    // ===== Word lists by category — 12 categories =====
+    // ===== Difficulty settings =====
+    const DIFFICULTIES = {
+      easy:   { maxWrong: 8, hints: 3, label: 'Easy',   minLen: 3, maxLen: 7  },
+      medium: { maxWrong: 6, hints: 2, label: 'Medium', minLen: 5, maxLen: 10 },
+      hard:   { maxWrong: 4, hints: 1, label: 'Hard',   minLen: 7, maxLen: 20 }
+    };
+
+    // ===== Word lists by category — 300+ words total =====
     const CATEGORIES = {
-      'Animals': {
-        icon: '🐾',
-        desc: ' Creatures from across the animal kingdom.',
-        words: [
-          { w: 'ELEPHANT', h: 'Largest land mammal with a trunk' },
-          { w: 'GIRAFFE',  h: 'Tallest animal in the world' },
-          { w: 'PENGUIN',  h: 'Flightless bird that swims' },
-          { w: 'KANGAROO', h: 'Australian marsupial that hops' },
-          { w: 'DOLPHIN',  h: 'Intelligent ocean mammal' },
-          { w: 'OCTOPUS',  h: 'Sea creature with eight arms' },
-          { w: 'CHEETAH',  h: 'Fastest land animal' },
-          { w: 'PANDA',    h: 'Black and white bear from China' },
-          { w: 'OWL',      h: 'Nocturnal bird of prey' },
-          { w: 'CROCODILE',h: 'Large reptile with sharp teeth' }
-        ]
-      },
-      'Countries': {
-        icon: '🌍',
-        desc: ' Nations from every continent.',
-        words: [
-          { w: 'BRAZIL',     h: 'Largest country in South America' },
-          { w: 'JAPAN',      h: 'Island nation in East Asia' },
-          { w: 'CANADA',     h: 'Second-largest country by area' },
-          { w: 'EGYPT',      h: 'Home of the ancient pyramids' },
-          { w: 'AUSTRALIA',  h: 'Continent and country' },
-          { w: 'MOROCCO',    h: 'North African country with Marrakech' },
-          { w: 'NORWAY',     h: 'Scandinavian land of fjords' },
-          { w: 'THAILAND',   h: 'Southeast Asian country with temples' },
-          { w: 'ARGENTINA',  h: 'Home of tango and Messi' },
-          { w: 'PORTUGAL',   h: 'Iberian country famous for port wine' }
-        ]
-      },
-      'Movies': {
-        icon: '🎬',
-        desc: ' Blockbusters and Oscar winners.',
-        words: [
-          { w: 'INCEPTION',   h: 'Dream-within-a-dream heist film' },
-          { w: 'GLADIATOR',   h: 'Russell Crowe Roman epic' },
-          { w: 'TITANIC',     h: 'Ship that sank in 1997 film' },
-          { w: 'AVATAR',      h: 'Blue aliens on Pandora' },
-          { w: 'INTERSTELLAR',h: 'Christopher Nolan space travel film' },
-          { w: 'JURASSIC',    h: 'Park full of cloned dinosaurs' },
-          { w: 'MATRIX',      h: 'Red pill or blue pill?' },
-          { w: 'FROZEN',      h: 'Disney film with Let It Go' },
-          { w: 'JOKER',       h: '2019 Joaquin Phoenix film' },
-          { w: 'AVENGERS',    h: 'Marvel superhero team' }
-        ]
-      },
-      'Tech': {
-        icon: '💻',
-        desc: ' Programming, hardware, and the internet.',
-        words: [
-          { w: 'JAVASCRIPT', h: 'Language of the web' },
-          { w: 'KEYBOARD',   h: 'Input device with keys' },
-          { w: 'ALGORITHM',  h: 'Step-by-step procedure' },
-          { w: 'DATABASE',   h: 'Organized data storage' },
-          { w: 'BROWSER',    h: 'App that renders web pages' },
-          { w: 'FIREWALL',   h: 'Network security barrier' },
-          { w: 'PIXEL',      h: 'Smallest unit of a screen' },
-          { w: 'CIPHER',     h: 'Code for encrypting text' },
-          { w: 'BACKEND',    h: 'Server side of an app' },
-          { w: 'COMPILER',   h: 'Translates source code to machine code' }
-        ]
-      },
-      'Food': {
-        icon: '🍔',
-        desc: ' Dishes and ingredients from around the world.',
-        words: [
-          { w: 'PIZZA',     h: 'Italian flatbread with toppings' },
-          { w: 'SUSHI',     h: 'Japanese rice and seafood dish' },
-          { w: 'BURRITO',   h: 'Mexican wrapped tortilla' },
-          { w: 'PANCAKE',   h: 'Flat breakfast cake' },
-          { w: 'CROISSANT', h: 'French buttery crescent pastry' },
-          { w: 'SPAGHETTI', h: 'Long thin Italian pasta' },
-          { w: 'CHOCOLATE', h: 'Sweet treat from cocoa' },
-          { w: 'SANDWICH',  h: 'Fillings between two bread slices' },
-          { w: 'PINEAPPLE', h: 'Tropical spiky fruit' },
-          { w: 'HAMBURGER', h: 'Beef patty in a bun' }
-        ]
-      },
-      'Superheroes': {
-        icon: '🦸',
-        desc: ' Heroes and villains from comics.',
-        words: [
-          { w: 'SUPERMAN',     h: 'Man of Steel from Krypton' },
-          { w: 'BATMAN',       h: 'Caped crusader of Gotham' },
-          { w: 'SPIDERMAN',    h: 'Web-slinging teen hero' },
-          { w: 'WONDERWOMAN',  h: 'Amazonian princess warrior' },
-          { w: 'IRONMAN',      h: 'Tony Stark in a suit' },
-          { w: 'THOR',         h: 'Asgardian god of thunder' },
-          { w: 'HULK',         h: 'Bruce Banner when angry' },
-          { w: 'FLASH',        h: 'Fastest man alive' },
-          { w: 'AQUAMAN',      h: 'King of Atlantis' },
-          { w: 'BLACKWIDOW',   h: 'Natasha Romanoff, Avenger and spy' }
-        ]
-      },
-      'Cars': {
-        icon: '🚗',
-        desc: ' Brands, models, and automotive culture.',
-        words: [
-          { w: 'FERRARI',    h: 'Italian luxury sports car maker' },
-          { w: 'LAMBORGHINI',h: 'Italian supercar with scissor doors' },
-          { w: 'PORSCHE',    h: 'German maker of the 911' },
-          { w: 'TESLA',      h: 'Electric car company by Musk' },
-          { w: 'BUGATTI',    h: 'French maker of the Veyron' },
-          { w: 'MUSTANG',    h: 'Ford pony car since 1964' },
-          { w: 'CORVETTE',   h: 'Chevrolet sports car' },
-          { w: 'BENTLEY',    h: 'British luxury automobile' },
-          { w: 'MASERATI',   h: 'Italian luxury maker with trident logo' },
-          { w: 'KOENIGSEGG', h: 'Swedish hypercar maker' }
-        ]
-      },
-      'Languages': {
-        icon: '🗣️',
-        desc: ' Spoken and programming languages.',
-        words: [
-          { w: 'ENGLISH',    h: 'Most widely spoken second language' },
-          { w: 'MANDARIN',   h: 'Most native speakers worldwide' },
-          { w: 'SPANISH',    h: 'Romance language of Spain and Latin America' },
-          { w: 'ARABIC',     h: 'Semitic language written right-to-left' },
-          { w: 'HINDI',      h: 'Official language of India' },
-          { w: 'PORTUGUESE', h: 'Language of Brazil and Portugal' },
-          { w: 'RUSSIAN',    h: 'Slavic language using Cyrillic' },
-          { w: 'JAPANESE',   h: 'Language using three writing systems' },
-          { w: 'PYTHON',     h: 'Programming language named after a snake' },
-          { w: 'RUST',       h: 'Modern systems programming language' }
-        ]
-      },
-      'Science': {
-        icon: '🔬',
-        desc: ' Biology, chemistry, physics, and nature.',
-        words: [
-          { w: 'GRAVITY',     h: 'Force that pulls objects together' },
-          { w: 'PHOTOSYNTHESIS', h: 'How plants make food from sunlight' },
-          { w: 'MITOCHONDRIA',h: 'Powerhouse of the cell' },
-          { w: 'MOLECULE',    h: 'Group of bonded atoms' },
-          { w: 'VELOCITY',    h: 'Speed in a given direction' },
-          { w: 'NEUTRON',     h: 'Neutral subatomic particle' },
-          { w: 'EVOLUTION',   h: 'Darwin theory of species change' },
-          { w: 'ENZYME',      h: 'Biological catalyst protein' },
-          { w: 'GALAXY',      h: 'Vast system of stars' },
-          { w: 'OSMOSIS',     h: 'Water moving across a membrane' }
-        ]
-      },
-      'Sports': {
-        icon: '⚽',
-        desc: ' Games, athletes, and legends.',
-        words: [
-          { w: 'BASKETBALL',  h: 'Sport with hoops and a orange ball' },
-          { w: 'FOOTBALL',    h: 'Global sport with a spherical ball' },
-          { w: 'TENNIS',      h: 'Racquet sport with love and deuce' },
-          { w: 'CRICKET',     h: 'Bat-and-ball sport with wickets' },
-          { w: 'OLYMPICS',    h: 'Quadrennial global sporting event' },
-          { w: 'MARATHON',    h: '26.2 mile foot race' },
-          { w: 'SURFING',     h: 'Riding waves on a board' },
-          { w: 'BOXING',      h: 'Combat sport with gloves' },
-          { w: 'HOCKEY',      h: 'Sport with sticks and a puck' },
-          { w: 'RUGBY',       h: 'Contact sport with an oval ball' }
-        ]
-      },
-      'Music': {
-        icon: '🎵',
-        desc: ' Genres, instruments, and artists.',
-        words: [
-          { w: 'PIANO',       h: 'Keyboard instrument with 88 keys' },
-          { w: 'GUITAR',      h: 'Six-stringed instrument' },
-          { w: 'VIOLIN',      h: 'Bowed string instrument' },
-          { w: 'TRUMPET',     h: 'Brass horn with three valves' },
-          { w: 'REGGAE',      h: 'Jamaican genre made famous by Bob Marley' },
-          { w: 'JAZZ',        h: 'Improvisational genre from New Orleans' },
-          { w: 'OPERA',       h: 'Theatrical work set to music' },
-          { w: 'SYMPHONY',    h: 'Long musical composition for orchestra' },
-          { w: 'BEATLES',     h: 'Fab Four from Liverpool' },
-          { w: 'DRUMS',       h: 'Percussion kit with sticks' }
-        ]
-      },
-      'History': {
-        icon: '📜',
-        desc: ' Empires, leaders, and turning points.',
-        words: [
-          { w: 'NAPOLEON',    h: 'French emperor who conquered Europe' },
-          { w: 'PYRAMIDS',    h: 'Ancient Egyptian tombs at Giza' },
-          { w: 'COLOSSEUM',   h: 'Roman amphitheatre' },
-          { w: 'RENAISSANCE', h: 'European cultural rebirth' },
-          { w: 'VIKINGS',     h: 'Norse seafarers and raiders' },
-          { w: 'SAMURAI',     h: 'Japanese warrior class' },
-          { w: 'PHARAOH',     h: 'Ancient Egyptian ruler' },
-          { w: 'GLADIATOR',   h: 'Roman arena fighter' },
-          { w: 'CRUSADES',    h: 'Medieval religious wars' },
-          { w: 'EMPIRE',      h: 'Large multi-ethnic political entity' }
-        ]
-      }
+      'Animals': { icon: 'A', desc: 'Creatures from across the animal kingdom.', words: [
+        'ELEPHANT','GIRAFFE','PENGUIN','KANGAROO','DOLPHIN','OCTOPUS','CHEETAH','PANDA','CROCODILE','HORSE',
+        'TIGER','LION','ZEBRA','GORILLA','HEDGEHOG','PLATYPUS','FLAMINGO','PEACOCK','SQUIRREL','RACCOON',
+        'WALRUS','OTTER','BEAVER','MOOSE','LEMUR','PANTHER','JAGUAR','LEOPARD','BUFFALO','CAMEL',
+        'CHIMPANZEE','RHINOCEROS','HIPPOPOTAMUS','ALLIGATOR','RATTLESNAKE','WOODPECKER','HUMMINGBIRD','CHAMELEON'
+      ]},
+      'Countries': { icon: 'C', desc: 'Nations from every continent.', words: [
+        'BRAZIL','JAPAN','CANADA','EGYPT','AUSTRALIA','MOROCCO','NORWAY','THAILAND','ARGENTINA','PORTUGAL',
+        'GERMANY','FRANCE','ITALY','SPAIN','GREECE','TURKEY','MEXICO','INDIA','CHINA','KOREA',
+        'VIETNAM','MALAYSIA','INDONESIA','PHILIPPINES','BANGLADESH','PAKISTAN','AFGHANISTAN','KAZAKHSTAN',
+        'SWITZERLAND','NETHERLANDS','BELGIUM','AUSTRIA','HUNGARY','ROMANIA','BULGARIA','SERBIA','CROATIA',
+        'FINLAND','DENMARK','SWEDEN','ICELAND','IRELAND','SCOTLAND','WALES','KENYA','NIGERIA','ETHIOPIA',
+        'COLOMBIA','VENEZUELA','PERU','CHILE','URUGUAY','PARAGUAY','BOLIVIA','ECUADOR'
+      ]},
+      'Movies': { icon: 'M', desc: 'Blockbusters and Oscar winners.', words: [
+        'INCEPTION','GLADIATOR','TITANIC','AVATAR','INTERSTELLAR','JURASSIC','MATRIX','FROZEN','JOKER','AVENGERS',
+        'BATMAN','SUPERMAN','SPIDERMAN','WONDERWOMAN','IRONMAN','THOR','BLACKPANTHER','GUARDIANS','STARWARS',
+        'ROCKY','RAMBO','TERMINATOR','PREDATOR','ALIEN','GODFATHER','GOODFELLAS','CASABLANCA','PSYCHO','HALLOWEEN',
+        'FRIDAY','SCREAM','SAW','PARANORMAL','SHUTTER','INCEPTION','MEMENTO','PRESTIGE','DARKNIGHT','LOGAN',
+        'DEADPOOL','WOLVERINE','CAPTAIN','HAWKEYE','BLACKWIDOW','DOCTORSTRANGE','ANTMAN','WASP','GUARDIANS'
+      ]},
+      'Tech': { icon: 'T', desc: 'Programming, hardware, and the internet.', words: [
+        'JAVASCRIPT','KEYBOARD','ALGORITHM','DATABASE','BROWSER','FIREWALL','PIXEL','CIPHER','BACKEND','COMPILER',
+        'PROCESSOR','MOTHERBOARD','HARDWARE','SOFTWARE','NETWORK','PROTOCOL','ENCRYPTION','AUTHENTICATION',
+        'BLOCKCHAIN','CRYPTOCURRENCY','VIRTUALIZATION','CONTAINER','KUBERNETES','DOCKER','REPOSITORY',
+        'FRAMEWORK','LIBRARY','FUNCTION','VARIABLE','BOOLEAN','INTEGER','STRING','ARRAY','OBJECT','CLASS',
+        'INTERFACE','INHERITANCE','POLYMORPHISM','ENCAPSULATION','RECURSION','ITERATION','DEBUGGING',
+        'BANDWIDTH','LATENCY','THROUGHPUT','FIREWALL','PROXY','GATEWAY','ROUTER','SWITCH'
+      ]},
+      'Food': { icon: 'F', desc: 'Dishes and ingredients from around the world.', words: [
+        'PIZZA','SUSHI','BURRITO','PANCAKE','CROISSANT','SPAGHETTI','CHOCOLATE','SANDWICH','PINEAPPLE','HAMBURGER',
+        'TACOS','NOODLES','DUMPLING','WONTON','RAMEN','CURRY','BIRYANI','TANDOORI','NAAN','CHAPATI',
+        'LASAGNA','RISOTTO','GNOCCHI','RAVIOLI','FETTUCCINE','PENNE','MACARONI','CANNELLONI',
+        'CHEESECAKE','TIRAMISU','GELATO','SORBET','BROWNIE','COOKIE','MUFFIN','CUPCAKE','DONUT',
+        'BAGEL','PRETZEL','CROISSANT','WAFFLE','CREPE','OMELETTE','QUICHE','SALAD','SOUP','STEW'
+      ]},
+      'Superheroes': { icon: 'S', desc: 'Heroes and villains from comics.', words: [
+        'SUPERMAN','BATMAN','SPIDERMAN','WONDERWOMAN','IRONMAN','THOR','HULK','FLASH','AQUAMAN','BLACKWIDOW',
+        'CAPTAINAMERICA','BLACKPANTHER','DOCTORSTRANGE','ANTMAN','WOLVERINE','DEADPOOL','CYCLOPS',
+        'STORM','ROGUE','GAMBIT','JEANGREY','PROFESSORX','MAGNETO','MYSTIQUE','SABRETOOTH',
+        'GREENLANTERN','THEFLASH','AQUAMAN','CYBORG','GREENARROW','SUPERGIRL','BATGIRL','ROBIN',
+        'NIGHTWING','REDHOOD','CONSTANTINE','SWAMPTHING','HELLBLAZER','DAREDEVIL','PUNISHER'
+      ]},
+      'Cars': { icon: 'A', desc: 'Brands, models, and automotive culture.', words: [
+        'FERRARI','LAMBORGHINI','PORSCHE','TESLA','BUGATTI','MUSTANG','CORVETTE','BENTLEY','MASERATI','KOENIGSEGG',
+        'MCLAREN','PAGANI','ASTONMARTIN','JAGUAR','BMW','MERCEDES','AUDI','VOLKSWAGEN','TOYOTA','HONDA',
+        'NISSAN','MAZDA','SUBARU','MITSUBISHI','HYUNDAI','KIA','VOLVO','SAAB','RENAULT','PEUGEOT',
+        'CITROEN','FIAT','ALFAROMEO','LANCIA','SKODA','SEAT','CHEVROLET','FORD','DODGE','CADILLAC',
+        'LINCOLN','BUICK','GMC','JEEP','CHRYSLER'
+      ]},
+      'Languages': { icon: 'L', desc: 'Spoken and programming languages.', words: [
+        'ENGLISH','MANDARIN','SPANISH','ARABIC','HINDI','PORTUGUESE','RUSSIAN','JAPANESE','PYTHON','RUST',
+        'GERMAN','FRENCH','ITALIAN','DUTCH','SWEDISH','NORWEGIAN','DANISH','FINNISH','POLISH','CZECH',
+        'SLOVAK','HUNGARIAN','ROMANIAN','BULGARIAN','GREEK','TURKISH','PERSIAN','HEBREW','THAI','VIETNAMESE',
+        'KOREAN','INDONESIAN','TAGALOG','SWAHILI','URDU','BENGALI','TAMIL','TELUGU','MARATHI','GUJARATI',
+        'JAVA','SCALA','GOLANG','ELIXIR','HASKELL','LISP','PROLOG','FORTRAN','COBOL','ASSEMBLY'
+      ]},
+      'Science': { icon: 'S', desc: 'Biology, chemistry, physics, and nature.', words: [
+        'GRAVITY','PHOTOSYNTHESIS','MITOCHONDRIA','MOLECULE','VELOCITY','NEUTRON','EVOLUTION','ENZYME','GALAXY','OSMOSIS',
+        'MEIOSIS','MITOSIS','CHROMOSOME','DNA','RIBOSOME','NUCLEUS','CYTOPLASM','MEMBRANE','VACUOLE',
+        'GOLGI','LYSOSOME','CENTROSOME','CILIUM','FLAGELLUM','PLASMA','ISOTOPE','CATALYST','REACTION',
+        'COMPOUND','SOLUTION','SOLVENT','SOLUTE','PRECIPITATE','CRYSTALLINE','AMORPHOUS','POLYMER',
+        'MONOMER','PROTEIN','CARBOHYDRATE','LIPID','NUCLEIC','AMINO','PEPTIDE','HYDROGEN','OXYGEN',
+        'CARBON','NITROGEN','HELIUM','ARGON','KRYPTON'
+      ]},
+      'Sports': { icon: 'P', desc: 'Games, athletes, and legends.', words: [
+        'BASKETBALL','FOOTBALL','TENNIS','CRICKET','OLYMPICS','MARATHON','SURFING','BOXING','HOCKEY','RUGBY',
+        'BASEBALL','VOLLEYBALL','HANDBALL','SQUASH','BADMINTON','TABLETENNIS','GOLF','BOWLING','ARCHERY',
+        'FENCING','WRESTLING','JUDO','KARATE','TAEKWONDO','BRAZILIANJIUJITSU','MMA','UFC','BOXING',
+        'SWIMMING','DIVING','WATERPOLO','SYNCHRONIZED','ROWING','CANOEING','SAILING','WINDSURFING',
+        'KITESURFING','CLIMBING','BOULDERING','CYCLING','MOUNTAINBIKING','SKATEBOARDING','SNOWBOARDING',
+        'SKIING','SNOWBOARDING','ICEHOCKEY','CURLING','BIATHLON','LUGE','BOBSLEIGH'
+      ]},
+      'Music': { icon: 'M', desc: 'Genres, instruments, and artists.', words: [
+        'PIANO','GUITAR','VIOLIN','TRUMPET','REGGAE','JAZZ','OPERA','SYMPHONY','BEATLES','DRUMS',
+        'SAXOPHONE','CLARINET','FLUTE','CELLO','BASS','HARP','ACCORDION','HARMONICA','TROMBONE',
+        'TUBA','XYLOPHONE','MARIMBA','BONGOS','CONGAS','TURNTABLE','SYNTHESIZER','KEYBOARD',
+        'CLASSICAL','BLUES','ROCK','POP','COUNTRY','FOLK','METAL','PUNK','DISCO','FUNK','SOUL',
+        'HIPHOP','RAP','EDM','DUBSTEP','TECHNO','HOUSE','TRANCE','AMBIENT','CHILL','GOSPEL'
+      ]},
+      'History': { icon: 'H', desc: 'Empires, leaders, and turning points.', words: [
+        'NAPOLEON','PYRAMIDS','COLOSSEUM','RENAISSANCE','VIKINGS','SAMURAI','PHARAOH','GLADIATOR','CRUSADES','EMPIRE',
+        'CLEOPATRA','CAESAR','ALEXANDER','GENGHISKHAN','CHARLEMAGNE','JOANOFARC','LEONARDO','MICHELANGELO',
+        'COLUMBUS','MAGELLAN','GALILEO','NEWTON','EINSTEIN','EDISON','TESLA','CURIE','DARWIN',
+        'WORLDWAR','REVOLUTION','INDEPENDENCE','DEMOCRACY','REPUBLIC','MONARCHY','DICTATORSHIP',
+        'COLONIAL','IMPERIAL','FEUDAL','MEDIEVAL','ANCIENT','PREHISTORIC','STONEAGE','BRONZEAGE',
+        'IRONAGE','RENAISSANCE','ENLIGHTENMENT','INDUSTRIAL','MODERN','CONTEMPORARY'
+      ]}
     };
 
     const PARTS_ORDER = ['part-head','part-body','part-arm-l','part-arm-r','part-leg-l','part-leg-r'];
-    const MAX_WRONG = 6;
+    const SAD_FACE = ['face-eye-l','face-eye-r','face-eye-l2','face-eye-r2','face-mouth'];
+    const HAPPY_FACE = ['happy-eye-l','happy-eye-r','happy-mouth'];
     const ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const STORAGE_KEY = 'contoura-hangman-stats-v1';
 
     // ===== State =====
     let state = {
       category: '',
+      difficulty: 'easy',
       word: '',
-      hint: '',
       guessed: new Set(),
       wrong: 0,
-      hintsLeft: 2,
+      hintsLeft: 3,
       gameOver: false,
       won: false,
       recent: []
     };
 
+    // ===== Persistent stats =====
+    let stats = loadStats();
+
+    function loadStats() {
+      try {
+        const s = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        if (s) return s;
+      } catch (e) {}
+      return { won: 0, lost: 0, hintsUsed: 0, wrongLetters: 0, gamesPlayed: 0 };
+    }
+    function saveStats() {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(stats)); } catch (e) {}
+    }
+    function calcPercentage() {
+      if (stats.gamesPlayed === 0) return 0;
+      // Win rate base: 50% weight
+      const winRate = (stats.won / stats.gamesPlayed) * 50;
+      // Efficiency: fewer wrong letters and hints = higher score
+      const totalWrong = stats.wrongLetters + stats.hintsUsed;
+      const avgWrongPerGame = totalWrong / stats.gamesPlayed;
+      // Perfect = 0 wrong per game = 50 bonus. Each wrong/hint reduces.
+      const efficiency = Math.max(0, 50 - avgWrongPerGame * 3);
+      return Math.round(winRate + efficiency);
+    }
+
     // ===== DOM refs =====
     const $ = (id) => document.getElementById(id);
-    const setupScreen  = $('setup-screen');
-    const gameScreen   = $('game-screen');
-    const catTrack     = $('cat-track');
-    const startBtn     = $('start-game-btn');
-    const selectHint   = $('select-hint');
-    const catBadge     = $('cat-badge');
-    const slotsEl      = $('slots');
-    const hintText     = $('hint-text');
-    const keysEl       = $('keys');
-    const wrongCount   = $('wrong-count');
-    const wrongBar     = $('wrong-bar');
-    const hintBtn      = $('hint-btn');
-    const hintCountEl  = $('hint-count');
+    const setupScreen = $('setup-screen');
+    const gameScreen = $('game-screen');
+    const catTrack = $('cat-track');
+    const startBtn = $('start-game-btn');
+    const selectHint = $('select-hint');
+    const catBadge = $('cat-badge');
+    const diffBadge = $('diff-badge');
+    const slotsEl = $('slots');
+    const hintText = $('hint-text');
+    const keysEl = $('keys');
+    const wrongCount = $('wrong-count');
+    const wrongBar = $('wrong-bar');
+    const hintBtn = $('hint-btn');
+    const hintCountEl = $('hint-count');
 
     // ===== Build category carousel =====
     function buildCategoryCarousel() {
@@ -566,12 +401,11 @@
         const card = document.createElement('div');
         card.className = 'cat-carousel-card';
         card.dataset.category = cat;
-        card.innerHTML = `
-          <div class="cc-icon">${c.icon}</div>
-          <div class="cc-name">${cat}</div>
-          <div class="cc-desc">${c.desc}</div>
-          <div class="cc-meta">${c.words.length} words</div>
-        `;
+        card.innerHTML =
+          '<div class="cc-icon">' + c.icon + '</div>' +
+          '<div class="cc-name">' + cat + '</div>' +
+          '<div class="cc-desc">' + c.desc + '</div>' +
+          '<div class="cc-meta">' + c.words.length + ' words</div>';
         card.addEventListener('click', () => selectCategory(cat));
         catTrack.appendChild(card);
       });
@@ -579,19 +413,25 @@
 
     function selectCategory(cat) {
       state.category = cat;
-      // Update selected state on all cards
       catTrack.querySelectorAll('.cat-carousel-card').forEach(card => {
         card.classList.toggle('selected', card.dataset.category === cat);
       });
-      // Scroll selected into view
       const sel = catTrack.querySelector('.cat-carousel-card.selected');
       if (sel) sel.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-      // Show start button
       startBtn.classList.remove('hidden');
-      selectHint.textContent = `Selected: ${CATEGORIES[cat].icon} ${cat} — click Start to begin`;
+      selectHint.textContent = 'Selected: ' + cat + ' - click Start to begin';
     }
 
-    // ===== Start the game =====
+    // ===== Difficulty tabs =====
+    $('diff-tabs').querySelectorAll('.diff-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.difficulty = btn.dataset.diff;
+        $('diff-tabs').querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+
+    // ===== Start game =====
     startBtn.addEventListener('click', () => {
       if (!state.category) return;
       setupScreen.classList.add('hm-hidden');
@@ -599,28 +439,38 @@
       newWord();
     });
 
-    // ===== Pick a new word =====
+    // ===== Pick a new word (filtered by difficulty) =====
     function newWord() {
-      const pool = CATEGORIES[state.category].words;
-      let candidates = pool.filter(p => !state.recent.includes(p.w));
-      if (candidates.length === 0) {
-        state.recent = [];
-        candidates = pool;
-      }
+      const diff = DIFFICULTIES[state.difficulty];
+      const allWords = CATEGORIES[state.category].words;
+
+      // Filter words by length based on difficulty
+      let pool = allWords.filter(w => w.length >= diff.minLen && w.length <= diff.maxLen);
+      // If pool is too small, relax constraints
+      if (pool.length < 5) pool = allWords;
+
+      // Avoid recent words
+      let candidates = pool.filter(w => !state.recent.includes(w));
+      if (candidates.length === 0) { state.recent = []; candidates = pool; }
+
       const pick = candidates[Math.floor(Math.random() * candidates.length)];
-      state.word = pick.w;
-      state.hint = pick.h;
+      state.word = pick;
       state.guessed = new Set();
       state.wrong = 0;
-      state.hintsLeft = 2;
+      state.hintsLeft = diff.hints;
       state.gameOver = false;
       state.won = false;
-      state.recent.push(pick.w);
-      if (state.recent.length > pool.length - 1) state.recent.shift();
+      state.recent.push(pick);
+      if (state.recent.length > Math.min(pool.length - 1, 20)) state.recent.shift();
 
-      catBadge.textContent = CATEGORIES[state.category].icon + ' ' + state.category;
+      catBadge.textContent = state.category;
+      diffBadge.textContent = diff.label;
+      diffBadge.style.background = state.difficulty === 'easy' ? 'rgba(0,184,169,0.1)' :
+        state.difficulty === 'medium' ? 'rgba(255,107,53,0.1)' : 'rgba(232,56,79,0.1)';
+      diffBadge.style.color = state.difficulty === 'easy' ? '#00B8A9' :
+        state.difficulty === 'medium' ? '#FF6B35' : '#E8384F';
+
       hintText.textContent = '';
-      hideModal();
       render();
     }
 
@@ -630,9 +480,8 @@
       slotsEl.innerHTML = '';
       for (const ch of state.word) {
         const slot = document.createElement('div');
-        if (ch === ' ') {
-          slot.className = 'letter-slot space';
-        } else {
+        if (ch === ' ') { slot.className = 'letter-slot space'; }
+        else {
           slot.className = 'letter-slot';
           const revealed = state.gameOver || state.guessed.has(ch);
           if (revealed) slot.classList.add('revealed');
@@ -658,8 +507,9 @@
       }
 
       // Wrong counter + bar
-      wrongCount.textContent = state.wrong + ' / ' + MAX_WRONG;
-      wrongBar.style.width = (state.wrong / MAX_WRONG * 100) + '%';
+      const diff = DIFFICULTIES[state.difficulty];
+      wrongCount.textContent = state.wrong + ' / ' + diff.maxWrong;
+      wrongBar.style.width = (state.wrong / diff.maxWrong * 100) + '%';
 
       // Hint button
       hintCountEl.textContent = state.hintsLeft;
@@ -672,12 +522,24 @@
         else el.classList.remove('show');
       });
 
-      // Face (only on loss)
-      ['face-eye-l','face-eye-r','face-eye-l2','face-eye-r2','face-mouth'].forEach(id => {
+      // Face: sad on loss, happy on win
+      SAD_FACE.forEach(id => {
         const el = document.getElementById(id);
         if (state.gameOver && !state.won) el.classList.add('show');
         else el.classList.remove('show');
       });
+      HAPPY_FACE.forEach(id => {
+        const el = document.getElementById(id);
+        if (state.gameOver && state.won) el.classList.add('show');
+        else el.classList.remove('show');
+      });
+
+      // Score board
+      $('sb-won').textContent = stats.won;
+      $('sb-lost').textContent = stats.lost;
+      $('sb-hints').textContent = stats.hintsUsed;
+      $('sb-wrong').textContent = stats.wrongLetters;
+      $('score-pct').innerHTML = 'Overall: <strong>' + calcPercentage() + '%</strong>';
     }
 
     // ===== Guess a letter =====
@@ -689,14 +551,23 @@
         if (allGuessed) {
           state.gameOver = true;
           state.won = true;
-          setTimeout(() => showModal(true), 400);
+          stats.won++;
+          stats.gamesPlayed++;
+          saveStats();
+          setTimeout(() => showResult(true), 500);
         }
       } else {
         state.wrong++;
-        if (state.wrong >= MAX_WRONG) {
+        stats.wrongLetters++;
+        saveStats();
+        const diff = DIFFICULTIES[state.difficulty];
+        if (state.wrong >= diff.maxWrong) {
           state.gameOver = true;
           state.won = false;
-          setTimeout(() => showModal(false), 500);
+          stats.lost++;
+          stats.gamesPlayed++;
+          saveStats();
+          setTimeout(() => showResult(false), 600);
         }
       }
       render();
@@ -710,47 +581,49 @@
       const reveal = unguessed[Math.floor(Math.random() * unguessed.length)];
       state.guessed.add(reveal);
       state.hintsLeft--;
-      hintText.textContent = 'Hint revealed: ' + reveal + ' — ' + state.hint;
+      stats.hintsUsed++;
+      saveStats();
+      hintText.textContent = 'Hint revealed: ' + reveal;
       const allGuessed = [...state.word].every(ch => ch === ' ' || state.guessed.has(ch));
       if (allGuessed) {
         state.gameOver = true;
         state.won = true;
-        setTimeout(() => showModal(true), 400);
+        stats.won++;
+        stats.gamesPlayed++;
+        saveStats();
+        setTimeout(() => showResult(true), 500);
       }
       render();
     });
 
-    // ===== Result modal — delegate to shared CL.showGameResult() =====
-    function showModal(won) {
+    // ===== Result modal =====
+    function showResult(won) {
+      const pct = calcPercentage();
       CL.showGameResult({
         emoji: won ? '🎉' : '💀',
         title: won ? 'You Won!' : 'Game Over',
-        message: 'The word was: <strong>' + state.word + '</strong>',
+        message: 'The word was: <strong>' + state.word + '</strong><br>Overall score: <strong>' + pct + '%</strong> (' + stats.won + 'W / ' + stats.lost + 'L)',
         onPlayAgain: newWord
       });
     }
-    function hideModal() { /* no-op — shared modal manages its own lifecycle */ }
 
-    // ===== New word / change category =====
+    // ===== Controls =====
     $('new-word-btn').addEventListener('click', newWord);
     $('change-cat-btn').addEventListener('click', () => {
       gameScreen.classList.add('hm-hidden');
       setupScreen.classList.remove('hm-hidden');
-      hideModal();
     });
 
     // ===== Keyboard input =====
     document.addEventListener('keydown', (e) => {
-      // Ignore letter typing while the shared result modal is open
       if (document.getElementById('cl-game-result-modal')) return;
-      if (gameScreen.classList.contains('hm-hidden')) return; // ignore typing on setup screen
+      if (gameScreen.classList.contains('hm-hidden')) return;
       const L = e.key.toUpperCase();
       if (L.length === 1 && L >= 'A' && L <= 'Z') guess(L);
     });
 
     // ===== Init =====
     buildCategoryCarousel();
-    // common.js wires the carousel arrows automatically via wireCategoryCarousels()
   })();
   </script>
 </body>
