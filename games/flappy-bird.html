@@ -64,6 +64,22 @@
 
       <div class="tool-card">
 
+        <!-- Persistent stats scoreboard -->
+        <div class="score-board" style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;margin-bottom:1rem;">
+          <div style="text-align:center;padding:0.5rem;border-radius:0.5rem;background:rgba(0,0,0,0.03);">
+            <div style="font-size:1.3rem;font-weight:800;color:#00B8A9;" id="sb-best">0</div>
+            <div style="font-size:0.6rem;text-transform:uppercase;color:#9ca3af;font-weight:600;">Best Score</div>
+          </div>
+          <div style="text-align:center;padding:0.5rem;border-radius:0.5rem;background:rgba(0,0,0,0.03);">
+            <div style="font-size:1.3rem;font-weight:800;color:#FF6B35;" id="sb-played">0</div>
+            <div style="font-size:0.6rem;text-transform:uppercase;color:#9ca3af;font-weight:600;">Games Played</div>
+          </div>
+          <div style="text-align:center;padding:0.5rem;border-radius:0.5rem;background:rgba(0,0,0,0.03);">
+            <div style="font-size:1.3rem;font-weight:800;color:#E8384F;" id="sb-last">0</div>
+            <div style="font-size:0.6rem;text-transform:uppercase;color:#9ca3af;font-weight:600;">Last Score</div>
+          </div>
+        </div>
+
         <!-- Stats -->
         <div class="flex flex-wrap justify-center gap-3 mb-5">
           <span class="stat-pill">Score: <span id="stat-score" class="text-lg">0</span></span>
@@ -101,6 +117,25 @@
   <script>
   (function () {
     'use strict';
+
+    // ===== Persistent stats =====
+    const STATS_KEY = 'contoura-stats-flappy-v1';
+    let stats = (function() {
+      try {
+        var s = JSON.parse(localStorage.getItem(STATS_KEY)) || {};
+        return { bestScore: s.bestScore || 0, gamesPlayed: s.gamesPlayed || 0, lastScore: s.lastScore || 0 };
+      }
+      catch (e) { return { bestScore: 0, gamesPlayed: 0, lastScore: 0 }; }
+    })();
+    function saveStats() { try { localStorage.setItem(STATS_KEY, JSON.stringify(stats)); } catch (e) {} }
+    function updateScoreBoard() {
+      var best = document.getElementById('sb-best');
+      var played = document.getElementById('sb-played');
+      var last = document.getElementById('sb-last');
+      if (best) best.textContent = stats.bestScore;
+      if (played) played.textContent = stats.gamesPlayed;
+      if (last) last.textContent = stats.lastScore;
+    }
 
     const canvas = document.getElementById('game-canvas');
     const ctx = canvas.getContext('2d');
@@ -230,6 +265,11 @@
 
     function endGame() {
       state = 'gameover';
+      // Update persistent stats
+      stats.gamesPlayed++;
+      stats.lastScore = score;
+      if (score > stats.bestScore) stats.bestScore = score;
+      saveStats(); updateScoreBoard();
       CL.toast(`Game over! Score: ${score}`, score >= best && score > 0);
 
       // Show standardized result modal (shared from common.js)
@@ -459,6 +499,7 @@
     // ---- Init ----
     state = 'ready';
     resetGame();
+    updateScoreBoard();
     loop();
   })();
   </script>

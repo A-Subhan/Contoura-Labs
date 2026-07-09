@@ -65,6 +65,22 @@
       </header>
 
       <div class="tool-card">
+        <!-- Persistent stats scoreboard -->
+        <div class="score-board" style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;margin-bottom:1rem;">
+          <div style="text-align:center;padding:0.5rem;border-radius:0.5rem;background:rgba(0,0,0,0.03);">
+            <div style="font-size:1.3rem;font-weight:800;color:#00B8A9;" id="sb-won">0</div>
+            <div style="font-size:0.6rem;text-transform:uppercase;color:#9ca3af;font-weight:600;">Won</div>
+          </div>
+          <div style="text-align:center;padding:0.5rem;border-radius:0.5rem;background:rgba(0,0,0,0.03);">
+            <div style="font-size:1.3rem;font-weight:800;color:#E8384F;" id="sb-lost">0</div>
+            <div style="font-size:0.6rem;text-transform:uppercase;color:#9ca3af;font-weight:600;">Lost</div>
+          </div>
+          <div style="text-align:center;padding:0.5rem;border-radius:0.5rem;background:rgba(0,0,0,0.03);">
+            <div style="font-size:1.3rem;font-weight:800;color:#FF6B35;" id="sb-pct">0%</div>
+            <div style="font-size:0.6rem;text-transform:uppercase;color:#9ca3af;font-weight:600;">Win Rate</div>
+          </div>
+        </div>
+
         <div class="flex items-center justify-center gap-3 mb-5 flex-wrap">
           <span class="bo-stat">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
@@ -105,6 +121,23 @@
   <script>
   (function () {
     'use strict';
+
+    // ===== Persistent stats =====
+    const STATS_KEY = 'contoura-stats-breakout-v1';
+    let stats = (function() {
+      try { return JSON.parse(localStorage.getItem(STATS_KEY)) || { won: 0, lost: 0 }; }
+      catch (e) { return { won: 0, lost: 0 }; }
+    })();
+    function saveStats() { try { localStorage.setItem(STATS_KEY, JSON.stringify(stats)); } catch (e) {} }
+    function updateScoreBoard() {
+      var won = document.getElementById('sb-won');
+      var lost = document.getElementById('sb-lost');
+      var pct = document.getElementById('sb-pct');
+      if (won) won.textContent = stats.won;
+      if (lost) lost.textContent = stats.lost;
+      var total = stats.won + stats.lost;
+      if (pct) pct.textContent = total > 0 ? Math.round(stats.won / total * 100) + '%' : '0%';
+    }
 
     const canvas = document.getElementById('bo-canvas');
     const ctx = canvas.getContext('2d');
@@ -220,6 +253,9 @@
       gameOver = true;
       running = false;
       won = didWin;
+      // Update persistent stats
+      if (didWin) { stats.won++; } else { stats.lost++; }
+      saveStats(); updateScoreBoard();
       overlayEmoji.textContent = didWin ? '🏆' : '💥';
       overlayTitle.textContent = didWin ? 'You Win!' : 'Game Over';
       overlayScore.textContent = score;
@@ -414,6 +450,7 @@
     restartBtn.addEventListener('click', resetGame);
 
     resetGame();
+    updateScoreBoard();
     loop();
   })();
   </script>

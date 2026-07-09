@@ -120,6 +120,12 @@
             </button>
           </div>
 
+          <!-- Anime sub-selection (shown only when Anime category is selected) -->
+          <div id="anime-sub" class="hm-hidden mt-4">
+            <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2 text-center">Choose an anime series</h3>
+            <div class="anime-grid" id="anime-sub-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:0.6rem;"></div>
+          </div>
+
           <div class="flex justify-center mt-5">
             <button class="btn-primary hidden" id="start-game-btn" style="min-width:14rem;">Start Game</button>
           </div>
@@ -242,13 +248,13 @@
 
     // ===== Word lists by category — 300+ words total =====
     const CATEGORIES = {
-      'Animals': { icon: 'A', desc: 'Creatures from across the animal kingdom.', words: [
+      'Animals': { icon: '🐾', desc: 'Creatures from across the animal kingdom.', words: [
         'ELEPHANT','GIRAFFE','PENGUIN','KANGAROO','DOLPHIN','OCTOPUS','CHEETAH','PANDA','CROCODILE','HORSE',
         'TIGER','LION','ZEBRA','GORILLA','HEDGEHOG','PLATYPUS','FLAMINGO','PEACOCK','SQUIRREL','RACCOON',
         'WALRUS','OTTER','BEAVER','MOOSE','LEMUR','PANTHER','JAGUAR','LEOPARD','BUFFALO','CAMEL',
         'CHIMPANZEE','RHINOCEROS','HIPPOPOTAMUS','ALLIGATOR','RATTLESNAKE','WOODPECKER','HUMMINGBIRD','CHAMELEON'
       ]},
-      'Countries': { icon: 'C', desc: 'Nations from every continent.', words: [
+      'Countries': { icon: '🌍', desc: 'Nations from every continent.', words: [
         'BRAZIL','JAPAN','CANADA','EGYPT','AUSTRALIA','MOROCCO','NORWAY','THAILAND','ARGENTINA','PORTUGAL',
         'GERMANY','FRANCE','ITALY','SPAIN','GREECE','TURKEY','MEXICO','INDIA','CHINA','KOREA',
         'VIETNAM','MALAYSIA','INDONESIA','PHILIPPINES','BANGLADESH','PAKISTAN','AFGHANISTAN','KAZAKHSTAN',
@@ -256,14 +262,14 @@
         'FINLAND','DENMARK','SWEDEN','ICELAND','IRELAND','SCOTLAND','WALES','KENYA','NIGERIA','ETHIOPIA',
         'COLOMBIA','VENEZUELA','PERU','CHILE','URUGUAY','PARAGUAY','BOLIVIA','ECUADOR'
       ]},
-      'Movies': { icon: 'M', desc: 'Blockbusters and Oscar winners.', words: [
+      'Movies': { icon: '🎬', desc: 'Blockbusters and Oscar winners.', words: [
         'INCEPTION','GLADIATOR','TITANIC','AVATAR','INTERSTELLAR','JURASSIC','MATRIX','FROZEN','JOKER','AVENGERS',
         'BATMAN','SUPERMAN','SPIDERMAN','WONDERWOMAN','IRONMAN','THOR','BLACKPANTHER','GUARDIANS','STARWARS',
         'ROCKY','RAMBO','TERMINATOR','PREDATOR','ALIEN','GODFATHER','GOODFELLAS','CASABLANCA','PSYCHO','HALLOWEEN',
         'FRIDAY','SCREAM','SAW','PARANORMAL','SHUTTER','INCEPTION','MEMENTO','PRESTIGE','DARKNIGHT','LOGAN',
         'DEADPOOL','WOLVERINE','CAPTAIN','HAWKEYE','BLACKWIDOW','DOCTORSTRANGE','ANTMAN','WASP','GUARDIANS'
       ]},
-      'Tech': { icon: 'T', desc: 'Programming, hardware, and the internet.', words: [
+      'Tech': { icon: '💻', desc: 'Programming, hardware, and the internet.', words: [
         'JAVASCRIPT','KEYBOARD','ALGORITHM','DATABASE','BROWSER','FIREWALL','PIXEL','CIPHER','BACKEND','COMPILER',
         'PROCESSOR','MOTHERBOARD','HARDWARE','SOFTWARE','NETWORK','PROTOCOL','ENCRYPTION','AUTHENTICATION',
         'BLOCKCHAIN','CRYPTOCURRENCY','VIRTUALIZATION','CONTAINER','KUBERNETES','DOCKER','REPOSITORY',
@@ -271,35 +277,35 @@
         'INTERFACE','INHERITANCE','POLYMORPHISM','ENCAPSULATION','RECURSION','ITERATION','DEBUGGING',
         'BANDWIDTH','LATENCY','THROUGHPUT','FIREWALL','PROXY','GATEWAY','ROUTER','SWITCH'
       ]},
-      'Food': { icon: 'F', desc: 'Dishes and ingredients from around the world.', words: [
+      'Food': { icon: '🍔', desc: 'Dishes and ingredients from around the world.', words: [
         'PIZZA','SUSHI','BURRITO','PANCAKE','CROISSANT','SPAGHETTI','CHOCOLATE','SANDWICH','PINEAPPLE','HAMBURGER',
         'TACOS','NOODLES','DUMPLING','WONTON','RAMEN','CURRY','BIRYANI','TANDOORI','NAAN','CHAPATI',
         'LASAGNA','RISOTTO','GNOCCHI','RAVIOLI','FETTUCCINE','PENNE','MACARONI','CANNELLONI',
         'CHEESECAKE','TIRAMISU','GELATO','SORBET','BROWNIE','COOKIE','MUFFIN','CUPCAKE','DONUT',
         'BAGEL','PRETZEL','CROISSANT','WAFFLE','CREPE','OMELETTE','QUICHE','SALAD','SOUP','STEW'
       ]},
-      'Superheroes': { icon: 'S', desc: 'Heroes and villains from comics.', words: [
+      'Superheroes': { icon: '🦸', desc: 'Heroes and villains from comics.', words: [
         'SUPERMAN','BATMAN','SPIDERMAN','WONDERWOMAN','IRONMAN','THOR','HULK','FLASH','AQUAMAN','BLACKWIDOW',
         'CAPTAINAMERICA','BLACKPANTHER','DOCTORSTRANGE','ANTMAN','WOLVERINE','DEADPOOL','CYCLOPS',
         'STORM','ROGUE','GAMBIT','JEANGREY','PROFESSORX','MAGNETO','MYSTIQUE','SABRETOOTH',
         'GREENLANTERN','THEFLASH','AQUAMAN','CYBORG','GREENARROW','SUPERGIRL','BATGIRL','ROBIN',
         'NIGHTWING','REDHOOD','CONSTANTINE','SWAMPTHING','HELLBLAZER','DAREDEVIL','PUNISHER'
       ]},
-      'Cars': { icon: 'A', desc: 'Brands, models, and automotive culture.', words: [
+      'Cars': { icon: '🚗', desc: 'Brands, models, and automotive culture.', words: [
         'FERRARI','LAMBORGHINI','PORSCHE','TESLA','BUGATTI','MUSTANG','CORVETTE','BENTLEY','MASERATI','KOENIGSEGG',
         'MCLAREN','PAGANI','ASTONMARTIN','JAGUAR','BMW','MERCEDES','AUDI','VOLKSWAGEN','TOYOTA','HONDA',
         'NISSAN','MAZDA','SUBARU','MITSUBISHI','HYUNDAI','KIA','VOLVO','SAAB','RENAULT','PEUGEOT',
         'CITROEN','FIAT','ALFAROMEO','LANCIA','SKODA','SEAT','CHEVROLET','FORD','DODGE','CADILLAC',
         'LINCOLN','BUICK','GMC','JEEP','CHRYSLER'
       ]},
-      'Languages': { icon: 'L', desc: 'Spoken and programming languages.', words: [
+      'Languages': { icon: '🗣️', desc: 'Spoken and programming languages.', words: [
         'ENGLISH','MANDARIN','SPANISH','ARABIC','HINDI','PORTUGUESE','RUSSIAN','JAPANESE','PYTHON','RUST',
         'GERMAN','FRENCH','ITALIAN','DUTCH','SWEDISH','NORWEGIAN','DANISH','FINNISH','POLISH','CZECH',
         'SLOVAK','HUNGARIAN','ROMANIAN','BULGARIAN','GREEK','TURKISH','PERSIAN','HEBREW','THAI','VIETNAMESE',
         'KOREAN','INDONESIAN','TAGALOG','SWAHILI','URDU','BENGALI','TAMIL','TELUGU','MARATHI','GUJARATI',
         'JAVA','SCALA','GOLANG','ELIXIR','HASKELL','LISP','PROLOG','FORTRAN','COBOL','ASSEMBLY'
       ]},
-      'Science': { icon: 'S', desc: 'Biology, chemistry, physics, and nature.', words: [
+      'Science': { icon: '🔬', desc: 'Biology, chemistry, physics, and nature.', words: [
         'GRAVITY','PHOTOSYNTHESIS','MITOCHONDRIA','MOLECULE','VELOCITY','NEUTRON','EVOLUTION','ENZYME','GALAXY','OSMOSIS',
         'MEIOSIS','MITOSIS','CHROMOSOME','DNA','RIBOSOME','NUCLEUS','CYTOPLASM','MEMBRANE','VACUOLE',
         'GOLGI','LYSOSOME','CENTROSOME','CILIUM','FLAGELLUM','PLASMA','ISOTOPE','CATALYST','REACTION',
@@ -307,7 +313,7 @@
         'MONOMER','PROTEIN','CARBOHYDRATE','LIPID','NUCLEIC','AMINO','PEPTIDE','HYDROGEN','OXYGEN',
         'CARBON','NITROGEN','HELIUM','ARGON','KRYPTON'
       ]},
-      'Sports': { icon: 'P', desc: 'Games, athletes, and legends.', words: [
+      'Sports': { icon: '⚽', desc: 'Games, athletes, and legends.', words: [
         'BASKETBALL','FOOTBALL','TENNIS','CRICKET','OLYMPICS','MARATHON','SURFING','BOXING','HOCKEY','RUGBY',
         'BASEBALL','VOLLEYBALL','HANDBALL','SQUASH','BADMINTON','TABLETENNIS','GOLF','BOWLING','ARCHERY',
         'FENCING','WRESTLING','JUDO','KARATE','TAEKWONDO','BRAZILIANJIUJITSU','MMA','UFC','BOXING',
@@ -315,21 +321,51 @@
         'KITESURFING','CLIMBING','BOULDERING','CYCLING','MOUNTAINBIKING','SKATEBOARDING','SNOWBOARDING',
         'SKIING','SNOWBOARDING','ICEHOCKEY','CURLING','BIATHLON','LUGE','BOBSLEIGH'
       ]},
-      'Music': { icon: 'M', desc: 'Genres, instruments, and artists.', words: [
+      'Music': { icon: '🎵', desc: 'Genres, instruments, and artists.', words: [
         'PIANO','GUITAR','VIOLIN','TRUMPET','REGGAE','JAZZ','OPERA','SYMPHONY','BEATLES','DRUMS',
         'SAXOPHONE','CLARINET','FLUTE','CELLO','BASS','HARP','ACCORDION','HARMONICA','TROMBONE',
         'TUBA','XYLOPHONE','MARIMBA','BONGOS','CONGAS','TURNTABLE','SYNTHESIZER','KEYBOARD',
         'CLASSICAL','BLUES','ROCK','POP','COUNTRY','FOLK','METAL','PUNK','DISCO','FUNK','SOUL',
         'HIPHOP','RAP','EDM','DUBSTEP','TECHNO','HOUSE','TRANCE','AMBIENT','CHILL','GOSPEL'
       ]},
-      'History': { icon: 'H', desc: 'Empires, leaders, and turning points.', words: [
+      'History': { icon: '📜', desc: 'Empires, leaders, and turning points.', words: [
         'NAPOLEON','PYRAMIDS','COLOSSEUM','RENAISSANCE','VIKINGS','SAMURAI','PHARAOH','GLADIATOR','CRUSADES','EMPIRE',
         'CLEOPATRA','CAESAR','ALEXANDER','GENGHISKHAN','CHARLEMAGNE','JOANOFARC','LEONARDO','MICHELANGELO',
         'COLUMBUS','MAGELLAN','GALILEO','NEWTON','EINSTEIN','EDISON','TESLA','CURIE','DARWIN',
         'WORLDWAR','REVOLUTION','INDEPENDENCE','DEMOCRACY','REPUBLIC','MONARCHY','DICTATORSHIP',
         'COLONIAL','IMPERIAL','FEUDAL','MEDIEVAL','ANCIENT','PREHISTORIC','STONEAGE','BRONZEAGE',
         'IRONAGE','RENAISSANCE','ENLIGHTENMENT','INDUSTRIAL','MODERN','CONTEMPORARY'
+      ]},
+      'Anime': { icon: '🌸', desc: 'Anime series, characters, and studios.', words: [
+        'NARUTO','ONEPIECE','BLEACH','DRAGONBALL','ATTACKONTITAN','DEATHNOTE','FULLMETAL','COWBOYBEBOP',
+        'ONEPUNCHMAN','MYHEROACADEMIA','DEMOSLAYER','JUJUTSUKAISEN','CHAINSAWMAN','SPYXFAMILY',
+        'POKEMON','YUGIOH','DIGIMON','SAILORMOON','CARDCAPTOR','EVANGELION',
+        'GHIBLI','SPIRITEDAWAY','PRINCESSMONONOKE','HOWLSMOVINGCASTLE','TOTORO','KIKISDELIVERYSERVICE',
+        'PONYO','ARRIETTY','PORCOROSSO','WINDRISES','TALESOFEARTHSEA',
+        'TOKYO','KYOTO','OSAKA','SAKURA','SENSEI','SAMURAI','SHOGUN','RONIN',
+        'HOKAGE','SHINOBI','KONOHA','AKATSUKI','SWORDSMAN','NINJA','SAMURAI','RONIN',
+        'GUNDAM','EVANGELION','CODEGEASS','GUILITYCROWN','AKAMEGAKILL','TOKYOGHOUL',
+        'FIREFORCE','SOULEATER','BLUEEXORCIST','DGRAYMAN','HUNTERHUNTER','YUYUHAKUSHO'
       ]}
+    };
+
+    // ===== Anime sub-categories (15 anime series) =====
+    const ANIME_SUB = {
+      'Naruto': { emoji: '🍥', words: ['NARUTO','SASUKE','SAKURA','KAKASHI','ITACHI','GAARA','HINATA','SHIKAMARU','OROCHIMARU','JIRAIYA','TSUNADE','KURAMA','AKATSUKI','SHARINGAN','RASENGAN','CHIDORI','KONOHA','HOKAGE','CHUNIN','JONIN','SANNIN','BYAKUGAN','SUSANOO','DEIDARA','PAIN','TOBI','MADARA','OBITO','NEJI','ROCKLEE'] },
+      'One Piece': { emoji: '🏴‍☠️', words: ['LUFFY','ZORO','NAMI','SANJI','CHOPPER','ROBIN','FRANKY','BROOK','USOPP','ACE','SHANKS','WHITEBEARD','BLACKBEARD','LAW','DOFLAMINGO','BIGMOM','KAIDO','HAKI','DEVILFRUIT','GRANDLINE','SKYPIEA','WANO','MARINEFORD','ALABASTA','ENIESLOBBY','GEARFOURTH','THOUSANDSUNNY','BARATIE','ARLONG','CROCODILE'] },
+      'Dragon Ball Z': { emoji: '🐉', words: ['GOKU','VEGETA','GOHAN','PICCOLO','KRILLIN','FRIEZA','CELL','BUU','TRUNKS','GOTEN','BROLY','BARDACK','RADITZ','NAPPA','TIEN','YAMCHA','KAMEHAMEHA','SUPERSAIYAN','DRAGONBALL','NAMEK','SAYIAN','SPIRITBOMB','INSTANTTRANSMISSION','FUSION','KAI','KORIN','YAJIROBE','CHICHI','BULMA','MASTERROSHI'] },
+      'Gintama': { emoji: '🐚', words: ['GINTOKI','SHIMPACHI','KAGURA','SADAHARU','HIJIKATA','OKITA','KONDO','KATSURA','TAKASUGI','SACCHAN','KYUUBEI','OTSU','HIJIKATA','MAYO','JUMPIA','YOROZUYA','SHINSENGUMI','KABUKICHO','AMANTO','YOYO','ELIZABETH','GEMMA','NOBUME','MATAKO','TAKECHI','HENPEITA','BANSAI','KIJIMA','YAMAZAKI','MUSKET'] },
+      'Bleach': { emoji: '⚔️', words: ['ICHIGO','RUUKIA','RENJI','BYAKUYA','TOUSHIRO','KENPACHI','ORIHIME','CHAD','URYUU','AIZEN','GRIMMJOW','ULQUIORRA','YORUICHI','KISUKE','HOLLOW','ZANPAKUTOU','BANKAI','SHIKAI','SOULSOCIETY','KON','TATSUKI','KEIGO','MIZUIRO','ISSHIN','KARIN','YUZU','SHINIGAMI','ARRANCAR','ESPADA','VISORED'] },
+      'Death Note': { emoji: '📓', words: ['LIGHT','L','NEAR','MELLO','RYUK','MISA','REM','SOICHIRO','MATSUDA','WATARI','KIRA','DEATHNOTE','SHINIGAMI','TASKFORCE','YAGAMI','AMANE','AIZAWA','MOGI','UKITA','IDE','RAYE','NAOMI','WEDDY','ROGER','MATT','SIDOH','GELUS','JEALOUS','KYOSUKE','TERU'] },
+      'Attack on Titan': { emoji: '⚔️', words: ['EREN','MIKASA','ARMIN','LEVI','HANGE','ERWIN','JEAN','CONNIE','SASHA','HISTORIA','REINER','BERTHOLDT','ANNIE','YUIRIN','ZEKE','PIECK','GALLIARD','MARLEY','TITANS','WALLMARIA','WALLROSE','WALLSINA','SURVEYCORPS','GARRISON','MILITARYPOLICE','SCOUTINGLEGION','ODMGEAR','TITANHARDENING','COLOSSALTITAN','FEMALETITAN'] },
+      'My Hero Academia': { emoji: '💥', words: ['DEKU','BAKUGO','TODOROKI','IIDA','URARAKA','TSUYU','TENYA','ALLMIGHT','ENDEAVOR','HAWKS','AIZAWA','TOSHINORI','SHIGARAKI','TOGA','DABI','TWICE','STAIN','OVERHAUL','ONEFORALL','ALLFORONE','UASCHOOL','HEROES','VILLAINS','QUIRK','MIDORIYA','KACCHAN','SHOTO','OCHACO','TSUYU','MINETA'] },
+      'Demon Slayer': { emoji: '🗡️', words: ['TANJIRO','NEZUKO','ZENITSU','INOSUKE','GIYU','SHINOBU','KYOUJURO','TENGEN','MUICHRO','MITSURI','OBANAI','SANEMI','GENYA','KANAO','KOTETSU','MUZAN','AKAZA','DOMA','KOKUSHIBOU','NAKIME','HANTENGI','GYUTARO','DAKI','ENMU','RUI','SUSAMARU','YAHABA','TAMAYO','YUSHIRO','CHACHAMARU'] },
+      'Jujutsu Kaisen': { emoji: '🩸', words: ['YUUJI','MEGUMI','NOBARA','GOJO','GETO','SUKUNA','TOJI','MIWA','INUMAKI','PANDA','MAKI','NANAMI','HAIBARA','MEIMEI','UTAHIME','GAKUGANJI','CURSEDENERGY','DOMAINEXPANSION','TOKYOJUJUTSU','KYOTOJUJUTSU','CURSEDSPIRITS','CURSEDTECHNIQUE','REVERSEDCURSE','BLACKFLASH','HOLLOWPURPLE','INFINITY','UNLIMITEDVOID','MALEVOLENTSHRINE','TENSHADOWS','CHIMERA'] },
+      'Fullmetal Alchemist': { emoji: '🜍', words: ['EDWARD','ALPHONSE','WINRY','ROYMUSTANG','RIZA','HUGHES','ARMSTRONG','SCAR','LING','MAY','LANFAN','FU','BARRED','KIMBLEE','HOMUNCULUS','FATHER','PRIDE','WRATH','LUST','GLUTTONY','ENVY','SLOTH','GREED','PHILOSOPHERSTONE','EQUIVALENTEXCHANGE','AUMESTRIS','XING','ISHVAL','LIORA','RESALEMBOOL'] },
+      'Pokemon': { emoji: '⚡', words: ['PIKACHU','CHARIZARD','BLASTOISE','VENUSAUR','MEWTWO','MEW','LUCARIO','GENGAR','GYARADOS','DRAGONITE','SNORLAX','MACHAMP','ALAKAZAM','GOLEM','ONIX','HAUNTER','ABRA','JIGGLYPUFF','EEVEE','PSYDUCK','MAGIKARP','SQUIRTLE','BULBASAUR','CHARMANDER','RAICHU','CLEFAIRY','VILEPLUME','DUGTRIO','GOLBAT','PARASECT'] },
+      'Sailor Moon': { emoji: '🌙', words: ['USAGI','AMI','REI','MAKOTO','MINAKO','HARUKA','MICHIRU','SETSUNA','HOTARU','CHIBIUSA','TUXEDOMASK','LUNA','ARTEMIS','DIANA','QUEENBERRY','NEPHRITE','ZOISITE','KUNZITE','JADEITE','DARIEN','MAMORU','SILVERCRYSTAL','MOONPRISM','SUPERSAILOR','ETERNAL','NEGENO','WCKED','BLACKMOON','DEATHBUSTERS','SHADOW'] },
+      'Cowboy Bebop': { emoji: '🤠', words: ['SPIKE','JET','FAYE','ED','EIN','VICOUS','JULIA','GRENVIOLET','ANDY','PUSSYFOOT','TONGPU','DECKER','MCPHAEL','GREYLAND','WEN','RSCO','REDCRAB','WALKER','HARMONICA','MOSUS','SUNYU','RHEINHEL','WESTERN','JACKPOT','SHORTFUSE','NANCY','ANTONIO','CARLOS','JOBIM','MURDOCK'] },
+      'Hunter x Hunter': { emoji: '🎣', words: ['GON','KILLUA','KURAPIKA','LEORIO','HISOKA','CHROLLO','ILLUMI','MILLUKI','KALLUTO','SILVA','ZENO','MERUEM','NEFERPITOU','SHAIAPOUF','MENTHUTHUYOUPI','KOMUGI','NOVU','MOREL','KNOV','PALM','SHIZUKU','PHINKS','FEITAN','BONOLENOV','FRANKLIN','UVOGIN','MACHI','SHALNARK','KORTOPI','POKKLE'] }
     };
 
     const PARTS_ORDER = ['part-head','part-body','part-arm-l','part-arm-r','part-leg-l','part-leg-r'];
@@ -341,6 +377,7 @@
     // ===== State =====
     let state = {
       category: '',
+      animeSub: '',
       difficulty: 'easy',
       word: '',
       guessed: new Set(),
@@ -413,13 +450,60 @@
 
     function selectCategory(cat) {
       state.category = cat;
+      state.animeSub = '';
       catTrack.querySelectorAll('.cat-carousel-card').forEach(card => {
         card.classList.toggle('selected', card.dataset.category === cat);
       });
       const sel = catTrack.querySelector('.cat-carousel-card.selected');
       if (sel) sel.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+
+      // Show anime sub-selection if Anime is selected
+      const animeSub = $('anime-sub');
+      if (cat === 'Anime') {
+        buildAnimeSubGrid();
+        animeSub.classList.remove('hm-hidden');
+        startBtn.classList.add('hidden');
+        selectHint.textContent = 'Pick an anime series to begin';
+      } else {
+        animeSub.classList.add('hm-hidden');
+        startBtn.classList.remove('hidden');
+        selectHint.textContent = 'Selected: ' + cat + ' - click Start to begin';
+      }
+    }
+
+    // ===== Build anime sub-selection grid =====
+    function buildAnimeSubGrid() {
+      const grid = $('anime-sub-grid');
+      grid.innerHTML = '';
+      Object.keys(ANIME_SUB).forEach(name => {
+        const sub = ANIME_SUB[name];
+        const card = document.createElement('div');
+        card.className = 'anime-card';
+        card.dataset.sub = name;
+        card.style.cssText = 'padding:0.8rem 0.5rem;border-radius:0.6rem;border:2px solid #e5e7eb;background:#fff;cursor:pointer;text-align:center;transition:all 0.2s ease;';
+        card.innerHTML = '<div style="font-size:1.5rem;margin-bottom:0.3rem;">' + sub.emoji + '</div>' +
+          '<div style="font-weight:700;font-size:0.75rem;">' + name + '</div>' +
+          '<div style="font-size:0.6rem;color:#9ca3af;margin-top:0.15rem;">' + sub.words.length + ' words</div>';
+        card.addEventListener('click', () => selectAnimeSub(name, card));
+        card.addEventListener('mouseenter', () => { card.style.borderColor = '#FF6B35'; card.style.transform = 'translateY(-2px)'; });
+        card.addEventListener('mouseleave', () => { if (!card.classList.contains('selected')) { card.style.borderColor = '#e5e7eb'; card.style.transform = ''; } });
+        grid.appendChild(card);
+      });
+    }
+
+    function selectAnimeSub(name, cardEl) {
+      state.animeSub = name;
+      $('anime-sub-grid').querySelectorAll('.anime-card').forEach(c => {
+        c.classList.remove('selected');
+        c.style.borderColor = '#e5e7eb';
+        c.style.background = '#fff';
+        c.style.transform = '';
+      });
+      cardEl.classList.add('selected');
+      cardEl.style.borderColor = '#FF6B35';
+      cardEl.style.background = 'linear-gradient(135deg, rgba(255,107,53,0.08), rgba(0,184,169,0.06))';
       startBtn.classList.remove('hidden');
-      selectHint.textContent = 'Selected: ' + cat + ' - click Start to begin';
+      selectHint.textContent = 'Selected: ' + name + ' - click Start to begin';
     }
 
     // ===== Difficulty tabs =====
@@ -434,6 +518,10 @@
     // ===== Start game =====
     startBtn.addEventListener('click', () => {
       if (!state.category) return;
+      if (state.category === 'Anime' && !state.animeSub) {
+        selectHint.textContent = 'Please pick an anime series first!';
+        return;
+      }
       setupScreen.classList.add('hm-hidden');
       gameScreen.classList.remove('hm-hidden');
       newWord();
@@ -442,7 +530,13 @@
     // ===== Pick a new word (filtered by difficulty) =====
     function newWord() {
       const diff = DIFFICULTIES[state.difficulty];
-      const allWords = CATEGORIES[state.category].words;
+      // Use anime sub-category words if Anime is selected with a sub
+      let allWords;
+      if (state.category === 'Anime' && state.animeSub) {
+        allWords = ANIME_SUB[state.animeSub].words;
+      } else {
+        allWords = CATEGORIES[state.category].words;
+      }
 
       // Filter words by length based on difficulty
       let pool = allWords.filter(w => w.length >= diff.minLen && w.length <= diff.maxLen);
@@ -463,7 +557,7 @@
       state.recent.push(pick);
       if (state.recent.length > Math.min(pool.length - 1, 20)) state.recent.shift();
 
-      catBadge.textContent = state.category;
+      catBadge.textContent = state.animeSub ? (ANIME_SUB[state.animeSub].emoji + ' ' + state.animeSub) : state.category;
       diffBadge.textContent = diff.label;
       diffBadge.style.background = state.difficulty === 'easy' ? 'rgba(0,184,169,0.1)' :
         state.difficulty === 'medium' ? 'rgba(255,107,53,0.1)' : 'rgba(232,56,79,0.1)';

@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anime Quiz — Contoura Labs</title>
+  <meta name="description" content="Test your anime knowledge! Pick from 15 popular anime series and answer trivia questions about characters, powers, and storylines.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 73 28 A 32 32 0 0 0 27 28' stroke='%23FF6B35' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 24 32 A 32 32 0 0 0 24 68' stroke='%23E8384F' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 27 72 A 32 32 0 0 0 73 72' stroke='%2300B8A9' stroke-width='9' fill='none' stroke-linecap='round'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: {
+        colors: {
+          brand: { orange: '#FF6B35', red: '#E8384F', teal: '#00B8A9' },
+          surface: { light: '#F8F9FA', dark: '#0A0A0A', card: '#1A1A1A', alt: '#111111' }
+        },
+        fontFamily: { sans: ['Inter', 'sans-serif'] }
+      }}
+    }
+  </script>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <style>
+    .aq-screen { animation: aqFade 0.4s cubic-bezier(0.16,1,0.3,1) both; }
+    @keyframes aqFade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .aq-hidden { display: none !important; }
+
+    .anime-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 0.75rem; margin: 1rem 0; }
+    .anime-card { padding: 1rem 0.75rem; border-radius: 0.75rem; border: 2px solid #e5e7eb; background: #fff; cursor: pointer; transition: all 0.2s ease; text-align: center; }
+    .dark .anime-card { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.1); }
+    .anime-card:hover { border-color: var(--brand-orange); transform: translateY(-3px); box-shadow: 0 8px 20px rgba(255,107,53,0.12); }
+    .anime-card.selected { border-color: var(--brand-orange); background: linear-gradient(135deg, rgba(255,107,53,0.08), rgba(0,184,169,0.06)); }
+    .anime-emoji { font-size: 2rem; margin-bottom: 0.4rem; }
+    .anime-name { font-weight: 700; font-size: 0.82rem; }
+    .anime-questions { font-size: 0.65rem; color: #9ca3af; margin-top: 0.2rem; }
+
+    .aq-option { display: flex; align-items: center; gap: 0.75rem; padding: 0.85rem 1rem; border-radius: 0.6rem; border: 2px solid #e5e7eb; background: #fff; cursor: pointer; transition: all 0.2s ease; font-size: 0.875rem; font-weight: 500; width: 100%; text-align: left; font-family: 'Inter', sans-serif; }
+    .dark .aq-option { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.1); color: #e5e7eb; }
+    .aq-option:hover:not(.locked) { border-color: var(--brand-orange); }
+    .aq-option.correct { border-color: var(--brand-teal); background: rgba(0,184,169,0.1); }
+    .aq-option.wrong { border-color: var(--brand-red); background: rgba(232,56,79,0.1); }
+    .aq-option.locked { cursor: default; }
+    .aq-option-letter { width: 28px; height: 28px; border-radius: 0.35rem; background: #f3f4f6; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem; color: #6b7280; flex-shrink: 0; }
+    .dark .aq-option-letter { background: rgba(255,255,255,0.08); color: #9ca3af; }
+    .aq-option.correct .aq-option-letter { background: var(--brand-teal); color: #fff; }
+    .aq-option.wrong .aq-option-letter { background: var(--brand-red); color: #fff; }
+
+    .score-board { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; margin-bottom: 0.75rem; }
+    .score-card { text-align: center; padding: 0.5rem 0.3rem; border-radius: 0.6rem; background: rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.05); }
+    .dark .score-card { background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.05); }
+    .score-num { font-size: 1.2rem; font-weight: 800; line-height: 1; }
+    .score-label { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.05em; color: #9ca3af; margin-top: 0.15rem; font-weight: 600; }
+
+    .progress-track { width: 100%; height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden; margin-bottom: 1.5rem; }
+    .dark .progress-track { background: rgba(255,255,255,0.1); }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, #FF6B35, #E8384F, #00B8A9); background-size: 200% 200%; animation: gradientShift 2s ease infinite; transition: width 0.3s ease; }
+  </style>
+</head>
+<body class="font-sans bg-white text-gray-900 dark:bg-surface-dark dark:text-gray-100 antialiased">
+
+  <div id="navbar-mount"></div>
+
+  <main class="tool-page">
+    <div class="tool-container">
+      <header class="tool-header">
+        <span class="badge mb-3">Games</span>
+        <h1 class="tool-title">Anime Quiz</h1>
+        <p class="tool-subtitle">Pick your favorite anime series and test your knowledge. 15 anime to choose from, 10 questions each.</p>
+      </header>
+
+      <div class="tool-card">
+        <!-- Score board -->
+        <div class="score-board">
+          <div class="score-card"><div class="score-num text-brand-teal" id="sb-won">0</div><div class="score-label">Won</div></div>
+          <div class="score-card"><div class="score-num text-brand-red" id="sb-lost">0</div><div class="score-label">Lost</div></div>
+          <div class="score-card"><div class="score-num text-brand-orange" id="sb-pct">0%</div><div class="score-label">Win Rate</div></div>
+          <div class="score-card"><div class="score-num text-gray-400" id="sb-best">0</div><div class="score-label">Best Score</div></div>
+        </div>
+
+        <!-- ===== ANIME SELECT SCREEN ===== -->
+        <div id="select-screen" class="aq-screen">
+          <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2 text-center">Choose an anime series</h3>
+          <div class="anime-grid" id="anime-grid"></div>
+          <div class="flex justify-center mt-4">
+            <button class="btn-primary hidden" id="start-btn" style="min-width:14rem;">Start Quiz</button>
+          </div>
+          <p id="select-hint" class="text-xs text-gray-400 text-center mt-3">Select an anime to begin</p>
+        </div>
+
+        <!-- ===== QUIZ SCREEN ===== -->
+        <div id="quiz-screen" class="aq-screen aq-hidden">
+          <div class="flex items-center justify-between mb-3">
+            <span class="badge" id="anime-badge"></span>
+            <span class="text-xs text-gray-400 font-semibold">Question <span id="q-num">1</span> / 10</span>
+            <span class="text-xs text-gray-400 font-semibold">Score: <span id="q-score" class="text-brand-teal font-bold">0</span></span>
+          </div>
+          <div class="progress-track"><div class="progress-fill" id="progress" style="width:10%;"></div></div>
+          <div id="question-text" class="text-base font-semibold mb-5 leading-relaxed"></div>
+          <div id="options" class="flex flex-col gap-2.5"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="py-8 border-t border-gray-100 dark:border-white/5 mt-12">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p class="text-xs text-gray-400">2025 Contoura Labs</p>
+      <a href="index.html" class="text-xs text-brand-orange hover:text-brand-red transition-colors">Back to all games</a>
+    </div>
+  </footer>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+  (function () {
+    'use strict';
+
+    // ===== 15 Anime series with 10 questions each =====
+    const ANIME_DATA = {
+      'Naruto': { emoji: '🍥', questions: [
+        { q: 'What is the name of the nine-tailed beast sealed inside Naruto?', correct: 'Kurama', wrong: ['Gamabunta','Shukaku','Matatabi'] },
+        { q: 'Which village does Naruto belong to?', correct: 'Hidden Leaf Village (Konoha)', wrong: ['Hidden Sand Village','Hidden Mist Village','Hidden Cloud Village'] },
+        { q: 'What is the name of Naruto signature attack?', correct: 'Rasengan', wrong: ['Chidori','Kamehameha','Bankai'] },
+        { q: 'Who is Naruto rival throughout the series?', correct: 'Sasuke Uchiha', wrong: ['Neji Hyuga','Rock Lee','Shikamaru Nara'] },
+        { q: 'What does the Sharingan allow the user to do?', correct: 'Copy and predict jutsu', wrong: ['Breathe fire','Heal wounds','Summon animals'] },
+        { q: 'Who is the leader of Team 7?', correct: 'Kakashi Hatake', wrong: ['Might Guy','Asuma Sarutobi','Kurenai Yuhi'] },
+        { q: 'What is the highest rank a ninja can achieve?', correct: 'Kage', wrong: ['Jonin','Chunin','Genin'] },
+        { q: 'Which organization does Itachi belong to?', correct: 'Akatsuki', wrong: ['Anbu Black Ops','Root','Sound Four'] },
+        { q: 'What is Gaara primary element?', correct: 'Sand', wrong: ['Fire','Water','Lightning'] },
+        { q: 'Who becomes the 8th Hokage?', correct: 'No one (Naruto is 7th)', wrong: ['Shikamaru','Sasuke','Konohamaru'] }
+      ]},
+      'One Piece': { emoji: '🏴‍☠️', questions: [
+        { q: 'What is the name of Luffy pirate crew?', correct: 'Straw Hat Pirates', wrong: ['Blackbeard Pirates','Red Hair Pirates','Heart Pirates'] },
+        { q: 'What Devil Fruit did Luffy eat?', correct: 'Gomu Gomu no Mi (Gum-Gum)', wrong: ['Mera Mera no Mi','Hie Hie no Mi','Bara Bara no Mi'] },
+        { q: 'Who is the swordsman of the Straw Hat crew?', correct: 'Roronoa Zoro', wrong: ['Sanji','Usopp','Brook'] },
+        { q: 'What is the name of the legendary treasure?', correct: 'One Piece', wrong: ['Sky Island','Ancient Weapon','Void Century'] },
+        { q: 'Who was the Pirate King before Luffy?', correct: 'Gol D. Roger', wrong: ['Whitebeard','Shanks','Big Mom'] },
+        { q: 'What is Nami role on the ship?', correct: 'Navigator', wrong: ['Cook','Doctor','Sniper'] },
+        { q: 'Which sea did Luffy start his journey from?', correct: 'East Blue', wrong: ['North Blue','South Blue','Grand Line'] },
+        { q: 'What is the name of the Straw Hats ship?', correct: 'Thousand Sunny', wrong: ['Going Merry','Moby Dick','Orca'] },
+        { q: 'Who is the crew archaeologist?', correct: 'Nico Robin', wrong: ['Nami','Vivi','Boa Hancock'] },
+        { q: 'What is Sanji dream?', correct: 'Find the All Blue', wrong: ['Become Pirate King','Be the best swordsman','Map the world'] }
+      ]},
+      'Dragon Ball Z': { emoji: '🐉', questions: [
+        { q: 'What is the name of Goku signature move?', correct: 'Kamehameha', wrong: ['Spirit Bomb','Destructo Disc','Solar Flare'] },
+        { q: 'What race does Goku belong to?', correct: 'Saiyan', wrong: ['Namekian','Frieza Race','Human'] },
+        { q: 'What is Goku Saiyan name?', correct: 'Kakarot', wrong: ['Vegeta','Raditz','Bardock'] },
+        { q: 'How many Dragon Balls are needed to make a wish?', correct: '7', wrong: ['5','3','10'] },
+        { q: 'Who is the prince of all Saiyans?', correct: 'Vegeta', wrong: ['Goku','Nappa','Raditz'] },
+        { q: 'What form does Goku achieve first against Frieza?', correct: 'Super Saiyan', wrong: ['Super Saiyan 2','Super Saiyan 3','Ultra Instinct'] },
+        { q: 'What is Piccolo home planet?', correct: 'Namek', wrong: ['Earth','Vegeta','Yardrat'] },
+        { q: 'Who created the Dragon Balls on Earth?', correct: 'Kami', wrong: ['Dende','Guru','Mori'] },
+        { q: 'What does Gohan transform into during the Cell Games?', correct: 'Super Saiyan 2', wrong: ['Super Saiyan 3','Super Saiyan','Great Ape'] },
+        { q: 'Who is the main villain of the Frieza Saga?', correct: 'Frieza', wrong: ['Cell','Majin Buu','Broly'] }
+      ]},
+      'Gintama': { emoji: '🐚', questions: [
+        { q: 'What is the name of the main character?', correct: 'Gintoki Sakata', wrong: ['Shinpachi Shimura','Kagura','Hijikata'] },
+        { q: 'What does Gintoki do for a living?', correct: 'Odd jobs (freelancer)', wrong: ['Samurai','Shinsengumi','Teacher'] },
+        { q: 'What is Gintoki favorite food?', correct: 'Strawberry milk', wrong: ['Rice balls','Ramen','Sushi'] },
+        { q: 'What is the name of Gintoki sword?', correct: 'Toyako (a wooden bokuto)', wrong: ['Katana','Tachi','Nodachi'] },
+        { q: 'Who is the leader of the Shinsengumi?', correct: 'Isao Kondo', wrong: ['Hijikata','Okita','Yamazaki'] },
+        { q: 'What alien race conquered Earth in Gintama?', correct: 'Amanto', wrong: ['Saiyans','Titans','Hollows'] },
+        { q: 'What is Kagura species?', correct: 'Yato Clan', wrong: ['Human','Amanto','Shinigami'] },
+        { q: 'What is the name of Gintoki pet dog?', correct: 'Sadaharu', wrong: ['Gigi','Pochi','Hachi'] },
+        { q: 'Who is Gintoki rival and friend?', correct: 'Kotaro Katsura', wrong: ['Hijikata','Takasugi','Sakamoto'] },
+        { q: 'What does Gintoki always carry?', wrong: ['A scooter','A real sword','A gun'], correct: 'A wooden sword (bokuto)' }
+      ]},
+      'Bleach': { emoji: '⚔️', questions: [
+        { q: 'What is the name of Ichigo sword?', correct: 'Zangetsu', wrong: ['Tensa Zangetsu','Senbonzakura','Kyoka Suigetsu'] },
+        { q: 'What is a Soul Reaper (Shinigami) job?', correct: 'Guide souls to the afterlife', wrong: ['Kill demons','Protect humans','Train warriors'] },
+        { q: 'Who is the captain of Squad 6?', correct: 'Byakuya Kuchiki', wrong: ['Kenpachi Zaraki','Toshiro Hitsugaya','Sajin Komamura'] },
+        { q: 'What is the name of Ichigo Bankai?', correct: 'Tensa Zangetsu', wrong: ['Zangetsu','Senbonzakura Kageyoshi','Daiguren Hyorinmaru'] },
+        { q: 'What are the main villains in the Arrancar arc?', correct: 'Espada', wrong: ['Sternritter','Gotei 13','Visored'] },
+        { q: 'Who is the head captain of the Gotei 13?', correct: 'Genryusai Yamamoto', wrong: ['Shunsui Kyoraku','Jushiro Ukitake','Retatsu Unohana'] },
+        { q: 'What is Rukia position in Soul Society?', correct: 'Squad 13 lieutenant', wrong: ['Squad 6 captain','Squad 2 lieutenant','Squad 11 captain'] },
+        { q: 'What is the name of Ichigo Hollow form?', correct: 'Vasto Lorde', wrong: ['Menos','Adjuchas','Gillian'] },
+        { q: 'What is Aizen signature ability?', correct: 'Complete Hypnosis (Kyoka Suigetsu)', wrong: ['Mirror Flower','Kido mastery','Flash Step'] },
+        { q: 'What is the final arc of Bleach called?', correct: 'Thousand-Year Blood War', wrong: ['Arrancar Arc','Soul Society Arc','Fullbring Arc'] }
+      ]},
+      'Death Note': { emoji: '📓', questions: [
+        { q: 'What is the name of the main character?', correct: 'Light Yagami', wrong: ['L','Near','Mello'] },
+        { q: 'What can the Death Note do?', correct: 'Kill anyone whose name is written in it', wrong: ['Control minds','Grant wishes','See the future'] },
+        { q: 'Who is the shinigami that drops the Death Note?', correct: 'Ryuk', wrong: ['Rem','Sidoh','Jealous'] },
+        { q: 'What is Light alias as Kira?', correct: 'Kira', wrong: ['L','N','W'] },
+        { q: 'Who is the detective trying to catch Kira?', correct: 'L', wrong: ['Near','Mello','Soichiro'] },
+        { q: 'What rule must be followed to use the Death Note?', correct: 'You must know the person face and name', wrong: ['You must be a shinigami','You must write in blood','You must be at midnight'] },
+        { q: 'What is L signature habit?', correct: 'Squatting and eating sweets', wrong: ['Smoking','Drinking coffee','Fidgeting with coins'] },
+        { q: 'Who is Light father?', correct: 'Soichiro Yagami', wrong: ['Watari','Matsuda','Aizawa'] },
+        { q: 'What is the name of L successor?', correct: 'Near', wrong: ['Mello','Matt','Watari'] },
+        { q: 'How does Light die?', correct: 'Ryuk writes his name in the Death Note', wrong: ['L shoots him','He is arrested','He commits suicide'] }
+      ]},
+      'Attack on Titan': { emoji: '⚔️', questions: [
+        { q: 'What is the name of the main character?', correct: 'Eren Yeager', wrong: ['Armin Arlert','Mikasa Ackerman','Levi Ackerman'] },
+        { q: 'What are the giant humanoid creatures called?', correct: 'Titans', wrong: ['Demons','Colossals','Eldians'] },
+        { q: 'What is the name of the walls protecting humanity?', correct: 'Wall Maria, Rose, and Sina', wrong: ['Wall Eve, Adam, and Noah','Wall North, South, East','Wall Alpha, Beta, Gamma'] },
+        { q: 'Who is the captain of the Survey Corps?', correct: 'Levi Ackerman', wrong: ['Erwin Smith','Hange Zoe','Keith Shadis'] },
+        { q: 'What special ability does Eren have?', correct: 'He can transform into a Titan', wrong: ['He can fly','He can turn invisible','He can heal others'] },
+        { q: 'What is the name of the blade material used to fight Titans?', correct: 'Ultrahard steel', wrong: ['Titanium','Diamond','Iron bamboo'] },
+        { q: 'What is the Survey Corps motto?', correct: 'Dedicate your heart', wrong: ['Fight for freedom','Kill all Titans','Survive at all costs'] },
+        { q: 'Who is the female Titan?', correct: 'Annie Leonhart', wrong: ['Mikasa','Sasha','Historia'] },
+        { q: 'What is the basement in Eren house contain?', correct: 'The truth about the outside world', wrong: ['A weapon','A map','A photograph'] },
+        { q: 'What is the name of the nation across the sea?', correct: 'Marley', wrong: ['Eldia','Hizuru','Mid-East Allied Forces'] }
+      ]},
+      'My Hero Academia': { emoji: '💥', questions: [
+        { q: 'What is the name of the main character?', correct: 'Izuku Midoriya', wrong: ['Katsuki Bakugo','Shoto Todoroki','Tenya Iida'] },
+        { q: 'What is Izuku nickname?', correct: 'Deku', wrong: ['Kacchan','Shoto','Hero'] },
+        { q: 'What is Izuku Quirk called?', correct: 'One For All', wrong: ['Half-Cold Half-Hot','Explosion','Engine'] },
+        { q: 'Who is the number 1 hero?', correct: 'All Might', wrong: ['Endeavor','Hawks','Best Jeanist'] },
+        { q: 'What is the name of the hero school?', correct: 'UA High School', wrong: ['Shiketsu High','Ketsubutsu Academy','UA Academy'] },
+        { q: 'What is Bakugo Quirk?', correct: 'Explosion', wrong: ['One For All','Half-Cold Half-Hot','Zero Gravity'] },
+        { q: 'Who is the main villain?', correct: 'Tomura Shigaraki', wrong: ['Stain','Overhaul','All For One'] },
+        { q: 'What is Todoroki Quirk?', correct: 'Half-Cold Half-Hot', wrong: ['Explosion','One For All','Hardening'] },
+        { q: 'What does All Might say when he transforms?', correct: 'I am here!', wrong: ['Plus Ultra','Go beyond','Smash'] },
+        { q: 'What is the hero motto?', correct: 'Go Beyond, Plus Ultra!', wrong: ['I am here','Never give up','Hero for all'] }
+      ]},
+      'Demon Slayer': { emoji: '🗡️', questions: [
+        { q: 'What is the name of the main character?', correct: 'Tanjiro Kamado', wrong: ['Zenitsu Agatsuma','Inosuke Hashibira','Giyu Tomioka'] },
+        { q: 'What happened to Tanjiro family?', correct: 'Killed by a demon', wrong: ['Died in a war','Lost in a fire','Kidnapped'] },
+        { q: 'What is Tanjiro sister name?', correct: 'Nezuko', wrong: ['Kanao','Shinobu','Mitsuri'] },
+        { q: 'What is Tanjiro breathing style?', correct: 'Water Breathing', wrong: ['Fire Breathing','Thunder Breathing','Wind Breathing'] },
+        { q: 'Who is the strongest demon?', correct: 'Muzan Kibutsuji', wrong: ['Akaza','Doma','Kokushibo'] },
+        { q: 'What are the demon slayers called?', correct: 'Hashira (Pillars)', wrong: ['Captains','Demon Slayers','Demon Hunters'] },
+        { q: 'What is Zenitsu breathing style?', correct: 'Thunder Breathing', wrong: ['Water Breathing','Fire Breathing','Beast Breathing'] },
+        { q: 'What is Inosuke signature trait?', correct: 'Wears a boar head', wrong: ['Wears a mask','Has tattoos','Has white hair'] },
+        { q: 'What is the name of Tanjiro sword?', correct: 'Nichirin Blade', wrong: ['Katana','Zanbato','Kodachi'] },
+        { q: 'What is Nezuko special ability?', correct: 'She can shrink and grow', wrong: ['She can fly','She can read minds','She can heal'] }
+      ]},
+      'Jujutsu Kaisen': { emoji: '🩸', questions: [
+        { q: 'What is the name of the main character?', correct: 'Yuji Itadori', wrong: ['Megumi Fushiguro','Nobara Kugisaki','Satoru Gojo'] },
+        { q: 'What does Yuji swallow?', correct: 'Sukuna finger', wrong: ['A cursed object','A special grade curse','A talisman'] },
+        { q: 'Who is the strongest sorcerer?', correct: 'Satoru Gojo', wrong: ['Yuji Itadori','Megumi Fushiguro','Kento Nanami'] },
+        { q: 'What is Gojo signature technique?', correct: 'Limitless and Six Eyes', wrong: ['Ten Shadows','Cursed Speech','Straw Doll'] },
+        { q: 'What is the king of curses?', correct: 'Ryomen Sukuna', wrong: ['Jogo','Mahito','Hanami'] },
+        { q: 'What is Megumi technique?', correct: 'Ten Shadows', wrong: ['Limitless','Cursed Speech','Boogie Woogie'] },
+        { q: 'What are curses born from?', correct: 'Negative human emotions', wrong: ['Dead souls','Cursed objects','Dark magic'] },
+        { q: 'What is the name of the school?', correct: 'Tokyo Jujutsu High', wrong: ['Kyoto Jujutsu High','UA High','UA Academy'] },
+        { q: 'Who is the main antagonist curse?', correct: 'Mahito', wrong: ['Sukuna','Jogo','Geto'] },
+        { q: 'What is Nobara technique?', correct: 'Straw Doll', wrong: ['Ten Shadows','Limitless','Cursed Speech'] }
+      ]},
+      'Fullmetal Alchemist': { emoji: '🜍', questions: [
+        { q: 'What are the names of the two brothers?', correct: 'Edward and Alphonse Elric', wrong: ['Edward and Alphonse Mustang','Edward and Alphonse Bradley','Edward and Alphonse Hohenheim'] },
+        { q: 'What did the brothers lose in human transmutation?', correct: 'Edward lost an arm and leg, Alphonse lost his body', wrong: ['Their memories','Their eyesight','Their parents'] },
+        { q: 'What is the equivalent exchange law?', correct: 'To obtain, something of equal value must be lost', wrong: ['Alchemy requires a circle','Transmutation is forbidden','Philosopher stones are free'] },
+        { q: 'What is the name of the state military organization?', correct: 'State Military (Amestris)', wrong: ['Ishvalan Army','Briggs Army','Xing Military'] },
+        { q: 'Who is the Flame Alchemist?', correct: 'Roy Mustang', wrong: ['Edward Elric','Alex Armstrong','Riza Hawkeye'] },
+        { q: 'What are the homunculi?', correct: 'Artificial humans created by alchemy', wrong: ['Immortal soldiers','Chimeras','Philosopher stones'] },
+        { q: 'Who is the father of the homunculi?', correct: 'Father (Dwarf in the Flask)', wrong: ['Hohenheim','Van Hohenheim','King Bradley'] },
+        { q: 'What is the Philosopher Stone made of?', correct: 'Human souls', wrong: ['Gold','Mercury','Crimson elixir'] },
+        { q: 'What is Alphonse body made of?', correct: 'A suit of armor', wrong: ['Metal','Stone','Wood'] },
+        { q: 'What is the name of the country?', correct: 'Amestris', wrong: ['Xing','Ishval','Creta'] }
+      ]},
+      'Pokemon': { emoji: '⚡', questions: [
+        { q: 'Who is the main character?', correct: 'Ash Ketchum', wrong: ['Red','Gary Oak','Brock'] },
+        { q: 'What is Ash first Pokemon?', correct: 'Pikachu', wrong: ['Charmander','Bulbasaur','Squirtle'] },
+        { q: 'How many Pokemon were in the original Pokedex?', correct: '151', wrong: ['100','200','250'] },
+        { q: 'What type is Pikachu?', correct: 'Electric', wrong: ['Fire','Water','Normal'] },
+        { q: 'Who is Ash rival from Pallet Town?', correct: 'Gary Oak', wrong: ['Brock','Misty','Professor Oak'] },
+        { q: 'What are the three starter Pokemon in Kanto?', correct: 'Bulbasaur, Charmander, Squirtle', wrong: ['Pikachu, Eevee, Jigglypuff','Mewtwo, Mew, Celebi','Magikarp, Gyarados, Lapras'] },
+        { q: 'What is the Pokemon motto?', correct: 'Gotta catch them all!', wrong: ['I choose you!','Battle on!','Be the very best!'] },
+        { q: 'Who gives trainers their first Pokemon?', correct: 'Professor Oak', wrong: ['Nurse Joy','Officer Jenny','Giovanni'] },
+        { q: 'What is the evil organization called?', correct: 'Team Rocket', wrong: ['Team Plasma','Team Magma','Team Galactic'] },
+        { q: 'What evolves into Charizard?', correct: 'Charmeleon', wrong: ['Charmander','Bulbasaur','Squirtle'] }
+      ]},
+      'Sailor Moon': { emoji: '🌙', questions: [
+        { q: 'What is the name of the main character?', correct: 'Usagi Tsukino (Serena)', wrong: ['Ami Mizuno','Rei Hino','Minako Aino'] },
+        { q: 'What is Sailor Moon cat name?', correct: 'Luna', wrong: ['Artemis','Diana','Selene'] },
+        { q: 'What is Sailor Moon transformation phrase?', correct: 'Moon Prism Power, Make Up!', wrong: ['Mercury Power, Make Up!','Mars Power, Make Up!','Venus Power, Make Up!'] },
+        { q: 'How many Sailor Senshi are there in the original team?', correct: '5', wrong: ['3','7','10'] },
+        { q: 'Who is Sailor Moon love interest?', correct: 'Tuxedo Mask (Mamoru)', wrong: ['Prince Endymion','Helios','Seiya'] },
+        { q: 'What is Sailor Moon signature attack?', correct: 'Moon Tiara Action', wrong: ['Mars Flame Sniper','Mercury Aqua Mirage','Venus Love-Me Chain'] },
+        { q: 'What is the name of the magical item Sailor Moon uses?', correct: 'Silver Crystal', wrong: ['Golden Crystal','Pink Crystal','Rose Crystal'] },
+        { q: 'Who is the leader of the Sailor Senshi?', correct: 'Sailor Moon', wrong: ['Sailor Venus','Sailor Mars','Sailor Mercury'] },
+        { q: 'What is Sailor Moon future daughter name?', correct: 'Chibiusa (Rini)', wrong: ['Hotaru','Setsuna','Haruka'] },
+        { q: 'What planet is Sailor Mercury associated with?', correct: 'Mercury', wrong: ['Venus','Mars','Jupiter'] }
+      ]},
+      'Cowboy Bebop': { emoji: '🤠', questions: [
+        { q: 'What is the name of the main character?', correct: 'Spike Spiegel', wrong: ['Jet Black','Faye Valentine','Ed'] },
+        { q: 'What is the name of the spaceship?', correct: 'Bebop', wrong: ['Swordfish II','Red Tail','Hammerhead'] },
+        { q: 'What is Spike fighting style?', correct: 'Jeet Kune Do', wrong: ['Karate','Boxing','Kung Fu'] },
+        { q: 'Who is Spike former partner?', correct: 'Vicious', wrong: ['Jet','Faye','Julia'] },
+        { q: 'What is Jet arm made of?', correct: 'Metal prosthetic', wrong: ['Wood','Plastic','Nothing'] },
+        { q: 'What is the name of the data dog?', correct: 'Ein', wrong: ['Ed','Spike','Faye'] },
+        { q: 'What is the opening theme song called?', correct: 'Tank!', wrong: ['The Real Folk Blues','Space Lion','Blue'] },
+        { q: 'What is Faye real name?', correct: 'Faye Valentine', wrong: ['Faye Resnick','Faye Wong','Faye Dunaway'] },
+        { q: 'What is Ed full name?', correct: 'Edward Wong Hau Pepelu Tivrusky IV', wrong: ['Ed Ein','Ed Bebop','Ed Spike'] },
+        { q: 'What is Spike catchphrase about life?', correct: 'See you, space cowboy', wrong: ['Bang','Goodnight','Adios'] }
+      ]},
+      'Hunter x Hunter': { emoji: '🎣', questions: [
+        { q: 'What is the name of the main character?', correct: 'Gon Freecss', wrong: ['Killua Zoldyck','Kurapika','Leorio'] },
+        { q: 'What is Gon looking for?', correct: 'His father Ging', wrong: ['The Hunter Exam','The Phantom Troupe','The Dark Continent'] },
+        { q: 'What is Killua family business?', correct: 'Assassins', wrong: ['Hunters','Thieves','Merchants'] },
+        { q: 'What is the power system called?', correct: 'Nen', wrong: ['Haki','Chakra','Ki'] },
+        { q: 'What Nen type is Gon?', correct: 'Enhancer', wrong: ['Transmuter','Conjurer','Emitter'] },
+        { q: 'Who is the leader of the Phantom Troupe?', correct: 'Chrollo Lucilfer', wrong: ['Hisoka','Illumi','Meruem'] },
+        { q: 'What is the name of the Hunter Exam?', correct: 'The Hunter Examination', wrong: ['The Nen Test','The Hunter Games','The Hunter Trial'] },
+        { q: 'What is Hisoka favorite phrase?', correct: 'I am strong because you are weak', wrong: ['Bungee Gum has the properties of rubber and gum','Magicians are the best','I love fighting strong opponents'] },
+        { q: 'What is the strongest Nen beast called?', correct: 'Meruem (Chimera Ant King)', wrong: ['Neferpitou','Shaiapouf','Menthuthuyoupi'] },
+        { q: 'What is Killua signature attack?', correct: 'Lightning Palm (Godspeed)', wrong: ['Paper','Rock','Scissors'] }
+      ]}
+    };
+
+    const STATS_KEY = 'contoura-stats-anime-quiz-v1';
+    let stats = (function() {
+      try { return JSON.parse(localStorage.getItem(STATS_KEY)) || { won: 0, lost: 0, bestScore: 0 }; }
+      catch (e) { return { won: 0, lost: 0, bestScore: 0 }; }
+    })();
+    function saveStats() { try { localStorage.setItem(STATS_KEY, JSON.stringify(stats)); } catch (e) {} }
+    function updateScoreBoard() {
+      $('sb-won').textContent = stats.won;
+      $('sb-lost').textContent = stats.lost;
+      var total = stats.won + stats.lost;
+      $('sb-pct').textContent = total > 0 ? Math.round(stats.won / total * 100) + '%' : '0%';
+      $('sb-best').textContent = stats.bestScore;
+    }
+
+    const $ = (id) => document.getElementById(id);
+    let selectedAnime = null;
+    let questions = [];
+    let currentIdx = 0;
+    let score = 0;
+    let locked = false;
+
+    function buildAnimeGrid() {
+      const grid = $('anime-grid');
+      grid.innerHTML = '';
+      Object.keys(ANIME_DATA).forEach(name => {
+        const anime = ANIME_DATA[name];
+        const card = document.createElement('div');
+        card.className = 'anime-card';
+        card.dataset.anime = name;
+        card.innerHTML = '<div class="anime-emoji">' + anime.emoji + '</div>' +
+          '<div class="anime-name">' + name + '</div>' +
+          '<div class="anime-questions">' + anime.questions.length + ' questions</div>';
+        card.addEventListener('click', () => selectAnime(name));
+        grid.appendChild(card);
+      });
+    }
+
+    function selectAnime(name) {
+      selectedAnime = name;
+      $('anime-grid').querySelectorAll('.anime-card').forEach(c => {
+        c.classList.toggle('selected', c.dataset.anime === name);
+      });
+      $('start-btn').classList.remove('hidden');
+      $('select-hint').textContent = 'Selected: ' + name + ' - click Start to begin';
+    }
+
+    $('start-btn').addEventListener('click', () => {
+      if (!selectedAnime) return;
+      startQuiz();
+    });
+
+    function startQuiz() {
+      // Shuffle questions and take 10
+      const pool = ANIME_DATA[selectedAnime].questions.slice();
+      questions = pool.sort(() => Math.random() - 0.5).slice(0, Math.min(10, pool.length));
+      // Shuffle options for each question
+      questions.forEach(q => {
+        const opts = [{ text: q.correct, correct: true }];
+        q.wrong.forEach(w => opts.push({ text: w, correct: false }));
+        q.shuffled = opts.sort(() => Math.random() - 0.5);
+      });
+      currentIdx = 0;
+      score = 0;
+      locked = false;
+      $('select-screen').classList.add('aq-hidden');
+      $('quiz-screen').classList.remove('aq-hidden');
+      $('anime-badge').textContent = ANIME_DATA[selectedAnime].emoji + ' ' + selectedAnime;
+      showQuestion();
+    }
+
+    function showQuestion() {
+      const q = questions[currentIdx];
+      $('q-num').textContent = currentIdx + 1;
+      $('q-score').textContent = score;
+      $('progress').style.width = ((currentIdx + 1) / questions.length * 100) + '%';
+      $('question-text').textContent = q.q;
+
+      const optsEl = $('options');
+      optsEl.innerHTML = '';
+      locked = false;
+      q.shuffled.forEach((opt, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'aq-option';
+        btn.innerHTML = '<span class="aq-option-letter">' + String.fromCharCode(65 + i) + '</span>' + opt.text;
+        btn.addEventListener('click', () => answer(btn, opt.correct));
+        optsEl.appendChild(btn);
+      });
+    }
+
+    function answer(btn, isCorrect) {
+      if (locked) return;
+      locked = true;
+      $('options').querySelectorAll('.aq-option').forEach(b => b.classList.add('locked'));
+
+      if (isCorrect) {
+        btn.classList.add('correct');
+        score++;
+      } else {
+        btn.classList.add('wrong');
+        // Show correct answer
+        $('options').querySelectorAll('.aq-option').forEach(b => {
+          const text = b.textContent.slice(1);
+          if (text === questions[currentIdx].correct) b.classList.add('correct');
+        });
+      }
+
+      setTimeout(() => {
+        if (currentIdx < questions.length - 1) {
+          currentIdx++;
+          showQuestion();
+        } else {
+          finishQuiz();
+        }
+      }, 1200);
+    }
+
+    function finishQuiz() {
+      const passed = score >= 6;
+      if (passed) stats.won++; else stats.lost++;
+      if (score > stats.bestScore) stats.bestScore = score;
+      saveStats();
+      updateScoreBoard();
+
+      let emoji, title;
+      if (score >= 8) { emoji = '🏆'; title = 'Excellent!'; }
+      else if (score >= 6) { emoji = '👍'; title = 'Good Job!'; }
+      else { emoji = '📚'; title = 'Keep Practicing!'; }
+
+      CL.showGameResult({
+        emoji: emoji,
+        title: title,
+        message: 'You scored <strong>' + score + '/' + questions.length + '</strong> in ' + selectedAnime,
+        onPlayAgain: function() {
+          $('quiz-screen').classList.add('aq-hidden');
+          $('select-screen').classList.remove('aq-hidden');
+        }
+      });
+    }
+
+    buildAnimeGrid();
+    updateScoreBoard();
+  })();
+  </script>
+</body>
+</html>

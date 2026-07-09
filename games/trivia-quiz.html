@@ -207,6 +207,12 @@
             </button>
           </div>
 
+          <!-- Anime sub-selection (shown only when Anime is selected) -->
+          <div id="anime-sub" style="display:none;margin-top:1rem;">
+            <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2 text-center">Choose an anime series</h3>
+            <div id="anime-sub-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:0.6rem;"></div>
+          </div>
+
           <div class="flex justify-center mt-5">
             <button class="btn-primary hidden" id="start-quiz-btn" style="min-width:14rem;">Start Quiz →</button>
           </div>
@@ -283,7 +289,8 @@
       { id: 14, name: 'TV',         emoji: '📺', desc: 'Sitcoms, dramas, streaming hits, and the characters we love.' },
       { id: 10, name: 'Books',      emoji: '📚', desc: 'Novels, authors, classics, and the lines that became legend.' },
       { id: 24, name: 'Politics',   emoji: '🏛️', desc: 'Leaders, parties, systems of government, and landmark laws.' },
-      { id: 25, name: 'Art',        emoji: '🎨', desc: 'Painters, movements, masterpieces, and the museums that hold them.' }
+      { id: 25, name: 'Art',        emoji: '🎨', desc: 'Painters, movements, masterpieces, and the museums that hold them.' },
+      { id: 999, name: 'Anime',     emoji: '🌸', desc: 'Anime series, characters, studios, and the legends who created them.' }
     ];
     const CATEGORY_NAMES = {};
     CATEGORIES.forEach(c => CATEGORY_NAMES[c.id] = c.name);
@@ -433,6 +440,18 @@
         { q: "Who painted 'The Persistence of Memory'?", correct: "Salvador Dalí", wrong: ["Pablo Picasso","René Magritte","Max Ernst"] },
         { q: "What color did Yves Klein famously patent?", correct: "Blue", wrong: ["Red","Yellow","Green"] },
         { q: "Which museum houses the Sistine Chapel ceiling?", correct: "Vatican Museums", wrong: ["Louvre","Metropolitan Museum","British Museum"] }
+      ],
+      999: [
+        { q: "What is the name of the main character in Naruto?", correct: "Naruto Uzumaki", wrong: ["Sasuke Uchiha","Kakashi Hatake","Sakura Haruno"] },
+        { q: "Which studio created Spirited Away?", correct: "Studio Ghibli", wrong: ["Toei Animation","Madhouse","MAPPA"] },
+        { q: "What is the name of the pirate king in One Piece?", correct: "Gol D. Roger", wrong: ["Luffy","Shanks","Whitebeard"] },
+        { q: "In Death Note, what is the name of the shinigami?", correct: "Ryuk", wrong: ["Rem","Sidoh","Jealous"] },
+        { q: "What is the name of the giant humanoid creatures in Attack on Titan?", correct: "Titans", wrong: ["Demons","Colossals","Eldians"] },
+        { q: "Who is the protagonist of My Hero Academia?", correct: "Izuku Midoriya", wrong: ["Katsuki Bakugo","Shoto Todoroki","All Might"] },
+        { q: "What is the highest-grossing anime film of all time?", correct: "Demon Slayer: Mugen Train", wrong: ["Your Name","Spirited Away","Princess Mononoke"] },
+        { q: "In Fullmetal Alchemist, what is the equivalent exchange law?", correct: "To obtain, something of equal value must be lost", wrong: ["Alchemy requires a circle","Homunculi are immortal","The Philosopher Stone is free"] },
+        { q: "What sport is the focus of Haikyuu?", correct: "Volleyball", wrong: ["Basketball","Tennis","Soccer"] },
+        { q: "Who directed Spirited Away and Princess Mononoke?", correct: "Hayao Miyazaki", wrong: ["Mamoru Hosoda","Makoto Shinkai","Satoshi Kon"] }
       ]
     };
 
@@ -492,17 +511,244 @@
       });
     }
 
+    let selectedAnimeSub = null;
+
+    // ===== Anime sub-category questions =====
+    const ANIME_QUESTIONS = {
+      'Naruto': [
+        { q: "What is the name of the nine-tailed beast sealed inside Naruto?", correct: "Kurama", wrong: ["Gamabunta","Shukaku","Matatabi"] },
+        { q: "Which village does Naruto belong to?", correct: "Hidden Leaf Village", wrong: ["Hidden Sand Village","Hidden Mist Village","Hidden Cloud Village"] },
+        { q: "What is the name of Naruto signature attack?", correct: "Rasengan", wrong: ["Chidori","Kamehameha","Bankai"] },
+        { q: "Who is Naruto rival?", correct: "Sasuke Uchiha", wrong: ["Neji Hyuga","Rock Lee","Shikamaru Nara"] },
+        { q: "Who is the leader of Team 7?", correct: "Kakashi Hatake", wrong: ["Might Guy","Asuma Sarutobi","Kurenai Yuhi"] },
+        { q: "What is the highest ninja rank?", correct: "Kage", wrong: ["Jonin","Chunin","Genin"] },
+        { q: "Which organization does Itachi belong to?", correct: "Akatsuki", wrong: ["Anbu Black Ops","Root","Sound Four"] },
+        { q: "What is Gaara primary element?", correct: "Sand", wrong: ["Fire","Water","Lightning"] },
+        { q: "What does the Sharingan allow?", correct: "Copy and predict jutsu", wrong: ["Breathe fire","Heal wounds","Summon animals"] },
+        { q: "Who is Naruto father?", correct: "Minato Namikaze (4th Hokage)", wrong: ["Jiraiya","Kakashi","Hiruzen Sarutobi"] }
+      ],
+      'One Piece': [
+        { q: "What is the name of Luffy pirate crew?", correct: "Straw Hat Pirates", wrong: ["Blackbeard Pirates","Red Hair Pirates","Heart Pirates"] },
+        { q: "What Devil Fruit did Luffy eat?", correct: "Gomu Gomu no Mi", wrong: ["Mera Mera no Mi","Hie Hie no Mi","Bara Bara no Mi"] },
+        { q: "Who is the swordsman of the crew?", correct: "Roronoa Zoro", wrong: ["Sanji","Usopp","Brook"] },
+        { q: "Who was the Pirate King?", correct: "Gol D. Roger", wrong: ["Whitebeard","Shanks","Big Mom"] },
+        { q: "What is Nami role?", correct: "Navigator", wrong: ["Cook","Doctor","Sniper"] },
+        { q: "Which sea did Luffy start from?", correct: "East Blue", wrong: ["North Blue","South Blue","Grand Line"] },
+        { q: "What is the crew ship name?", correct: "Thousand Sunny", wrong: ["Going Merry","Moby Dick","Orca"] },
+        { q: "Who is the crew archaeologist?", correct: "Nico Robin", wrong: ["Nami","Vivi","Boa Hancock"] },
+        { q: "What is Sanji dream?", correct: "Find the All Blue", wrong: ["Become Pirate King","Be the best swordsman","Map the world"] },
+        { q: "Who is the crew doctor?", correct: "Tony Tony Chopper", wrong: ["Nami","Robin","Franky"] }
+      ],
+      'Dragon Ball Z': [
+        { q: "What is Goku signature move?", correct: "Kamehameha", wrong: ["Spirit Bomb","Destructo Disc","Solar Flare"] },
+        { q: "What race is Goku?", correct: "Saiyan", wrong: ["Namekian","Frieza Race","Human"] },
+        { q: "What is Goku Saiyan name?", correct: "Kakarot", wrong: ["Vegeta","Raditz","Bardock"] },
+        { q: "How many Dragon Balls make a wish?", correct: "7", wrong: ["5","3","10"] },
+        { q: "Who is the prince of Saiyans?", correct: "Vegeta", wrong: ["Goku","Nappa","Raditz"] },
+        { q: "What form does Goku achieve vs Frieza?", correct: "Super Saiyan", wrong: ["Super Saiyan 2","Super Saiyan 3","Ultra Instinct"] },
+        { q: "What is Piccolo home planet?", correct: "Namek", wrong: ["Earth","Vegeta","Yardrat"] },
+        { q: "Who created the Dragon Balls?", correct: "Kami", wrong: ["Dende","Guru","Mori"] },
+        { q: "Who is the villain of the Frieza Saga?", correct: "Frieza", wrong: ["Cell","Majin Buu","Broly"] },
+        { q: "What does Gohan transform into vs Cell?", correct: "Super Saiyan 2", wrong: ["Super Saiyan 3","Super Saiyan","Great Ape"] }
+      ],
+      'Demon Slayer': [
+        { q: "What is the main character name?", correct: "Tanjiro Kamado", wrong: ["Zenitsu Agatsuma","Inosuke Hashibira","Giyu Tomioka"] },
+        { q: "What happened to Tanjiro family?", correct: "Killed by a demon", wrong: ["Died in war","Lost in fire","Kidnapped"] },
+        { q: "What is Tanjiro sister name?", correct: "Nezuko", wrong: ["Kanao","Shinobu","Mitsuri"] },
+        { q: "What is Tanjiro breathing style?", correct: "Water Breathing", wrong: ["Fire Breathing","Thunder Breathing","Wind Breathing"] },
+        { q: "Who is the strongest demon?", correct: "Muzan Kibutsuji", wrong: ["Akaza","Doma","Kokushibo"] },
+        { q: "What are demon slayers called?", correct: "Hashira", wrong: ["Captains","Demon Hunters","Slayers"] },
+        { q: "What is Zenitsu breathing style?", correct: "Thunder Breathing", wrong: ["Water Breathing","Fire Breathing","Beast Breathing"] },
+        { q: "What is Inosuke trait?", correct: "Wears a boar head", wrong: ["Wears a mask","Has tattoos","Has white hair"] },
+        { q: "What is Tanjiro sword called?", correct: "Nichirin Blade", wrong: ["Katana","Zanbato","Kodachi"] },
+        { q: "What can Nezuko do?", correct: "Shrink and grow", wrong: ["Fly","Read minds","Heal"] }
+      ],
+      'Attack on Titan': [
+        { q: "What is the main character name?", correct: "Eren Yeager", wrong: ["Armin Arlert","Mikasa Ackerman","Levi Ackerman"] },
+        { q: "What are the giants called?", correct: "Titans", wrong: ["Demons","Colossals","Eldians"] },
+        { q: "Who leads the Survey Corps?", correct: "Levi Ackerman", wrong: ["Erwin Smith","Hange Zoe","Keith Shadis"] },
+        { q: "What can Eren do?", correct: "Transform into a Titan", wrong: ["Fly","Turn invisible","Heal others"] },
+        { q: "What is the Survey Corps motto?", correct: "Dedicate your heart", wrong: ["Fight for freedom","Kill all Titans","Survive"] },
+        { q: "Who is the female Titan?", correct: "Annie Leonhart", wrong: ["Mikasa","Sasha","Historia"] },
+        { q: "What is in Eren basement?", correct: "Truth about the outside world", wrong: ["A weapon","A map","A photograph"] },
+        { q: "What is the nation across the sea?", correct: "Marley", wrong: ["Eldia","Hizuru","Mid-East"] },
+        { q: "What blade material fights Titans?", correct: "Ultrahard steel", wrong: ["Titanium","Diamond","Iron bamboo"] },
+        { q: "What are the three walls called?", correct: "Maria, Rose, and Sina", wrong: ["Alpha, Beta, Gamma","North, South, East","Eve, Adam, Noah"] }
+      ],
+      'My Hero Academia': [
+        { q: "What is the main character name?", correct: "Izuku Midoriya", wrong: ["Katsuki Bakugo","Shoto Todoroki","Tenya Iida"] },
+        { q: "What is Izuku nickname?", correct: "Deku", wrong: ["Kacchan","Shoto","Hero"] },
+        { q: "What is Izuku Quirk?", correct: "One For All", wrong: ["Explosion","Half-Cold Half-Hot","Engine"] },
+        { q: "Who is the number 1 hero?", correct: "All Might", wrong: ["Endeavor","Hawks","Best Jeanist"] },
+        { q: "What is the hero school name?", correct: "UA High School", wrong: ["Shiketsu High","Ketsubutsu Academy","UA Academy"] },
+        { q: "What is Bakugo Quirk?", correct: "Explosion", wrong: ["One For All","Half-Cold Half-Hot","Zero Gravity"] },
+        { q: "Who is the main villain?", correct: "Tomura Shigaraki", wrong: ["Stain","Overhaul","All For One"] },
+        { q: "What is Todoroki Quirk?", correct: "Half-Cold Half-Hot", wrong: ["Explosion","One For All","Hardening"] },
+        { q: "What does All Might say?", correct: "I am here!", wrong: ["Plus Ultra","Go beyond","Smash"] },
+        { q: "What is the hero motto?", correct: "Go Beyond, Plus Ultra!", wrong: ["I am here","Never give up","Hero for all"] }
+      ],
+      'Death Note': [
+        { q: "What is the main character name?", correct: "Light Yagami", wrong: ["L","Near","Mello"] },
+        { q: "What can the Death Note do?", correct: "Kill anyone whose name is written", wrong: ["Control minds","Grant wishes","See the future"] },
+        { q: "Who is the shinigami?", correct: "Ryuk", wrong: ["Rem","Sidoh","Jealous"] },
+        { q: "What is Light alias?", correct: "Kira", wrong: ["L","N","W"] },
+        { q: "Who tries to catch Kira?", correct: "L", wrong: ["Near","Mello","Soichiro"] },
+        { q: "What rule must be followed?", correct: "Know the person face and name", wrong: ["Be a shinigami","Write in blood","Be at midnight"] },
+        { q: "What is L habit?", correct: "Squatting and eating sweets", wrong: ["Smoking","Drinking coffee","Fidgeting"] },
+        { q: "Who is Light father?", correct: "Soichiro Yagami", wrong: ["Watari","Matsuda","Aizawa"] },
+        { q: "Who is L successor?", correct: "Near", wrong: ["Mello","Matt","Watari"] },
+        { q: "How does Light die?", correct: "Ryuk writes his name", wrong: ["L shoots him","He is arrested","Suicide"] }
+      ],
+      'Jujutsu Kaisen': [
+        { q: "What is the main character name?", correct: "Yuji Itadori", wrong: ["Megumi Fushiguro","Nobara Kugisaki","Satoru Gojo"] },
+        { q: "What does Yuji swallow?", correct: "Sukuna finger", wrong: ["A cursed object","A special curse","A talisman"] },
+        { q: "Who is the strongest sorcerer?", correct: "Satoru Gojo", wrong: ["Yuji Itadori","Megumi Fushiguro","Kento Nanami"] },
+        { q: "What is Gojo technique?", correct: "Limitless and Six Eyes", wrong: ["Ten Shadows","Cursed Speech","Straw Doll"] },
+        { q: "Who is the king of curses?", correct: "Ryomen Sukuna", wrong: ["Jogo","Mahito","Hanami"] },
+        { q: "What is Megumi technique?", correct: "Ten Shadows", wrong: ["Limitless","Cursed Speech","Boogie Woogie"] },
+        { q: "What are curses born from?", correct: "Negative human emotions", wrong: ["Dead souls","Cursed objects","Dark magic"] },
+        { q: "What is the school name?", correct: "Tokyo Jujutsu High", wrong: ["Kyoto Jujutsu High","UA High","UA Academy"] },
+        { q: "Who is the main antagonist curse?", correct: "Mahito", wrong: ["Sukuna","Jogo","Geto"] },
+        { q: "What is Nobara technique?", correct: "Straw Doll", wrong: ["Ten Shadows","Limitless","Cursed Speech"] }
+      ],
+      'Bleach': [
+        { q: "What is Ichigo sword name?", correct: "Zangetsu", wrong: ["Senbonzakura","Kyoka Suigetsu","Hyorinmaru"] },
+        { q: "What is a Soul Reaper job?", correct: "Guide souls to the afterlife", wrong: ["Kill demons","Protect humans","Train warriors"] },
+        { q: "Who is captain of Squad 6?", correct: "Byakuya Kuchiki", wrong: ["Kenpachi Zaraki","Toshiro Hitsugaya","Sajin Komamura"] },
+        { q: "What is Ichigo Bankai?", correct: "Tensa Zangetsu", wrong: ["Zangetsu","Senbonzakura Kageyoshi","Daiguren Hyorinmaru"] },
+        { q: "Who are the main villains in Arrancar arc?", correct: "Espada", wrong: ["Sternritter","Gotei 13","Visored"] },
+        { q: "Who is the head captain?", correct: "Genryusai Yamamoto", wrong: ["Shunsui Kyoraku","Jushiro Ukitake","Unohana"] },
+        { q: "What is Aizen ability?", correct: "Complete Hypnosis", wrong: ["Mirror Flower","Kido mastery","Flash Step"] },
+        { q: "What is the final arc called?", correct: "Thousand-Year Blood War", wrong: ["Arrancar Arc","Soul Society Arc","Fullbring Arc"] },
+        { q: "What is Rukia position?", correct: "Squad 13 lieutenant", wrong: ["Squad 6 captain","Squad 2 lieutenant","Squad 11 captain"] },
+        { q: "What is Ichigo Hollow form?", correct: "Vasto Lorde", wrong: ["Menos","Adjuchas","Gillian"] }
+      ],
+      'Fullmetal Alchemist': [
+        { q: "What are the two brothers names?", correct: "Edward and Alphonse Elric", wrong: ["Edward and Alphonse Mustang","Edward and Bradley","Edward and Hohenheim"] },
+        { q: "What did they lose in transmutation?", correct: "Ed lost arm and leg, Al lost his body", wrong: ["Their memories","Their eyesight","Their parents"] },
+        { q: "What is the equivalent exchange law?", correct: "Equal value must be lost", wrong: ["Alchemy needs a circle","Transmutation is forbidden","Stones are free"] },
+        { q: "Who is the Flame Alchemist?", correct: "Roy Mustang", wrong: ["Edward Elric","Alex Armstrong","Riza Hawkeye"] },
+        { q: "What are the homunculi?", correct: "Artificial humans", wrong: ["Immortal soldiers","Chimeras","Philosopher stones"] },
+        { q: "What is the Philosopher Stone made of?", correct: "Human souls", wrong: ["Gold","Mercury","Crimson elixir"] },
+        { q: "What is Alphonse body?", correct: "A suit of armor", wrong: ["Metal","Stone","Wood"] },
+        { q: "What is the country name?", correct: "Amestris", wrong: ["Xing","Ishval","Creta"] },
+        { q: "Who is the father of homunculi?", correct: "Father (Dwarf in the Flask)", wrong: ["Hohenheim","Van Hohenheim","King Bradley"] },
+        { q: "What is the state military?", correct: "State Military of Amestris", wrong: ["Ishvalan Army","Briggs Army","Xing Military"] }
+      ],
+      'Pokemon': [
+        { q: "Who is the main character?", correct: "Ash Ketchum", wrong: ["Red","Gary Oak","Brock"] },
+        { q: "What is Ash first Pokemon?", correct: "Pikachu", wrong: ["Charmander","Bulbasaur","Squirtle"] },
+        { q: "How many original Pokemon?", correct: "151", wrong: ["100","200","250"] },
+        { q: "What type is Pikachu?", correct: "Electric", wrong: ["Fire","Water","Normal"] },
+        { q: "Who is Ash rival?", correct: "Gary Oak", wrong: ["Brock","Misty","Professor Oak"] },
+        { q: "What are the Kanto starters?", correct: "Bulbasaur, Charmander, Squirtle", wrong: ["Pikachu, Eevee, Jigglypuff","Mewtwo, Mew, Celebi","Magikarp, Gyarados, Lapras"] },
+        { q: "What is the Pokemon motto?", correct: "Gotta catch them all!", wrong: ["I choose you!","Battle on!","Be the very best!"] },
+        { q: "Who gives trainers their first Pokemon?", correct: "Professor Oak", wrong: ["Nurse Joy","Officer Jenny","Giovanni"] },
+        { q: "What is the evil organization?", correct: "Team Rocket", wrong: ["Team Plasma","Team Magma","Team Galactic"] },
+        { q: "What evolves into Charizard?", correct: "Charmeleon", wrong: ["Charmander","Bulbasaur","Squirtle"] }
+      ],
+      'Sailor Moon': [
+        { q: "What is the main character name?", correct: "Usagi Tsukino", wrong: ["Ami Mizuno","Rei Hino","Minako Aino"] },
+        { q: "What is Sailor Moon cat name?", correct: "Luna", wrong: ["Artemis","Diana","Selene"] },
+        { q: "What is her transformation phrase?", correct: "Moon Prism Power, Make Up!", wrong: ["Mercury Power, Make Up!","Mars Power, Make Up!","Venus Power, Make Up!"] },
+        { q: "How many Sailor Senshi in the original team?", correct: "5", wrong: ["3","7","10"] },
+        { q: "Who is Sailor Moon love interest?", correct: "Tuxedo Mask", wrong: ["Prince Endymion","Helios","Seiya"] },
+        { q: "What is her signature attack?", correct: "Moon Tiara Action", wrong: ["Mars Flame Sniper","Mercury Aqua Mirage","Venus Love-Me Chain"] },
+        { q: "What magical item does she use?", correct: "Silver Crystal", wrong: ["Golden Crystal","Pink Crystal","Rose Crystal"] },
+        { q: "Who leads the Sailor Senshi?", correct: "Sailor Moon", wrong: ["Sailor Venus","Sailor Mars","Sailor Mercury"] },
+        { q: "What is her future daughter name?", correct: "Chibiusa", wrong: ["Hotaru","Setsuna","Haruka"] },
+        { q: "What planet is Sailor Mercury?", correct: "Mercury", wrong: ["Venus","Mars","Jupiter"] }
+      ],
+      'Cowboy Bebop': [
+        { q: "What is the main character name?", correct: "Spike Spiegel", wrong: ["Jet Black","Faye Valentine","Ed"] },
+        { q: "What is the spaceship name?", correct: "Bebop", wrong: ["Swordfish II","Red Tail","Hammerhead"] },
+        { q: "What is Spike fighting style?", correct: "Jeet Kune Do", wrong: ["Karate","Boxing","Kung Fu"] },
+        { q: "Who is Spike former partner?", correct: "Vicious", wrong: ["Jet","Faye","Julia"] },
+        { q: "What is Jet arm made of?", correct: "Metal prosthetic", wrong: ["Wood","Plastic","Nothing"] },
+        { q: "What is the data dog name?", correct: "Ein", wrong: ["Ed","Spike","Faye"] },
+        { q: "What is the opening theme?", correct: "Tank!", wrong: ["The Real Folk Blues","Space Lion","Blue"] },
+        { q: "What is Ed full name?", correct: "Edward Wong Hau Pepelu Tivrusky IV", wrong: ["Ed Ein","Ed Bebop","Ed Spike"] },
+        { q: "What is Spike catchphrase?", correct: "See you, space cowboy", wrong: ["Bang","Goodnight","Adios"] },
+        { q: "What is Faye real name?", correct: "Faye Valentine", wrong: ["Faye Resnick","Faye Wong","Faye Dunaway"] }
+      ],
+      'Gintama': [
+        { q: "What is the main character name?", correct: "Gintoki Sakata", wrong: ["Shinpachi Shimura","Kagura","Hijikata"] },
+        { q: "What does Gintoki do?", correct: "Odd jobs (freelancer)", wrong: ["Samurai","Shinsengumi","Teacher"] },
+        { q: "What is Gintoki favorite food?", correct: "Strawberry milk", wrong: ["Rice balls","Ramen","Sushi"] },
+        { q: "What is Gintoki sword?", correct: "A wooden bokuto", wrong: ["Katana","Tachi","Nodachi"] },
+        { q: "Who leads the Shinsengumi?", correct: "Isao Kondo", wrong: ["Hijikata","Okita","Yamazaki"] },
+        { q: "What alien race conquered Earth?", correct: "Amanto", wrong: ["Saiyans","Titans","Hollows"] },
+        { q: "What is Kagura species?", correct: "Yato Clan", wrong: ["Human","Amanto","Shinigami"] },
+        { q: "What is Gintoki pet dog?", correct: "Sadaharu", wrong: ["Gigi","Pochi","Hachi"] },
+        { q: "Who is Gintoki rival?", correct: "Kotaro Katsura", wrong: ["Hijikata","Takasugi","Sakamoto"] },
+        { q: "What does Gintoki always carry?", correct: "A wooden sword", wrong: ["A scooter","A real sword","A gun"] }
+      ],
+      'Hunter x Hunter': [
+        { q: "What is the main character name?", correct: "Gon Freecss", wrong: ["Killua Zoldyck","Kurapika","Leorio"] },
+        { q: "What is Gon looking for?", correct: "His father Ging", wrong: ["The Hunter Exam","The Phantom Troupe","The Dark Continent"] },
+        { q: "What is Killua family business?", correct: "Assassins", wrong: ["Hunters","Thieves","Merchants"] },
+        { q: "What is the power system called?", correct: "Nen", wrong: ["Haki","Chakra","Ki"] },
+        { q: "What Nen type is Gon?", correct: "Enhancer", wrong: ["Transmuter","Conjurer","Emitter"] },
+        { q: "Who leads the Phantom Troupe?", correct: "Chrollo Lucilfer", wrong: ["Hisoka","Illumi","Meruem"] },
+        { q: "What is the exam called?", correct: "The Hunter Examination", wrong: ["The Nen Test","The Hunter Games","The Hunter Trial"] },
+        { q: "What is Hisoka catchphrase about Bungee Gum?", correct: "It has properties of both rubber and gum", wrong: ["Magicians are the best","I love fighting","I am strong"] },
+        { q: "Who is the Chimera Ant King?", correct: "Meruem", wrong: ["Neferpitou","Shaiapouf","Menthuthuyoupi"] },
+        { q: "What is Killua signature attack?", correct: "Lightning Palm (Godspeed)", wrong: ["Paper","Rock","Scissors"] }
+      ]
+    };
+
     function selectCategory(id) {
       selectedCatId = id;
+      selectedAnimeSub = null;
       document.querySelectorAll('.cat-card').forEach(c => {
         c.classList.toggle('selected', parseInt(c.dataset.id, 10) === id);
       });
-      startQuizBtn.classList.remove('hidden');
-      selectHint.textContent = `Selected: ${CATEGORY_NAMES[id]} — ready when you are`;
-      // Scroll selected card into view smoothly
+      // Scroll selected card into view
       const sel = carouselTrack.querySelector('.cat-card.selected');
       if (sel) sel.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
       updateCarouselBtns();
+
+      // Show anime sub-selection if Anime is selected
+      const animeSubEl = document.getElementById('anime-sub');
+      if (id === 999) {
+        buildAnimeSubGrid();
+        animeSubEl.style.display = 'block';
+        startQuizBtn.classList.add('hidden');
+        selectHint.textContent = 'Pick an anime series to begin';
+      } else {
+        animeSubEl.style.display = 'none';
+        startQuizBtn.classList.remove('hidden');
+        selectHint.textContent = 'Selected: ' + CATEGORY_NAMES[id] + ' - ready when you are';
+      }
+    }
+
+    function buildAnimeSubGrid() {
+      const grid = document.getElementById('anime-sub-grid');
+      grid.innerHTML = '';
+      Object.keys(ANIME_QUESTIONS).forEach(name => {
+        const card = document.createElement('div');
+        card.style.cssText = 'padding:0.8rem 0.5rem;border-radius:0.6rem;border:2px solid #e5e7eb;background:#fff;cursor:pointer;text-align:center;transition:all 0.2s ease;';
+        card.innerHTML = '<div style="font-weight:700;font-size:0.75rem;">' + name + '</div><div style="font-size:0.6rem;color:#9ca3af;margin-top:0.15rem;">10 questions</div>';
+        card.addEventListener('click', () => selectAnimeSub(name, card));
+        card.addEventListener('mouseenter', () => { card.style.borderColor = '#FF6B35'; card.style.transform = 'translateY(-2px)'; });
+        card.addEventListener('mouseleave', () => { if (!card.dataset.selected) { card.style.borderColor = '#e5e7eb'; card.style.transform = ''; } });
+        grid.appendChild(card);
+      });
+    }
+
+    function selectAnimeSub(name, cardEl) {
+      selectedAnimeSub = name;
+      document.getElementById('anime-sub-grid').querySelectorAll('div').forEach(c => {
+        c.dataset.selected = '';
+        c.style.borderColor = '#e5e7eb';
+        c.style.background = '#fff';
+        c.style.transform = '';
+      });
+      cardEl.dataset.selected = '1';
+      cardEl.style.borderColor = '#FF6B35';
+      cardEl.style.background = 'linear-gradient(135deg, rgba(255,107,53,0.08), rgba(0,184,169,0.06))';
+      startQuizBtn.classList.remove('hidden');
+      selectHint.textContent = 'Selected: ' + name + ' - ready when you are';
     }
 
     function updateCarouselBtns() {
@@ -521,6 +767,15 @@
 
     // ---- Quiz flow ----
     async function fetchQuestions(category) {
+      // Anime (999) — use selected anime sub-category questions
+      if (category === 999) {
+        if (selectedAnimeSub && ANIME_QUESTIONS[selectedAnimeSub]) {
+          return shuffle(ANIME_QUESTIONS[selectedAnimeSub].slice()).slice(0, 10).map(q => ({ ...q }));
+        }
+        // Fallback to generic anime questions
+        const bank = FALLBACK[999];
+        return shuffle(bank).slice(0, 10).map(q => ({ ...q }));
+      }
       try {
         const url = `https://opentdb.com/api.php?amount=10&category=${category}&type=multiple`;
         const res = await fetch(url);
@@ -634,6 +889,10 @@
     startQuizBtn.addEventListener('click', () => {
       if (selectedCatId == null) {
         CL.toast('Pick a category first!', false);
+        return;
+      }
+      if (selectedCatId === 999 && !selectedAnimeSub) {
+        CL.toast('Pick an anime series first!', false);
         return;
       }
       startQuiz(selectedCatId);
