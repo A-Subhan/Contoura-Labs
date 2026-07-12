@@ -11,16 +11,19 @@
   const path = window.location.pathname;
   const inToolsDir = /\/tools\//.test(path);
   const inGamesDir = /\/games\//.test(path);
-  const inBlogDir = /\/blog\//.test(path);
+  const inBlogDir  = /\/blog\//.test(path);
   const inLegalDir = /\/legal\//.test(path);
-  const inSubdir = inToolsDir || inGamesDir || inBlogDir || inLegalDir;
+  // Tools and games have back-nav banners + individual page treatment;
+  // blog and legal are content subdirectories that just need the ../ prefix.
+  const inBackNavDir = inToolsDir || inGamesDir;
+  const inSubdir = inBackNavDir || inBlogDir || inLegalDir;
   const prefix = inSubdir ? '../' : '';
 
   // Determine if this is a hub page (index.html in tools/ or games/)
   // vs an individual tool/game page
   const isHubPage = /index\.html$/.test(path) || path.endsWith('/tools/') || path.endsWith('/games/') || path.endsWith('/blog/') || path.endsWith('/legal/');
-  const pageType = inToolsDir ? 'tool' : (inGamesDir ? 'game' : (inBlogDir ? 'blog' : 'home'));
-  const isIndividualPage = inSubdir && !isHubPage;
+  const pageType = inToolsDir ? 'tool' : (inGamesDir ? 'game' : 'home');
+  const isIndividualPage = inBackNavDir && !isHubPage;
 
   // ===== 1. AUTO-INJECT NAVBAR (always visible with solid background) =====
   // All links same color; active page highlighted with brand orange + underline
@@ -62,7 +65,7 @@
       </nav>
 
       <!-- Mobile Menu Backdrop -->
-      <div id="menu-backdrop" class="fixed inset-0 bg-black/40 z-40 is-hidden"></div>
+      <div id="menu-backdrop" class="fixed inset-0 bg-black/40 z-40 hidden"></div>
 
       <!-- Mobile Menu -->
       <div id="mobile-menu" class="fixed top-0 right-0 bottom-0 w-72 bg-white dark:bg-surface-dark z-50 shadow-2xl flex flex-col pt-20 px-8" style="transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.16,1,0.3,1);">
@@ -85,12 +88,12 @@
 
     function openMenu() {
       mobileMenu.style.transform = 'translateX(0)';
-      menuBackdrop.classList.remove('is-hidden');
+      menuBackdrop.classList.remove('hidden');
       document.body.style.overflow = 'hidden';
     }
     function closeMenu() {
       mobileMenu.style.transform = 'translateX(100%)';
-      menuBackdrop.classList.add('is-hidden');
+      menuBackdrop.classList.add('hidden');
       document.body.style.overflow = '';
     }
     if (menuBtn) menuBtn.addEventListener('click', openMenu);
@@ -287,74 +290,30 @@
     });
   }
 
-  // ===== 10. AUTO-INJECT FOOTER (professional, permanent on every page) =====
+  // ===== 10. AUTO-INJECT FOOTER (permanent on every page) =====
   function injectFooter() {
-    if (document.querySelector('footer.cl-footer')) return;
+    // Don't inject if page already has any footer
+    // Remove any existing footer(s) so our professional one replaces them
+    document.querySelectorAll('footer').forEach(f => f.remove());
 
     const year = new Date().getFullYear();
     const footer = document.createElement('footer');
-    footer.className = 'cl-footer';
-    footer.style.cssText = 'background:#0a0a0a;color:#9ca3af;padding:3rem 1.5rem 1.5rem;margin-top:auto;';
+    footer.className = 'cl-footer py-8 border-t border-gray-100 dark:border-white/5';
     footer.innerHTML = `
-      <div class="max-w-6xl mx-auto">
-        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:2.5rem;margin-bottom:2rem;">
-          <!-- Brand -->
-          <div>
-            <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:1rem;">
-              <svg width="32" height="32" viewBox="0 0 100 100" fill="none">
-                <path d="M 73 28 A 32 32 0 0 0 27 28" stroke="#FF6B35" stroke-width="9" fill="none" stroke-linecap="round"/>
-                <path d="M 24 32 A 32 32 0 0 0 24 68" stroke="#E8384F" stroke-width="9" fill="none" stroke-linecap="round"/>
-                <path d="M 27 72 A 32 32 0 0 0 73 72" stroke="#00B8A9" stroke-width="9" fill="none" stroke-linecap="round"/>
-              </svg>
-              <span style="font-weight:700;font-size:1.1rem;color:#fff;">Contoura Labs</span>
-            </div>
-            <p style="font-size:0.8rem;line-height:1.6;max-width:18rem;">We build digital experiences that matter. Free tools, games, and professional web services. All running 100% in your browser.</p>
-            <div style="display:flex;gap:0.75rem;margin-top:1rem;">
-              <a href="https://www.instagram.com/contouralabs/" target="_blank" rel="noopener" style="width:36px;height:36px;border-radius:0.5rem;background:rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center;color:#9ca3af;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,107,53,0.2)';this.style.color='#FF6B35';" onmouseout="this.style.background='rgba(255,255,255,0.05)';this.style.color='#9ca3af';">
-                <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
-              </a>
-              <a href="https://www.facebook.com/profile.php?id=61581292773749" target="_blank" rel="noopener" style="width:36px;height:36px;border-radius:0.5rem;background:rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center;color:#9ca3af;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,107,53,0.2)';this.style.color='#FF6B35';" onmouseout="this.style.background='rgba(255,255,255,0.05)';this.style.color='#9ca3af';">
-                <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-              </a>
-              <a href="mailto:contouralabs@gmail.com" style="width:36px;height:36px;border-radius:0.5rem;background:rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center;color:#9ca3af;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,107,53,0.2)';this.style.color='#FF6B35';" onmouseout="this.style.background='rgba(255,255,255,0.05)';this.style.color='#9ca3af';">
-                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-              </a>
-            </div>
-          </div>
-          <!-- Explore -->
-          <div>
-            <h4 style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#fff;margin-bottom:0.85rem;">Explore</h4>
-            <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:0.5rem;">
-              <li><a href="${prefix}index.html" style="font-size:0.8rem;color:#9ca3af;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#FF6B35'" onmouseout="this.style.color='#9ca3af'">Home</a></li>
-              <li><a href="${prefix}tools/index.html" style="font-size:0.8rem;color:#9ca3af;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#FF6B35'" onmouseout="this.style.color='#9ca3af'">Tools</a></li>
-              <li><a href="${prefix}games/index.html" style="font-size:0.8rem;color:#9ca3af;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#00B8A9'" onmouseout="this.style.color='#9ca3af'">Games</a></li>
-              <li><a href="${prefix}blog/index.html" style="font-size:0.8rem;color:#9ca3af;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#FF6B35'" onmouseout="this.style.color='#9ca3af'">Blog</a></li>
-              <li><a href="${prefix}faq-contact.html" style="font-size:0.8rem;color:#9ca3af;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#FF6B35'" onmouseout="this.style.color='#9ca3af'">FAQ and Contact</a></li>
-            </ul>
-          </div>
-          <!-- Legal -->
-          <div>
-            <h4 style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#fff;margin-bottom:0.85rem;">Legal</h4>
-            <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:0.5rem;">
-              <li><a href="${prefix}legal/privacy-policy.html" style="font-size:0.8rem;color:#9ca3af;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#FF6B35'" onmouseout="this.style.color='#9ca3af'">Privacy Policy</a></li>
-              <li><a href="${prefix}legal/terms-of-service.html" style="font-size:0.8rem;color:#9ca3af;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#FF6B35'" onmouseout="this.style.color='#9ca3af'">Terms of Service</a></li>
-              <li><a href="${prefix}legal/cookie-policy.html" style="font-size:0.8rem;color:#9ca3af;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#FF6B35'" onmouseout="this.style.color='#9ca3af'">Cookie Policy</a></li>
-              <li><a href="${prefix}legal/security.html" style="font-size:0.8rem;color:#9ca3af;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#FF6B35'" onmouseout="this.style.color='#9ca3af'">Security</a></li>
-            </ul>
-          </div>
-          <!-- Company -->
-          <div>
-            <h4 style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#fff;margin-bottom:0.85rem;">Company</h4>
-            <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:0.5rem;">
-              <li><a href="${prefix}index.html#about" style="font-size:0.8rem;color:#9ca3af;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#FF6B35'" onmouseout="this.style.color='#9ca3af'">About Us</a></li>
-              <li><a href="${prefix}index.html#services" style="font-size:0.8rem;color:#9ca3af;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#FF6B35'" onmouseout="this.style.color='#9ca3af'">Services</a></li>
-              <li><a href="${prefix}faq-contact.html" style="font-size:0.8rem;color:#9ca3af;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#FF6B35'" onmouseout="this.style.color='#9ca3af'">Contact</a></li>
-              <li><a href="mailto:contouralabs@gmail.com" style="font-size:0.8rem;color:#9ca3af;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#FF6B35'" onmouseout="this.style.color='#9ca3af'">contouralabs@gmail.com</a></li>
-            </ul>
-          </div>
+      <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div class="flex items-center gap-2">
+          <svg width="24" height="24" viewBox="0 0 100 100" fill="none">
+            <path d="M 73 28 A 32 32 0 0 0 27 28" stroke="#FF6B35" stroke-width="9" fill="none" stroke-linecap="round"/>
+            <path d="M 24 32 A 32 32 0 0 0 24 68" stroke="#E8384F" stroke-width="9" fill="none" stroke-linecap="round"/>
+            <path d="M 27 72 A 32 32 0 0 0 73 72" stroke="#00B8A9" stroke-width="9" fill="none" stroke-linecap="round"/>
+          </svg>
+          <span class="text-xs text-gray-400">${year} Contoura Labs. All rights reserved.</span>
         </div>
-        <div style="border-top:1px solid rgba(255,255,255,0.08);padding-top:1.25rem;display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:0.5rem;">
-          <p style="font-size:0.75rem;color:#6b7280;">${year} Contoura Labs. All rights reserved. Built with passion.</p>
+        <div class="flex items-center gap-5 text-xs text-gray-400">
+          <a href="${prefix}index.html" class="hover:text-brand-orange transition-colors">Home</a>
+          <a href="${prefix}tools/index.html" class="hover:text-brand-orange transition-colors">Tools</a>
+          <a href="${prefix}games/index.html" class="hover:text-brand-teal transition-colors">Games</a>
+          <a href="${prefix}index.html#contact" class="hover:text-brand-orange transition-colors">Contact</a>
         </div>
       </div>
     `;

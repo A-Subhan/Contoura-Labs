@@ -11,10 +11,36 @@
   <meta property="og:description" content="Modern web, mobile, and design solutions for businesses.">
   <meta property="og:type" content="website">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 73 28 A 32 32 0 0 0 27 28' stroke='%23FF6B35' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 24 32 A 32 32 0 0 0 24 68' stroke='%23E8384F' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 27 72 A 32 32 0 0 0 73 72' stroke='%2300B8A9' stroke-width='9' fill='none' stroke-linecap='round'/></svg>">
+  <link rel="canonical" href="https://contouralabs.com/">
+  <meta name="robots" content="index, follow">
+  <meta name="author" content="Contoura Labs">
+  <meta name="keywords" content="web development, mobile apps, UI UX design, ERP, POS, WordPress, digital agency, free tools, online games, PDF tools, resume builder">
+  <meta property="og:url" content="https://contouralabs.com/">
+  <meta property="og:image" content="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='630'><rect width='1200' height='630' fill='%230a0a0a'/><path d='M 473 178 A 32 32 0 0 0 427 178' stroke='%23FF6B35' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 424 182 A 32 32 0 0 0 424 218' stroke='%23E8384F' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 427 222 A 32 32 0 0 0 473 222' stroke='%2300B8A9' stroke-width='9' fill='none' stroke-linecap='round'/><text x='600' y='340' font-family='Arial,sans-serif' font-size='60' font-weight='bold' fill='white'>Contoura Labs</text><text x='600' y='400' font-family='Arial,sans-serif' font-size='24' fill='%239ca3af'>Digital Agency + Free Tools and Games</text></svg>">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Contoura Labs — Digital Agency + Free Tools & Games">
+  <meta name="twitter:description" content="We build digital experiences. 30+ free tools, 12 games, web development, mobile apps, UI/UX design.">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Contoura Labs",
+    "url": "https://contouralabs.com/",
+    "description": "Digital agency offering web development, mobile apps, UI/UX design, ERP, POS software, plus 30+ free in-browser tools and 12 games.",
+    "email": "contouralabs@gmail.com",
+    "sameAs": [
+      "https://www.instagram.com/contouralabs/",
+      "https://www.facebook.com/profile.php?id=61581292773749"
+    ]
+  }
+  </script>
   <link rel="stylesheet" href="assets/css/common.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"></noscript>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -216,12 +242,12 @@
         <span class="font-bold text-base tracking-tight">Contoura Labs</span>
       </a>
       <div class="hidden md:flex items-center gap-7">
-        <a href="#about" class="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">About</a>
-        <a href="#services" class="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">Services</a>
+        <a href="#about" class="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors">About</a>
+        <a href="#services" class="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors">Services</a>
         <a href="tools/index.html" class="text-sm font-semibold text-brand-orange hover:text-brand-red transition-colors">Tools</a>
         <a href="games/index.html" class="text-sm font-semibold text-brand-teal hover:text-brand-orange transition-colors">Games</a>
-        <a href="#portfolio" class="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">Portfolio</a>
-        <a href="#testimonials" class="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">Testimonials</a>
+        <a href="#portfolio" class="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors">Portfolio</a>
+        <a href="#testimonials" class="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors">Testimonials</a>
         <a href="#contact" class="btn-gradient text-white text-sm font-semibold px-5 py-2.5 rounded-full">Contact Us</a>
       </div>
       <button id="menu-btn" class="md:hidden w-9 h-9 rounded-full flex items-center justify-center bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/15 transition-colors z-50" aria-label="Open menu">
@@ -252,18 +278,19 @@
     <a href="#testimonials" class="mobile-link text-lg font-medium text-gray-800 dark:text-gray-200 py-3 border-b border-gray-100 dark:border-white/10">Testimonials</a>
     <a href="#contact" class="mobile-link btn-gradient text-white text-center font-semibold px-5 py-3 rounded-full mt-6">Contact Us</a>
     <div class="mt-auto pb-8">
-      <p class="text-xs text-gray-400 mb-3">Follow Us</p>
+      <p class="text-xs text-gray-600 dark:text-gray-400 mb-3">Follow Us</p>
       <div class="flex gap-4">
-        <a href="https://www.instagram.com/contouralabs/" target="_blank" rel="noopener" class="text-gray-400 hover:text-brand-orange transition-colors">
+        <a href="https://www.instagram.com/contouralabs/" target="_blank" rel="noopener" aria-label="Follow Contoura Labs on Instagram" class="text-gray-600 dark:text-gray-400 hover:text-brand-orange transition-colors">
           <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
         </a>
-        <a href="https://www.facebook.com/profile.php?id=61581292773749" target="_blank" rel="noopener" class="text-gray-400 hover:text-brand-orange transition-colors">
+        <a href="https://www.facebook.com/profile.php?id=61581292773749" target="_blank" rel="noopener" aria-label="Follow Contoura Labs on Facebook" class="text-gray-600 dark:text-gray-400 hover:text-brand-orange transition-colors">
           <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
         </a>
       </div>
     </div>
   </div>
 
+  <main role="main">
   <!-- HERO SECTION -->
   <section id="hero" class="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
     <div class="orb w-[500px] h-[500px] bg-brand-orange top-[-10%] right-[-10%] float"></div>
@@ -331,15 +358,15 @@
           <div class="reveal reveal-delay-2 grid grid-cols-3 gap-6">
             <div>
               <div class="text-2xl md:text-3xl font-bold gradient-text">10+</div>
-              <div class="text-xs text-gray-400 mt-1">Projects Done</div>
+              <div class="text-xs text-gray-600 dark:text-gray-400 mt-1">Projects Done</div>
             </div>
             <div>
               <div class="text-2xl md:text-3xl font-bold gradient-text">100%</div>
-              <div class="text-xs text-gray-400 mt-1">Client Focus</div>
+              <div class="text-xs text-gray-600 dark:text-gray-400 mt-1">Client Focus</div>
             </div>
             <div>
               <div class="text-2xl md:text-3xl font-bold gradient-text">24/7</div>
-              <div class="text-xs text-gray-400 mt-1">Support</div>
+              <div class="text-xs text-gray-600 dark:text-gray-400 mt-1">Support</div>
             </div>
           </div>
         </div>
@@ -421,7 +448,7 @@
         <!-- Project 1: Rezolvio -->
         <a href="https://rezolvio.netlify.app/" target="_blank" rel="noopener" class="reveal reveal-delay-1 portfolio-card group rounded-2xl overflow-hidden bg-white dark:bg-surface-card border border-gray-100 dark:border-white/5 block">
           <div class="relative aspect-[16/10] overflow-hidden">
-            <img src="https://image.thum.io/get/width/900/crop/560/https://rezolvio.netlify.app/" alt="Rezolvio" class="w-full h-full object-cover object-top" loading="lazy">
+            <img src="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27540%27%20height%3D%27336%27%3E%3Cdefs%3E%3ClinearGradient%20id%3D%27g%27%20x1%3D%270%2525%27%20y1%3D%270%2525%27%20x2%3D%27100%2525%27%20y2%3D%27100%2525%27%3E%3Cstop%20offset%3D%270%2525%27%20stop-color%3D%27%23FF6B35%27%2F%3E%3Cstop%20offset%3D%27100%2525%27%20stop-color%3D%27%23E8384F%27%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Crect%20width%3D%27540%27%20height%3D%27336%27%20fill%3D%27url%28%2523g%29%27%2F%3E%3Ctext%20x%3D%27270%27%20y%3D%27170%27%20font-family%3D%27Inter%2Csans-serif%27%20font-size%3D%2724%27%20font-weight%3D%27700%27%20fill%3D%27white%27%20text-anchor%3D%27middle%27%3ERezolvio%3C%2Ftext%3E%3C%2Fsvg%3E" alt="Rezolvio" class="w-full h-full object-cover object-top" loading="lazy">
             <div class="overlay absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col justify-end p-6">
               <span class="text-[10px] uppercase tracking-widest text-brand-orange font-semibold mb-2">Web Application</span>
               <h3 class="text-white font-semibold text-lg mb-1">Rezolvio</h3>
@@ -441,7 +468,7 @@
         <!-- Project 2: ChoChi Sports -->
         <a href="https://chochisports.netlify.app/" target="_blank" rel="noopener" class="reveal reveal-delay-2 portfolio-card group rounded-2xl overflow-hidden bg-white dark:bg-surface-card border border-gray-100 dark:border-white/5 block">
           <div class="relative aspect-[16/10] overflow-hidden">
-            <img src="https://image.thum.io/get/width/900/crop/560/https://chochisports.netlify.app/" alt="ChoChi Sports" class="w-full h-full object-cover object-top" loading="lazy">
+            <img src="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27540%27%20height%3D%27336%27%3E%3Cdefs%3E%3ClinearGradient%20id%3D%27g%27%20x1%3D%270%2525%27%20y1%3D%270%2525%27%20x2%3D%27100%2525%27%20y2%3D%27100%2525%27%3E%3Cstop%20offset%3D%270%2525%27%20stop-color%3D%27%2300B8A9%27%2F%3E%3Cstop%20offset%3D%27100%2525%27%20stop-color%3D%27%23FF6B35%27%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Crect%20width%3D%27540%27%20height%3D%27336%27%20fill%3D%27url%28%2523g%29%27%2F%3E%3Ctext%20x%3D%27270%27%20y%3D%27170%27%20font-family%3D%27Inter%2Csans-serif%27%20font-size%3D%2724%27%20font-weight%3D%27700%27%20fill%3D%27white%27%20text-anchor%3D%27middle%27%3EChoChi%20Sports%3C%2Ftext%3E%3C%2Fsvg%3E" alt="ChoChi Sports" class="w-full h-full object-cover object-top" loading="lazy">
             <div class="overlay absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col justify-end p-6">
               <span class="text-[10px] uppercase tracking-widest text-brand-red font-semibold mb-2">E Commerce</span>
               <h3 class="text-white font-semibold text-lg mb-1">ChoChi Sports</h3>
@@ -461,7 +488,7 @@
         <!-- Project 3: Business Website -->
         <div class="reveal reveal-delay-3 portfolio-card group rounded-2xl overflow-hidden bg-white dark:bg-surface-card border border-gray-100 dark:border-white/5">
           <div class="relative aspect-[16/10] overflow-hidden">
-            <img src="https://picsum.photos/seed/contoura-biz-site/900/560.jpg" alt="Modern Business Website" class="w-full h-full object-cover" loading="lazy">
+            <img src="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27540%27%20height%3D%27336%27%3E%3Cdefs%3E%3ClinearGradient%20id%3D%27g%27%20x1%3D%270%2525%27%20y1%3D%270%2525%27%20x2%3D%27100%2525%27%20y2%3D%27100%2525%27%3E%3Cstop%20offset%3D%270%2525%27%20stop-color%3D%27%23E8384F%27%2F%3E%3Cstop%20offset%3D%27100%2525%27%20stop-color%3D%27%2300B8A9%27%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Crect%20width%3D%27540%27%20height%3D%27336%27%20fill%3D%27url%28%2523g%29%27%2F%3E%3Ctext%20x%3D%27270%27%20y%3D%27170%27%20font-family%3D%27Inter%2Csans-serif%27%20font-size%3D%2724%27%20font-weight%3D%27700%27%20fill%3D%27white%27%20text-anchor%3D%27middle%27%3EBusiness%20Website%3C%2Ftext%3E%3C%2Fsvg%3E" alt="Modern Business Website" class="w-full h-full object-cover" loading="lazy">
             <div class="overlay absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col justify-end p-6">
               <span class="text-[10px] uppercase tracking-widest text-brand-teal font-semibold mb-2">Web Development</span>
               <h3 class="text-white font-semibold text-lg mb-1">Modern Business Website</h3>
@@ -477,7 +504,7 @@
         <!-- Project 4: Mobile App UI -->
         <div class="reveal reveal-delay-4 portfolio-card group rounded-2xl overflow-hidden bg-white dark:bg-surface-card border border-gray-100 dark:border-white/5">
           <div class="relative aspect-[16/10] overflow-hidden">
-            <img src="https://picsum.photos/seed/contoura-app-ui/900/560.jpg" alt="Mobile App UI Design" class="w-full h-full object-cover" loading="lazy">
+            <img src="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27540%27%20height%3D%27336%27%3E%3Cdefs%3E%3ClinearGradient%20id%3D%27g%27%20x1%3D%270%2525%27%20y1%3D%270%2525%27%20x2%3D%27100%2525%27%20y2%3D%27100%2525%27%3E%3Cstop%20offset%3D%270%2525%27%20stop-color%3D%27%23FF6B35%27%2F%3E%3Cstop%20offset%3D%27100%2525%27%20stop-color%3D%27%2300B8A9%27%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Crect%20width%3D%27540%27%20height%3D%27336%27%20fill%3D%27url%28%2523g%29%27%2F%3E%3Ctext%20x%3D%27270%27%20y%3D%27170%27%20font-family%3D%27Inter%2Csans-serif%27%20font-size%3D%2724%27%20font-weight%3D%27700%27%20fill%3D%27white%27%20text-anchor%3D%27middle%27%3EMobile%20App%20UI%3C%2Ftext%3E%3C%2Fsvg%3E" alt="Mobile App UI Design" class="w-full h-full object-cover" loading="lazy">
             <div class="overlay absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col justify-end p-6">
               <span class="text-[10px] uppercase tracking-widest text-brand-orange font-semibold mb-2">UI/UX Design</span>
               <h3 class="text-white font-semibold text-lg mb-1">Mobile App UI Design</h3>
@@ -517,7 +544,7 @@
             <div class="why-icon w-12 h-12 rounded-xl bg-brand-orange/10 dark:bg-brand-orange/10 flex items-center justify-center mb-4">
               <svg class="w-6 h-6 text-brand-orange" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z"/></svg>
             </div>
-            <h4 class="why-title font-semibold text-sm mb-1.5">Clean & Modern Design</h4>
+            <h3 class="why-title font-semibold text-sm mb-1.5">Clean & Modern Design</h3>
             <p class="text-xs text-gray-400 leading-relaxed">Pixel perfect designs that follow the latest trends and standards.</p>
           </div>
 
@@ -525,7 +552,7 @@
             <div class="why-icon w-12 h-12 rounded-xl bg-brand-red/10 dark:bg-brand-red/10 flex items-center justify-center mb-4">
               <svg class="w-6 h-6 text-brand-red" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/></svg>
             </div>
-            <h4 class="why-title font-semibold text-sm mb-1.5">Fast Delivery</h4>
+            <h3 class="why-title font-semibold text-sm mb-1.5">Fast Delivery</h3>
             <p class="text-xs text-gray-400 leading-relaxed">Efficient workflows that get your project launched on time, every time.</p>
           </div>
 
@@ -533,7 +560,7 @@
             <div class="why-icon w-12 h-12 rounded-xl bg-brand-teal/10 dark:bg-brand-teal/10 flex items-center justify-center mb-4">
               <svg class="w-6 h-6 text-brand-teal" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z"/></svg>
             </div>
-            <h4 class="why-title font-semibold text-sm mb-1.5">Affordable Pricing</h4>
+            <h3 class="why-title font-semibold text-sm mb-1.5">Affordable Pricing</h3>
             <p class="text-xs text-gray-400 leading-relaxed">Budget friendly rates without compromising on quality or features.</p>
           </div>
 
@@ -541,7 +568,7 @@
             <div class="why-icon w-12 h-12 rounded-xl bg-gradient-to-br from-brand-orange/10 to-brand-teal/10 flex items-center justify-center mb-4">
               <svg class="w-6 h-6 text-brand-orange" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15"/></svg>
             </div>
-            <h4 class="why-title font-semibold text-sm mb-1.5">Scalable Solutions</h4>
+            <h3 class="why-title font-semibold text-sm mb-1.5">Scalable Solutions</h3>
             <p class="text-xs text-gray-400 leading-relaxed">Architecture built to grow with your business, from MVP to enterprise.</p>
           </div>
         </div>
@@ -565,7 +592,7 @@
           </div>
           <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed mb-6">"Contoura Labs delivered exactly what we needed: a clean, fast website that our customers love. Their attention to detail and communication throughout the project was outstanding."</p>
           <div class="flex items-center gap-3">
-            <img src="https://picsum.photos/seed/asian-male-dev/100/100.jpg" alt="Zayan Shahid" class="w-10 h-10 rounded-full object-cover" loading="lazy">
+            <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><circle cx='20' cy='20' r='20' fill='%23FF6B35'/><text x='20' y='25' font-family='Inter,sans-serif' font-size='14' font-weight='700' fill='white' text-anchor='middle'>ZS</text></svg>" alt="Zayan Shahid" class="w-10 h-10 rounded-full object-cover" loading="lazy">
             <div>
               <div class="text-sm font-semibold">Zayan Shahid</div>
               <div class="text-xs text-gray-400">Founder, Rezolvio</div>
@@ -579,7 +606,7 @@
           </div>
           <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed mb-6">"Working with Contoura Labs on our mobile app was a great experience. They understood our vision from day one and brought it to life with a polished, intuitive design."</p>
           <div class="flex items-center gap-3">
-            <img src="https://picsum.photos/seed/asian-guy-tech/100/100.jpg" alt="Mike Rodriguez" class="w-10 h-10 rounded-full object-cover" loading="lazy">
+            <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><circle cx='20' cy='20' r='20' fill='%23FF6B35'/><text x='20' y='25' font-family='Inter,sans-serif' font-size='14' font-weight='700' fill='white' text-anchor='middle'>MR</text></svg>" alt="Mike Rodriguez" class="w-10 h-10 rounded-full object-cover" loading="lazy">
             <div>
               <div class="text-sm font-semibold">Mike Rodriguez</div>
               <div class="text-xs text-gray-400">CEO, FitTrack App</div>
@@ -593,7 +620,7 @@
           </div>
           <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed mb-6">"Contoura Labs built our entire e commerce store from scratch and the results exceeded our expectations. The store looks professional, runs smoothly, and our customers love the shopping experience."</p>
           <div class="flex items-center gap-3">
-            <img src="https://picsum.photos/seed/abdullah-founder/100/100.jpg" alt="Abdullah" class="w-10 h-10 rounded-full object-cover" loading="lazy">
+            <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><circle cx='20' cy='20' r='20' fill='%23FF6B35'/><text x='20' y='25' font-family='Inter,sans-serif' font-size='14' font-weight='700' fill='white' text-anchor='middle'>AB</text></svg>" alt="Abdullah" class="w-10 h-10 rounded-full object-cover" loading="lazy">
             <div>
               <div class="text-sm font-semibold">Abdullah</div>
               <div class="text-xs text-gray-400">Founder, ChoChi Sports</div>
@@ -716,131 +743,6 @@
     </div>
   </section>
 
-  <!-- CONTACT SECTION -->
-  <section id="contact" class="py-24 md:py-32 relative overflow-hidden">
-    <div class="orb w-[500px] h-[500px] bg-brand-red top-[-20%] left-[-10%]"></div>
-    <div class="orb w-[400px] h-[400px] bg-brand-teal bottom-[-10%] right-[-5%]"></div>
-
-    <div class="max-w-6xl mx-auto px-6 relative z-10">
-      <div class="grid md:grid-cols-2 gap-16">
-        <div>
-          <span class="reveal text-basefont-semibold uppercase tracking-widest text-brand-orange mb-4 block">Get in Touch</span>
-          <h2 class="reveal reveal-delay-1 text-3xl md:text-4xl font-bold tracking-tight mb-6">Let's Build Something <span class="gradient-text">Amazing</span> Together</h2>
-          <p class="reveal reveal-delay-2 text-gray-500 dark:text-gray-400 leading-relaxed mb-10">
-            Have a project in mind? We'd love to hear about it. Drop us a message and we'll get back to you within 24 hours.
-          </p>
-
-          <div class="reveal reveal-delay-3 space-y-5">
-            <div class="flex items-center gap-4">
-              <div class="w-11 h-11 rounded-xl bg-gray-100 dark:bg-white/5 flex items-center justify-center shrink-0">
-                <svg class="w-5 h-5 text-brand-orange" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
-              </div>
-              <div>
-                <div class="text-xs text-gray-400 mb-0.5">Email</div>
-                <a href="mailto:contouralabs@gmail.com" class="text-sm font-medium hover:text-brand-orange transition-colors">contouralabs@gmail.com</a>
-              </div>
-            </div>
-
-            <div class="flex items-center gap-4">
-              <div class="w-11 h-11 rounded-xl bg-gray-100 dark:bg-white/5 flex items-center justify-center shrink-0">
-                <svg class="w-5 h-5 text-brand-red" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-              </div>
-              <div>
-                <div class="text-xs text-gray-400 mb-0.5">Response Time</div>
-                <span class="text-sm font-medium">Within 24 hours</span>
-              </div>
-            </div>
-
-            <div class="flex items-center gap-4">
-              <div class="w-11 h-11 rounded-xl bg-gray-100 dark:bg-white/5 flex items-center justify-center shrink-0">
-                <svg class="w-5 h-5 text-brand-teal" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418"/></svg>
-              </div>
-              <div>
-                <div class="text-xs text-gray-400 mb-0.5">Working With</div>
-                <span class="text-sm font-medium">Clients Worldwide</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="reveal reveal-delay-4 mt-10">
-            <p class="text-xs text-gray-400 mb-3 uppercase tracking-widest font-medium">Follow Us</p>
-            <div class="flex gap-3">
-              <a href="https://www.instagram.com/contouralabs/" target="_blank" rel="noopener" class="w-10 h-10 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center text-gray-400 hover:text-brand-orange hover:bg-brand-orange/10 dark:hover:bg-brand-orange/10 transition-all">
-                <svg class="w-4.5 h-4.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
-              </a>
-              <a href="https://www.facebook.com/profile.php?id=61581292773749" target="_blank" rel="noopener" class="w-10 h-10 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center text-gray-400 hover:text-brand-orange hover:bg-brand-orange/10 dark:hover:bg-brand-orange/10 transition-all">
-                <svg class="w-4.5 h-4.5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-              </a>
-            </div>
-          </div>
-        </div>
-
-        <div class="reveal reveal-delay-2">
-          <form id="contact-form" class="bg-white dark:bg-surface-card rounded-2xl p-8 border border-gray-100 dark:border-white/5 shadow-sm">
-            <div class="space-y-5">
-              <div>
-                <label for="name" class="block text-sm font-medium mb-2">Your Name</label>
-                <input type="text" id="name" name="name" required placeholder="John Doe" class="form-input w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600">
-              </div>
-              <div>
-                <label for="email" class="block text-sm font-medium mb-2">Email Address</label>
-                <input type="email" id="email" name="email" required placeholder="john@example.com" class="form-input w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600">
-              </div>
-              <div>
-                <label for="message" class="block text-sm font-medium mb-2">Your Message</label>
-                <textarea id="message" name="message" rows="5" required placeholder="Tell us about your project..." class="form-input w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm outline-none transition-all resize-none placeholder:text-gray-400 dark:placeholder:text-gray-600"></textarea>
-              </div>
-              <button type="submit" class="w-full btn-gradient text-white font-semibold py-3.5 rounded-xl text-sm flex items-center justify-center gap-2">
-                Send Message
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- FOOTER -->
-  <footer class="py-12 border-t border-gray-100 dark:border-white/5">
-    <div class="max-w-6xl mx-auto px-6">
-      <div class="flex flex-col md:flex-row items-center justify-between gap-6">
-        <div class="flex flex-col items-center md:items-start gap-2">
-          <div class="flex items-center gap-2">
-          <svg width="28" height="28" viewBox="0 0 100 100" fill="none">
-            <path d="M 73 28 A 32 32 0 0 0 27 28" stroke="#FF6B35" stroke-width="9" fill="none" stroke-linecap="round"/>
-            <path d="M 24 32 A 32 32 0 0 0 24 68" stroke="#E8384F" stroke-width="9" fill="none" stroke-linecap="round"/>
-            <path d="M 27 72 A 32 32 0 0 0 73 72" stroke="#00B8A9" stroke-width="9" fill="none" stroke-linecap="round"/>
-          </svg>
-          <span class="font-bold text-sm">Contoura Labs</span>
-        </div>
-          <p class="text-xs text-gray-400">© 2025 Contoura Labs. All rights reserved.</p>
-        </div>
-
-        <div class="flex items-center gap-6 text-sm text-gray-400">
-          <a href="#about" class="hover:text-gray-700 dark:hover:text-gray-200 transition-colors">About</a>
-          <a href="#services" class="hover:text-gray-700 dark:hover:text-gray-200 transition-colors">Services</a>
-          <a href="tools/index.html" class="hover:text-brand-orange transition-colors">Tools</a>
-          <a href="games/index.html" class="hover:text-brand-teal transition-colors">Games</a>
-          <a href="#portfolio" class="hover:text-gray-700 dark:hover:text-gray-200 transition-colors">Portfolio</a>
-          <a href="#contact" class="hover:text-gray-700 dark:hover:text-gray-200 transition-colors">Contact</a>
-        </div>
-
-        <div class="flex items-center gap-4">
-          <a href="https://www.instagram.com/contouralabs/" target="_blank" rel="noopener" class="text-gray-400 hover:text-brand-orange transition-colors">
-            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
-          </a>
-          <a href="https://www.facebook.com/profile.php?id=61581292773749" target="_blank" rel="noopener" class="text-gray-400 hover:text-brand-orange transition-colors">
-            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-          </a>
-          <a href="mailto:contouralabs@gmail.com" class="text-gray-400 hover:text-brand-orange transition-colors">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
-          </a>
-        </div>
-      </div>
-    </div>
-  </footer>
-
   <!-- TOAST NOTIFICATION -->
   <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-6 py-3.5 rounded-xl shadow-2xl flex items-center gap-3 text-sm font-medium">
     <svg class="w-5 h-5 text-brand-teal shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -848,6 +750,8 @@
   </div>
 
   <!-- JAVASCRIPT -->
+  </main>
+
   <script>
     window.addEventListener('load', () => {
       setTimeout(() => {
@@ -921,48 +825,9 @@
     });
 
     // Contact Form
-    const contactForm = document.getElementById('contact-form');
-    const toast = document.getElementById('toast');
+        const toast = document.getElementById('toast');
     const toastText = document.getElementById('toast-text');
-
-    contactForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const name = document.getElementById('name').value.trim();
-      const email = document.getElementById('email').value.trim();
-      const message = document.getElementById('message').value.trim();
-
-      if (!name || !email || !message) {
-        showToast('Please fill in all fields.', false);
-        return;
-      }
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        showToast('Please enter a valid email address.', false);
-        return;
-      }
-
-      const btn = contactForm.querySelector('button[type="submit"]');
-      const originalHTML = btn.innerHTML;
-      btn.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span>Sending...</span>';
-      btn.disabled = true;
-
-  emailjs.send("service_zqund9k", "template_s2d1klj", {
-    from_name: name,
-    from_email: email,
-    message: message
-  })
-  .then(() => {
-    btn.innerHTML = originalHTML;
-    btn.disabled = false;
-    contactForm.reset();
-    showToast('Message sent successfully! We\'ll get back to you soon.', true);
-  })
-  .catch((error) => {
-    btn.innerHTML = originalHTML;
-    btn.disabled = false;
-    showToast('Something went wrong. Please try again.', false);
-    console.error(error);
-  });
-    });
+);
 
     function showToast(message, success) {
       toastText.textContent = message;
@@ -992,7 +857,7 @@
     });
   </script>
 
-  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
 <script>
   (function(){

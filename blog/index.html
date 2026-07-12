@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="google-adsense-account" content="ca-pub-1264117586848709">
   <title>Blog — Contoura Labs</title>
-  <meta name="description" content="Insights, tutorials, and guides from Contoura Labs on free tools, web development, design trends, SEO, productivity, and running a lean digital business in 2025.">
+  <meta name="description" content="Insights, tutorials, and product updates from the Contoura Labs team. Learn about web development, free online tools, design systems, SEO, and the future of in-browser software.">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 73 28 A 32 32 0 0 0 27 28' stroke='%23FF6B35' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 24 32 A 32 32 0 0 0 24 68' stroke='%23E8384F' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 27 72 A 32 32 0 0 0 73 72' stroke='%2300B8A9' stroke-width='9' fill='none' stroke-linecap='round'/></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,109 +25,130 @@
   </script>
   <link rel="stylesheet" href="../assets/css/common.css">
   <style>
-    .blog-card { display: flex; flex-direction: column; padding: 0; }
-    .blog-card-image {
-      position: relative;
-      width: 100%;
-      height: 160px;
+    /* Blog-specific styling */
+    .blog-card {
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+      border: 1px solid #f3f4f6;
+      border-radius: 1rem;
       overflow: hidden;
-      border-top-left-radius: 1rem;
-      border-top-right-radius: 1rem;
+      transition: transform 0.4s cubic-bezier(0.16,1,0.3,1), box-shadow 0.4s ease, border-color 0.4s ease;
+      text-decoration: none;
+      color: inherit;
+      position: relative;
+      height: 100%;
+    }
+    .dark .blog-card {
+      background: #1A1A1A;
+      border-color: rgba(255,255,255,0.05);
+    }
+    .blog-card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(255,107,53,0.4);
+      box-shadow: 0 16px 32px rgba(255,107,53,0.12);
+    }
+    .dark .blog-card:hover {
+      box-shadow: 0 16px 32px rgba(255,107,53,0.18);
+    }
+    .blog-card-header {
+      height: 130px;
+      position: relative;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #fff;
+      overflow: hidden;
     }
-    .blog-card-image .blog-emoji {
-      font-size: 2.5rem;
-      filter: drop-shadow(0 4px 10px rgba(0,0,0,0.25));
+    .blog-card-header::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(circle at 20% 30%, rgba(255,255,255,0.18) 0%, transparent 35%),
+                        radial-gradient(circle at 80% 70%, rgba(255,255,255,0.10) 0%, transparent 40%);
+      pointer-events: none;
+    }
+    .blog-card-header svg {
+      width: 56px;
+      height: 56px;
+      color: #fff;
+      opacity: 0.95;
+      filter: drop-shadow(0 4px 12px rgba(0,0,0,0.18));
+      position: relative;
+      z-index: 1;
     }
     .blog-card-body {
-      padding: 1.25rem 1.5rem 1.5rem;
+      padding: 1.25rem 1.4rem 1.4rem;
       display: flex;
       flex-direction: column;
+      gap: 0.6rem;
       flex: 1;
     }
     .blog-cat-badge {
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
       align-self: flex-start;
-      padding: 0.2rem 0.7rem;
+      padding: 0.22rem 0.7rem;
       border-radius: 999px;
       font-size: 0.68rem;
-      font-weight: 600;
-      text-transform: uppercase;
+      font-weight: 700;
       letter-spacing: 0.04em;
-      margin-bottom: 0.65rem;
-      background: rgba(255,107,53,0.12);
+      text-transform: uppercase;
+      background: rgba(255,107,53,0.10);
       color: var(--brand-orange);
+      border: 1px solid rgba(255,107,53,0.18);
     }
     .blog-card-title {
       font-weight: 700;
-      font-size: 1.05rem;
+      font-size: 1.0625rem;
       line-height: 1.35;
-      margin-bottom: 0.55rem;
+      letter-spacing: -0.01em;
+      color: #111;
       transition: color 0.3s ease;
     }
-    .tool-card-link:hover .blog-card-title { color: var(--brand-orange); }
+    .dark .blog-card-title { color: #f3f4f6; }
+    .blog-card:hover .blog-card-title { color: var(--brand-orange); }
+    .dark .blog-card:hover .blog-card-title { color: var(--brand-orange); }
     .blog-card-excerpt {
-      font-size: 0.85rem;
+      font-size: 0.875rem;
       color: #6b7280;
       line-height: 1.55;
       flex: 1;
-      margin-bottom: 0.9rem;
     }
     .dark .blog-card-excerpt { color: #9ca3af; }
     .blog-card-meta {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      font-size: 0.75rem;
-      color: #9ca3af;
+      gap: 0.5rem;
+      padding-top: 0.6rem;
       border-top: 1px solid #f3f4f6;
-      padding-top: 0.75rem;
+      font-size: 0.78rem;
+      color: #9ca3af;
     }
-    .dark .blog-card-meta { border-color: rgba(255,255,255,0.06); }
-    .blog-readmore {
-      color: var(--brand-orange);
-      font-weight: 600;
+    .dark .blog-card-meta { border-top-color: rgba(255,255,255,0.06); }
+    .blog-card-meta .read-time {
       display: inline-flex;
       align-items: center;
-      gap: 0.25rem;
-      transition: gap 0.25s ease;
+      gap: 0.3rem;
     }
-    .tool-card-link:hover .blog-readmore { gap: 0.5rem; }
-    .blog-filter-row {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 0.5rem;
-      margin-bottom: 2rem;
+    .blog-newsletter {
+      margin-top: 4rem;
+      background: linear-gradient(135deg, rgba(255,107,53,0.10), rgba(232,56,79,0.06), rgba(0,184,169,0.10));
+      border: 1px solid rgba(255,107,53,0.18);
+      border-radius: 1.5rem;
+      padding: 2.5rem 2rem;
+      text-align: center;
     }
-    .blog-filter-chip {
-      padding: 0.4rem 0.95rem;
-      border-radius: 999px;
-      font-size: 0.78rem;
-      font-weight: 600;
-      border: 1px solid #e5e7eb;
-      background: #fff;
-      color: #374151;
-      cursor: pointer;
-      transition: all 0.25s ease;
-    }
-    .dark .blog-filter-chip { background: #1A1A1A; border-color: rgba(255,255,255,0.08); color: #d1d5db; }
-    .blog-filter-chip:hover { border-color: var(--brand-orange); color: var(--brand-orange); }
-    .blog-filter-chip.active {
-      background: linear-gradient(135deg, #FF6B35, #E8384F, #00B8A9);
-      background-size: 200% 200%;
-      animation: gradientShift 4s ease infinite;
-      color: #fff;
-      border-color: transparent;
+    .dark .blog-newsletter {
+      background: linear-gradient(135deg, rgba(255,107,53,0.10), rgba(232,56,79,0.06), rgba(0,184,169,0.10));
+      border-color: rgba(255,107,53,0.22);
     }
   </style>
 </head>
 <body class="font-sans bg-white text-gray-900 dark:bg-surface-dark dark:text-gray-100 antialiased">
 
-  <!-- Background animation: animated gradient waves (same as tools hub) -->
+  <!-- Background animation: animated gradient waves -->
   <div class="bg-waves">
     <div class="bg-wave"></div>
     <div class="bg-wave"></div>
@@ -137,208 +158,210 @@
   <!-- NAVBAR (auto-injected) -->
   <div id="navbar-mount"></div>
 
-  <!-- HUB HERO -->
+  <!-- BLOG HERO -->
   <section class="hub-hero relative">
     <div class="orb w-[400px] h-[400px] bg-brand-orange top-[-10%] right-[-10%] float"></div>
     <div class="orb w-[350px] h-[350px] bg-brand-teal bottom-[-15%] left-[-8%] float-delay"></div>
     <div class="orb w-[250px] h-[250px] bg-brand-red top-[40%] left-[55%]"></div>
     <div class="relative z-10 max-w-4xl mx-auto">
-      <span class="badge mb-4"><span class="pulse-dot"></span>Tutorials · Insights · Guides</span>
-      <h1 class="reveal visible">The Contoura <span class="gradient-text">Blog</span></h1>
-      <p class="reveal reveal-delay-1 visible">Practical writing on free tools, web development, design, SEO, and running a lean digital business. New posts every week.</p>
+      <span class="badge mb-4"><span class="pulse-dot"></span>The Contoura Labs Blog</span>
+      <h1 class="reveal visible">Ideas, <span class="gradient-text">Insights</span> &amp; Updates</h1>
+      <p class="reveal reveal-delay-1 visible">Tutorials on web development, free in browser tools, design systems, and the privacy first philosophy behind everything we build at Contoura Labs.</p>
       <div class="hub-stat-row reveal reveal-delay-2 visible">
-        <span class="hub-stat-chip">📚 8 Articles</span>
-        <span class="hub-stat-chip">✏️ Weekly Posts</span>
-        <span class="hub-stat-chip">🆓 100% Free</span>
-        <span class="hub-stat-chip">📱 Read Anywhere</span>
+        <span class="hub-stat-chip">📝 Fresh Articles</span>
+        <span class="hub-stat-chip">🔒 Privacy First</span>
+        <span class="hub-stat-chip">🛠️ Practical Tutorials</span>
+        <span class="hub-stat-chip">📈 SEO &amp; Growth</span>
       </div>
     </div>
   </section>
 
   <!-- BLOG GRID -->
-  <div class="category-section">
-    <h2 class="category-title reveal">Latest Articles</h2>
+  <main class="tool-page" style="padding-top: 1rem;">
+    <div class="tool-container" style="max-width: 80rem;">
+      <div class="category-title reveal">Latest Articles</div>
+      <div class="tool-grid">
 
-    <div class="blog-filter-row reveal reveal-delay-1">
-      <button class="blog-filter-chip active" data-filter="all">All</button>
-      <button class="blog-filter-chip" data-filter="Business">Business</button>
-      <button class="blog-filter-chip" data-filter="Web Development">Web Development</button>
-      <button class="blog-filter-chip" data-filter="Productivity">Productivity</button>
-      <button class="blog-filter-chip" data-filter="Mobile">Mobile</button>
-      <button class="blog-filter-chip" data-filter="Design">Design</button>
-      <button class="blog-filter-chip" data-filter="SEO">SEO</button>
-      <button class="blog-filter-chip" data-filter="Tools">Tools</button>
+        <!-- Post 1 -->
+        <a href="#" class="blog-card reveal reveal-delay-1">
+          <div class="blog-card-header" style="background: linear-gradient(135deg, #FF6B35 0%, #E8384F 100%);">
+            <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+          </div>
+          <div class="blog-card-body">
+            <span class="blog-cat-badge">Web Development</span>
+            <h3 class="blog-card-title">Why In Browser Tools Are the Future of Software</h3>
+            <p class="blog-card-excerpt">Serverless, private, and instant. We break down why running code entirely on the client is reshaping how small utilities should be built and shipped in 2025.</p>
+            <div class="blog-card-meta">
+              <span>Jul 18, 2025</span>
+              <span class="read-time">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 7v5l3 2"/></svg>
+                6 min read
+              </span>
+            </div>
+          </div>
+        </a>
+
+        <!-- Post 2 -->
+        <a href="#" class="blog-card reveal reveal-delay-2">
+          <div class="blog-card-header" style="background: linear-gradient(135deg, #00B8A9 0%, #0EA5E9 100%);">
+            <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          </div>
+          <div class="blog-card-body">
+            <span class="blog-cat-badge">PDF Tools</span>
+            <h3 class="blog-card-title">Merging and Splitting PDFs Without Uploading Anything</h3>
+            <p class="blog-card-excerpt">A practical walkthrough of building PDF merge and split tools with pdf.lib that keep your files entirely on your own machine. Includes code samples.</p>
+            <div class="blog-card-meta">
+              <span>Jul 12, 2025</span>
+              <span class="read-time">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 7v5l3 2"/></svg>
+                8 min read
+              </span>
+            </div>
+          </div>
+        </a>
+
+        <!-- Post 3 -->
+        <a href="#" class="blog-card reveal reveal-delay-3">
+          <div class="blog-card-header" style="background: linear-gradient(135deg, #E8384F 0%, #8B5CF6 100%);">
+            <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
+          </div>
+          <div class="blog-card-body">
+            <span class="blog-cat-badge">Design</span>
+            <h3 class="blog-card-title">Building a Color System That Survives Dark Mode</h3>
+            <p class="blog-card-excerpt">Most palettes break the moment you flip to dark mode. Here is the layered approach we use at Contoura Labs to ship a single brand identity across both themes.</p>
+            <div class="blog-card-meta">
+              <span>Jul 8, 2025</span>
+              <span class="read-time">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 7v5l3 2"/></svg>
+                5 min read
+              </span>
+            </div>
+          </div>
+        </a>
+
+        <!-- Post 4 -->
+        <a href="#" class="blog-card reveal reveal-delay-1">
+          <div class="blog-card-header" style="background: linear-gradient(135deg, #FF6B35 0%, #F59E0B 100%);">
+            <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+          </div>
+          <div class="blog-card-body">
+            <span class="blog-cat-badge">SEO</span>
+            <h3 class="blog-card-title">Meta Tags, Open Graph, and the Anatomy of a Perfect Share</h3>
+            <p class="blog-card-excerpt">A complete checklist for the tags that actually matter when your link is shared on Twitter, Slack, LinkedIn, or iMessage. Includes a free generator walk through.</p>
+            <div class="blog-card-meta">
+              <span>Jul 3, 2025</span>
+              <span class="read-time">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 7v5l3 2"/></svg>
+                7 min read
+              </span>
+            </div>
+          </div>
+        </a>
+
+        <!-- Post 5 -->
+        <a href="#" class="blog-card reveal reveal-delay-2">
+          <div class="blog-card-header" style="background: linear-gradient(135deg, #00B8A9 0%, #10B981 100%);">
+            <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          </div>
+          <div class="blog-card-body">
+            <span class="blog-cat-badge">Privacy</span>
+            <h3 class="blog-card-title">Your Files Never Leave the Browser. Here Is the Proof.</h3>
+            <p class="blog-card-excerpt">We open up the network panel and demonstrate, byte by byte, that our image and PDF tools send nothing to any server. Bring your own DevTools and follow along.</p>
+            <div class="blog-card-meta">
+              <span>Jun 28, 2025</span>
+              <span class="read-time">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 7v5l3 2"/></svg>
+                4 min read
+              </span>
+            </div>
+          </div>
+        </a>
+
+        <!-- Post 6 -->
+        <a href="#" class="blog-card reveal reveal-delay-3">
+          <div class="blog-card-header" style="background: linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%);">
+            <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+          </div>
+          <div class="blog-card-body">
+            <span class="blog-cat-badge">Engineering</span>
+            <h3 class="blog-card-title">A 2025 Guide to Tailwind Config Without Build Tools</h3>
+            <p class="blog-card-excerpt">Using the Tailwind CDN with a runtime config object is perfect for side projects and internal tools. We explain the tradeoffs and how to make it production ready.</p>
+            <div class="blog-card-meta">
+              <span>Jun 22, 2025</span>
+              <span class="read-time">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 7v5l3 2"/></svg>
+                9 min read
+              </span>
+            </div>
+          </div>
+        </a>
+
+        <!-- Post 7 -->
+        <a href="#" class="blog-card reveal reveal-delay-1">
+          <div class="blog-card-header" style="background: linear-gradient(135deg, #E8384F 0%, #FF6B35 100%);">
+            <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><circle cx="12" cy="12" r="9"/></svg>
+          </div>
+          <div class="blog-card-body">
+            <span class="blog-cat-badge">Games</span>
+            <h3 class="blog-card-title">How We Built 12 Browser Games in a Single Sprint</h3>
+            <p class="blog-card-excerpt">From Flappy Dot to Minesweeper, here is the architecture and shared infrastructure that let us ship a dozen games without burning out the team.</p>
+            <div class="blog-card-meta">
+              <span>Jun 16, 2025</span>
+              <span class="read-time">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 7v5l3 2"/></svg>
+                10 min read
+              </span>
+            </div>
+          </div>
+        </a>
+
+        <!-- Post 8 -->
+        <a href="#" class="blog-card reveal reveal-delay-2">
+          <div class="blog-card-header" style="background: linear-gradient(135deg, #0EA5E9 0%, #00B8A9 100%);">
+            <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          </div>
+          <div class="blog-card-body">
+            <span class="blog-cat-badge">Product</span>
+            <h3 class="blog-card-title">Shipping a New Tool Every Week, Sustainably</h3>
+            <p class="blog-card-excerpt">Our cadence, our planning rituals, and the design system that lets us go from idea to published page in under five days without sacrificing quality.</p>
+            <div class="blog-card-meta">
+              <span>Jun 9, 2025</span>
+              <span class="read-time">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 7v5l3 2"/></svg>
+                6 min read
+              </span>
+            </div>
+          </div>
+        </a>
+
+      </div>
+
+      <!-- Newsletter CTA -->
+      <div class="blog-newsletter reveal reveal-delay-3">
+        <h2 class="text-2xl md:text-3xl font-bold tracking-tight mb-3">Get the next article in your inbox</h2>
+        <p class="text-sm md:text-base text-gray-600 dark:text-gray-400 max-w-xl mx-auto mb-6">No spam, no sales pitches. Just one thoughtful piece on web tooling, privacy, or design every couple of weeks. Unsubscribe in one click.</p>
+        <form id="newsletter-form" class="flex flex-col sm:flex-row gap-3 max-w-md mx-auto" onsubmit="return false;">
+          <input type="email" id="newsletter-email" placeholder="you@example.com" required class="flex-1">
+          <button type="submit" class="btn-primary whitespace-nowrap">Subscribe</button>
+        </form>
+        <p class="text-xs text-gray-400 mt-4">We use Buttondown. Your email is never shared.</p>
+      </div>
     </div>
-
-    <div class="tool-grid" id="blog-grid">
-
-      <a href="#" class="tool-card-link blog-card reveal reveal-delay-1" data-category="Business">
-        <div class="blog-card-image" style="background: linear-gradient(135deg, #FF6B35 0%, #E8384F 100%);">
-          <span class="blog-emoji">💼</span>
-        </div>
-        <div class="blog-card-body">
-          <span class="blog-cat-badge">Business</span>
-          <h3 class="blog-card-title">10 Free Tools Every Small Business Needs in 2025</h3>
-          <p class="blog-card-excerpt">Running a small business on a tight budget? These ten free, in-browser tools handle everything from PDF editing to password management — no install required.</p>
-          <div class="blog-card-meta">
-            <span>Jan 12, 2025 · 6 min read</span>
-            <span class="blog-readmore">Read more →</span>
-          </div>
-        </div>
-      </a>
-
-      <a href="#" class="tool-card-link blog-card reveal reveal-delay-2" data-category="Web Development">
-        <div class="blog-card-image" style="background: linear-gradient(135deg, #00B8A9 0%, #006B6E 100%);">
-          <span class="blog-emoji">🌐</span>
-        </div>
-        <div class="blog-card-body">
-          <span class="blog-cat-badge">Web Development</span>
-          <h3 class="blog-card-title">How to Build a Website Without Coding</h3>
-          <p class="blog-card-excerpt">No-code platforms have come a long way. Here's a step-by-step walkthrough for launching a professional website in a weekend — without writing a single line of code.</p>
-          <div class="blog-card-meta">
-            <span>Jan 20, 2025 · 8 min read</span>
-            <span class="blog-readmore">Read more →</span>
-          </div>
-        </div>
-      </a>
-
-      <a href="#" class="tool-card-link blog-card reveal reveal-delay-3" data-category="Productivity">
-        <div class="blog-card-image" style="background: linear-gradient(135deg, #E8384F 0%, #8B1F32 100%);">
-          <span class="blog-emoji">📄</span>
-        </div>
-        <div class="blog-card-body">
-          <span class="blog-cat-badge">Productivity</span>
-          <h3 class="blog-card-title">The Ultimate Guide to PDF Management</h3>
-          <p class="blog-card-excerpt">Merge, split, compress, and convert PDFs without paying for Adobe. We break down every PDF operation you'll ever need — and the free tools that do them best.</p>
-          <div class="blog-card-meta">
-            <span>Feb 3, 2025 · 10 min read</span>
-            <span class="blog-readmore">Read more →</span>
-          </div>
-        </div>
-      </a>
-
-      <a href="#" class="tool-card-link blog-card reveal reveal-delay-1" data-category="Mobile">
-        <div class="blog-card-image" style="background: linear-gradient(135deg, #FF6B35 0%, #00B8A9 100%);">
-          <span class="blog-emoji">📱</span>
-        </div>
-        <div class="blog-card-body">
-          <span class="blog-cat-badge">Mobile</span>
-          <h3 class="blog-card-title">Why Your Business Needs a Mobile App</h3>
-          <p class="blog-card-excerpt">Mobile traffic now exceeds desktop. We explore when a responsive website isn't enough, and how to decide whether building a native app is worth the investment.</p>
-          <div class="blog-card-meta">
-            <span>Feb 14, 2025 · 7 min read</span>
-            <span class="blog-readmore">Read more →</span>
-          </div>
-        </div>
-      </a>
-
-      <a href="#" class="tool-card-link blog-card reveal reveal-delay-2" data-category="Design">
-        <div class="blog-card-image" style="background: linear-gradient(135deg, #6B5BFF 0%, #FF6B35 100%);">
-          <span class="blog-emoji">🎨</span>
-        </div>
-        <div class="blog-card-body">
-          <span class="blog-cat-badge">Design</span>
-          <h3 class="blog-card-title">Design Trends That Will Define 2025</h3>
-          <p class="blog-card-excerpt">From bold minimalism to kinetic typography and AI-generated UI, here are the design movements shaping digital products this year — with real-world examples.</p>
-          <div class="blog-card-meta">
-            <span>Mar 1, 2025 · 9 min read</span>
-            <span class="blog-readmore">Read more →</span>
-          </div>
-        </div>
-      </a>
-
-      <a href="#" class="tool-card-link blog-card reveal reveal-delay-3" data-category="SEO">
-        <div class="blog-card-image" style="background: linear-gradient(135deg, #00B8A9 0%, #FF6B35 100%);">
-          <span class="blog-emoji">🔍</span>
-        </div>
-        <div class="blog-card-body">
-          <span class="blog-cat-badge">SEO</span>
-          <h3 class="blog-card-title">SEO Checklist for New Websites</h3>
-          <p class="blog-card-excerpt">A 24-point checklist covering technical SEO, on-page optimization, content structure, and Core Web Vitals. Run through it before you hit publish.</p>
-          <div class="blog-card-meta">
-            <span>Mar 18, 2025 · 12 min read</span>
-            <span class="blog-readmore">Read more →</span>
-          </div>
-        </div>
-      </a>
-
-      <a href="#" class="tool-card-link blog-card reveal reveal-delay-1" data-category="Tools">
-        <div class="blog-card-image" style="background: linear-gradient(135deg, #E8384F 0%, #FF6B35 100%);">
-          <span class="blog-emoji">🧰</span>
-        </div>
-        <div class="blog-card-body">
-          <span class="blog-cat-badge">Tools</span>
-          <h3 class="blog-card-title">Best Free Alternatives to Paid Software</h3>
-          <p class="blog-card-excerpt">Why pay $50/month for Photoshop or Microsoft Office? We round up the best free alternatives for design, productivity, dev tools, and office suites.</p>
-          <div class="blog-card-meta">
-            <span>Apr 5, 2025 · 11 min read</span>
-            <span class="blog-readmore">Read more →</span>
-          </div>
-        </div>
-      </a>
-
-      <a href="#" class="tool-card-link blog-card reveal reveal-delay-2" data-category="Design">
-        <div class="blog-card-image" style="background: linear-gradient(135deg, #FF6B35 0%, #6B5BFF 100%);">
-          <span class="blog-emoji">🖌️</span>
-        </div>
-        <div class="blog-card-body">
-          <span class="blog-cat-badge">Design</span>
-          <h3 class="blog-card-title">How to Choose the Right Color Palette</h3>
-          <p class="blog-card-excerpt">Color theory made practical. Learn how to build a palette from a single brand color, generate complementary schemes, and test for accessibility.</p>
-          <div class="blog-card-meta">
-            <span>Apr 22, 2025 · 6 min read</span>
-            <span class="blog-readmore">Read more →</span>
-          </div>
-        </div>
-      </a>
-
-    </div>
-
-    <!-- Newsletter CTA -->
-    <div class="reveal reveal-delay-3" style="margin-top: 4rem; background: linear-gradient(135deg, rgba(255,107,53,0.08), rgba(232,56,79,0.06), rgba(0,184,169,0.08)); border: 1px solid rgba(255,107,53,0.2); border-radius: 1.25rem; padding: 2.5rem 2rem; text-align: center;">
-      <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem;">Never miss a post</h3>
-      <p style="color: #6b7280; max-width: 36rem; margin: 0 auto 1.5rem;" class="dark:text-gray-400">Get the latest tutorials and tool updates delivered to your inbox. No spam, unsubscribe anytime.</p>
-      <form id="newsletter-form" style="display: flex; gap: 0.5rem; max-width: 28rem; margin: 0 auto; flex-wrap: wrap; justify-content: center;">
-        <input type="email" id="newsletter-email" placeholder="you@example.com" required style="flex: 1; min-width: 200px; max-width: 320px; padding: 0.75rem 1rem; border-radius: 0.75rem; background: #fff; border: 1px solid #e5e7eb; font-size: 0.875rem;">
-        <button type="submit" class="btn-primary">Subscribe</button>
-      </form>
-    </div>
-  </div>
+  </main>
 
   <script src="../assets/js/common.js"></script>
   <script>
-    // Category filter
-    const chips = document.querySelectorAll('.blog-filter-chip');
-    const cards = document.querySelectorAll('#blog-grid .blog-card');
-    chips.forEach(chip => {
-      chip.addEventListener('click', () => {
-        chips.forEach(c => c.classList.remove('active'));
-        chip.classList.add('active');
-        const filter = chip.dataset.filter;
-        cards.forEach(card => {
-          if (filter === 'all' || card.dataset.category === filter) {
-            card.style.display = '';
-          } else {
-            card.style.display = 'none';
-          }
-        });
-      });
+    // Newsletter form — demo handler (no real backend)
+    document.getElementById('newsletter-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      const email = document.getElementById('newsletter-email').value.trim();
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        if (window.CL) CL.toast('Please enter a valid email address', false);
+        return;
+      }
+      if (window.CL) CL.toast('You are subscribed. Welcome aboard!');
+      document.getElementById('newsletter-email').value = '';
     });
-
-    // Newsletter form (demo — just shows a toast)
-    const newsletterForm = document.getElementById('newsletter-form');
-    if (newsletterForm) {
-      newsletterForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const email = document.getElementById('newsletter-email').value.trim();
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-          window.CL && window.CL.toast('Please enter a valid email address.', false);
-          return;
-        }
-        newsletterForm.reset();
-        window.CL && window.CL.toast('Thanks for subscribing! Check your inbox to confirm.', true);
-      });
-    }
   </script>
 </body>
 </html>
