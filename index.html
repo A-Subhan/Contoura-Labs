@@ -41,9 +41,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"></noscript>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.tailwindcss.com" defer></script>
   <script>
-    tailwind.config = {
+    // Tailwind config will be applied once the deferred script loads
+    window.__twConfig = {
       darkMode: 'class',
       theme: {
         extend: {
@@ -54,7 +55,13 @@
           fontFamily: { sans: ['Inter', 'sans-serif'] }
         }
       }
+    };
+    // Apply config when Tailwind loads
+    function applyTwConfig() {
+      if (window.tailwind) { tailwind.config = window.__twConfig; }
+      else { setTimeout(applyTwConfig, 50); }
     }
+    applyTwConfig();
   </script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -743,12 +750,6 @@
     </div>
   </section>
 
-  <!-- TOAST NOTIFICATION -->
-  <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-6 py-3.5 rounded-xl shadow-2xl flex items-center gap-3 text-sm font-medium">
-    <svg class="w-5 h-5 text-brand-teal shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-    <span id="toast-text">Message sent successfully!</span>
-  </div>
-
   <!-- JAVASCRIPT -->
   </main>
 
@@ -824,25 +825,6 @@
       }
     });
 
-    // Contact Form
-        const toast = document.getElementById('toast');
-    const toastText = document.getElementById('toast-text');
-);
-
-    function showToast(message, success) {
-      toastText.textContent = message;
-      const icon = toast.querySelector('svg');
-      if (success) {
-        icon.classList.remove('text-brand-red');
-        icon.classList.add('text-brand-teal');
-      } else {
-        icon.classList.remove('text-brand-teal');
-        icon.classList.add('text-brand-red');
-      }
-      toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 3500);
-    }
-
     // Smooth Scroll
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
       anchor.addEventListener('click', function(e) {
@@ -857,12 +839,5 @@
     });
   </script>
 
-  <script defer src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-
-<script>
-  (function(){
-    emailjs.init("8FIZegGOO5ktJqe5M");
-  })();
-</script>
 </body>
 </html>
