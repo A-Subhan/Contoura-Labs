@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="google-adsense-account" content="ca-pub-1264117586848709">
+  <title>Terms of Service — Contoura Labs</title>
+  <meta name="description" content="Contoura Labs Terms of Service — acceptable use, intellectual property, user conduct, disclaimers, limitation of liability, indemnification, termination, and governing law.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 73 28 A 32 32 0 0 0 27 28' stroke='%23FF6B35' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 24 32 A 32 32 0 0 0 24 68' stroke='%23E8384F' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 27 72 A 32 32 0 0 0 73 72' stroke='%2300B8A9' stroke-width='9' fill='none' stroke-linecap='round'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: {
+        colors: {
+          brand: { orange: '#FF6B35', red: '#E8384F', teal: '#00B8A9' },
+          surface: { light: '#F8F9FA', dark: '#0A0A0A', card: '#1A1A1A', alt: '#111111' }
+        },
+        fontFamily: { sans: ['Inter', 'sans-serif'] }
+      }}
+    }
+  </script>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <style>
+    .legal-doc { max-width: 48rem; margin: 0 auto; padding: 2rem 1.5rem 4rem; position: relative; z-index: 1; }
+    .legal-back { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.5rem 1rem; border-radius: 999px; background: rgba(255,107,53,0.08); color: var(--brand-orange); font-size: 0.8rem; font-weight: 600; text-decoration: none; transition: all 0.25s ease; margin-bottom: 2rem; }
+    .legal-back:hover { background: rgba(255,107,53,0.18); transform: translateX(-2px); }
+    .legal-title { font-size: 2.25rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.5rem; line-height: 1.1; }
+    .legal-meta { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0.85rem; border-radius: 999px; background: rgba(0,184,169,0.1); color: var(--brand-teal); font-size: 0.78rem; font-weight: 600; margin-bottom: 2rem; }
+    .legal-intro { font-size: 1.05rem; line-height: 1.7; color: #4b5563; padding: 1.5rem; background: rgba(255,107,53,0.04); border-left: 3px solid var(--brand-orange); border-radius: 0 0.5rem 0.5rem 0; margin-bottom: 2.5rem; }
+    .dark .legal-intro { color: #9ca3af; }
+    .legal-section { margin-bottom: 2.5rem; scroll-margin-top: 6rem; }
+    .legal-section h2 { font-size: 1.4rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.6rem; }
+    .legal-section h2::before { content: ''; width: 4px; height: 1.4rem; background: linear-gradient(135deg, var(--brand-orange), var(--brand-red), var(--brand-teal)); border-radius: 2px; flex-shrink: 0; }
+    .legal-section h3 { font-size: 1.05rem; font-weight: 600; margin: 1.25rem 0 0.5rem; color: var(--brand-orange); }
+    .legal-section p { font-size: 0.95rem; line-height: 1.75; color: #4b5563; margin-bottom: 0.85rem; }
+    .dark .legal-section p { color: #9ca3af; }
+    .legal-section ul { margin: 0.5rem 0 1rem 1.5rem; list-style: disc; }
+    .legal-section ul li { font-size: 0.95rem; line-height: 1.7; color: #4b5563; margin-bottom: 0.4rem; }
+    .dark .legal-section ul li { color: #9ca3af; }
+    .legal-section a { color: var(--brand-orange); text-decoration: underline; text-underline-offset: 2px; }
+    .legal-toc { background: #f9fafb; border: 1px solid #f3f4f6; border-radius: 0.85rem; padding: 1.5rem 1.75rem; margin-bottom: 2.5rem; }
+    .dark .legal-toc { background: #1A1A1A; border-color: rgba(255,255,255,0.06); }
+    .legal-toc h3 { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #9ca3af; margin-bottom: 0.85rem; }
+    .legal-toc ol { list-style: decimal; margin-left: 1.25rem; }
+    .legal-toc ol li { margin-bottom: 0.4rem; font-size: 0.875rem; }
+    .legal-toc ol li a { color: #4b5563; text-decoration: none; transition: color 0.2s ease; }
+    .dark .legal-toc ol li a { color: #d1d5db; }
+    .legal-toc ol li a:hover { color: var(--brand-orange); }
+    .legal-contact { margin-top: 2rem; padding: 1.5rem; background: linear-gradient(135deg, rgba(255,107,53,0.06), rgba(0,184,169,0.06)); border: 1px solid rgba(255,107,53,0.15); border-radius: 0.85rem; }
+  </style>
+</head>
+<body class="font-sans bg-white text-gray-900 dark:bg-surface-dark dark:text-gray-100 antialiased">
+
+  <div id="navbar-mount"></div>
+
+  <main class="tool-page">
+    <div class="tool-container">
+      <article class="legal-doc">
+
+        <a href="../index.html" class="legal-back">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+          Back to Home
+        </a>
+
+        <h1 class="legal-title">Terms of Service</h1>
+        <span class="legal-meta">
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          Last updated: July 2025
+        </span>
+
+        <div class="legal-intro">
+          Welcome to Contoura Labs. These Terms of Service ("Terms") govern your use of our website at contouralabs.com and all tools, games, and content available through the site (collectively, the "Services"). By accessing or using the Services, you agree to be bound by these Terms. If you do not agree to these Terms, please do not use the Services.
+        </div>
+
+        <div class="legal-toc">
+          <h3>Table of Contents</h3>
+          <ol>
+            <li><a href="#acceptance">Acceptance of Terms</a></li>
+            <li><a href="#use-of-services">Use of Services</a></li>
+            <li><a href="#ip">Intellectual Property</a></li>
+            <li><a href="#conduct">User Conduct</a></li>
+            <li><a href="#liability">Limitation of Liability</a></li>
+            <li><a href="#disclaimers">Disclaimers</a></li>
+            <li><a href="#indemnification">Indemnification</a></li>
+            <li><a href="#termination">Termination</a></li>
+            <li><a href="#law">Governing Law</a></li>
+            <li><a href="#changes">Changes to Terms</a></li>
+            <li><a href="#contact">Contact</a></li>
+          </ol>
+        </div>
+
+        <section class="legal-section" id="acceptance">
+          <h2>1. Acceptance of Terms</h2>
+          <p>By accessing, browsing, or using any part of the Contoura Labs website, you acknowledge that you have read, understood, and agree to be bound by these Terms and our <a href="privacy-policy.html">Privacy Policy</a>, which is incorporated herein by reference.</p>
+          <p>If you are using the Services on behalf of an organization, you represent and warrant that you have the authority to bind that organization to these Terms, and the terms "you" and "your" will refer to both you and that organization.</p>
+          <p>If you do not agree with any part of these Terms, you must not access or use the Services. We may update these Terms from time to time, and your continued use of the Services after any changes constitutes acceptance of the revised Terms.</p>
+          <p> Certain tools or features may be subject to additional terms or policies, which will be clearly displayed. In the event of a conflict between these Terms and any such additional terms, the additional terms will govern with respect to the specific tool or feature.</p>
+        </section>
+
+        <section class="legal-section" id="use-of-services">
+          <h2>2. Use of Services</h2>
+          <p>Contoura Labs provides free, browser-based tools and games for personal and commercial use. We grant you a limited, non-exclusive, non-transferable, revocable license to access and use the Services for their intended purpose, subject to these Terms.</p>
+
+          <h3>2.1 Eligibility</h3>
+          <p>You must be at least 13 years of age (or the minimum age of digital consent in your jurisdiction) to use the Services. If you are under 18, you represent that your parent or legal guardian has reviewed and agreed to these Terms on your behalf.</p>
+
+          <h3>2.2 Acceptable Use</h3>
+          <p>You may use the Services for any lawful purpose, including commercial work. You may use the output of our tools (converted PDFs, generated QR codes, formatted text, etc.) in your own personal or commercial projects without attribution, except where noted otherwise on a specific tool.</p>
+
+          <h3>2.3 No Warranty of Suitability</h3>
+          <p>While we work hard to make our tools accurate and reliable, the Services are provided "as is" and you are responsible for verifying the suitability of any output for your specific use case. For example, if you use our PDF tools to prepare a legal document, you are responsible for reviewing the output before relying on it.</p>
+
+          <h3>2.4 Service Availability</h3>
+          <p>We strive to maintain high availability but do not guarantee that the Services will be uninterrupted, error-free, or available at all times. We may modify, suspend, or discontinue any tool or the entire website at any time without notice.</p>
+        </section>
+
+        <section class="legal-section" id="ip">
+          <h2>3. Intellectual Property</h2>
+          <p>The Services — including the website design, code, text, graphics, logos, and the unique combination of features that make up Contoura Labs — are owned by Contoura Labs and protected by international copyright, trademark, and other intellectual property laws.</p>
+
+          <h3>3.1 Our Marks</h3>
+          <p>"Contoura Labs," the Contoura Labs three-arc logo, and other marks associated with the Services are our trademarks. You may not use our marks without our prior written permission, except to refer to us in a descriptive, non-commercial manner (e.g., "I used a tool from Contoura Labs").</p>
+
+          <h3>3.2 Open-Source Components</h3>
+          <p>Many of the JavaScript libraries used by our tools are open-source and licensed under their respective terms (MIT, Apache 2.0, BSD, etc.). These licenses remain in effect and are not overridden by these Terms. We acknowledge and appreciate the open-source community.</p>
+
+          <h3>3.3 Your Content</h3>
+          <p>As described in our <a href="privacy-policy.html">Privacy Policy</a>, files you process with our tools remain entirely on your device. You retain all rights to your content. We claim no ownership over anything you create, convert, or generate using our tools.</p>
+
+          <h3>3.4 Output You Generate</h3>
+          <p>Output produced by our tools — such as QR codes, passwords, color palettes, or PDF conversions — belongs to you. You may use it for any purpose, personal or commercial, without attribution. We do not assert any intellectual property rights over output generated by you through the Services.</p>
+        </section>
+
+        <section class="legal-section" id="conduct">
+          <h2>4. User Conduct</h2>
+          <p>You agree not to engage in any of the following prohibited activities while using the Services:</p>
+          <ul>
+            <li>Using the Services for any unlawful purpose or in violation of any local, state, national, or international law.</li>
+            <li>Attempting to gain unauthorized access to, disrupt, or compromise the security of our systems, servers, or networks.</li>
+            <li>Scraping, crawling, or otherwise systematically extracting content from the website without our prior written consent.</li>
+            <li>Uploading or transmitting viruses, malware, or any other malicious code through any input mechanism on the website.</li>
+            <li>Interfering with the proper functioning of the website, including the ads displayed by our advertising partners.</li>
+            <li>Impersonating another person or entity, or falsely representing your affiliation with a person or entity.</li>
+            <li>Using the Services to develop, train, or evaluate competitive products without our prior written permission.</li>
+            <li>Engaging in any activity that could damage, disable, overburden, or impair the website.</li>
+          </ul>
+          <p>We reserve the right to suspend or block access for any user who violates these conduct rules, with or without notice.</p>
+        </section>
+
+        <section class="legal-section" id="liability">
+          <h2>5. Limitation of Liability</h2>
+          <p>To the fullest extent permitted by applicable law, Contoura Labs and its operators shall not be liable for any indirect, incidental, special, consequential, or punitive damages, or any loss of profits or revenues, whether incurred directly or indirectly, or any loss of data, use, goodwill, or other intangible losses, resulting from:</p>
+          <ul>
+            <li>Your access to or use of (or inability to access or use) the Services.</li>
+            <li>Any conduct or content of any third party on the Services, including advertisers.</li>
+            <li>Any unauthorized access, use, or alteration of your transmissions or content.</li>
+            <li>Any errors, bugs, or inaccuracies in the tools or their output.</li>
+            <li>Any interruption or cessation of transmission to or from the Services.</li>
+          </ul>
+          <p>In no event shall our total liability to you for any claim arising out of or relating to these Terms or the Services exceed the greater of (a) the amounts you have paid to us through the Services in the twelve months preceding the claim, or (b) one hundred U.S. dollars ($100). Since most of our tools are free, this limit will typically be $100.</p>
+          <p>Some jurisdictions do not allow the exclusion or limitation of certain damages, so some of the above limitations may not apply to you.</p>
+        </section>
+
+        <section class="legal-section" id="disclaimers">
+          <h2>6. Disclaimers</h2>
+          <p>The Services are provided on an "as is" and "as available" basis, without warranties of any kind, either express or implied, including but not limited to implied warranties of merchantability, fitness for a particular purpose, non-infringement, or course of performance.</p>
+          <p>We do not warrant that the Services will meet your specific requirements, that they will be error-free or uninterrupted, that any defects will be corrected, or that the results obtained from using the Services will be accurate or reliable.</p>
+          <p>You use the Services at your own risk. You are solely responsible for any output created through the tools and for verifying the accuracy and suitability of that output for your intended use. We specifically disclaim responsibility for any losses arising from reliance on tool output, including (but not limited to) converted PDFs, generated passwords, formatted code, and currency conversions.</p>
+          <p>Any content or advice obtained through the Services is done at your own discretion and risk, and you will be solely responsible for any damage to your device or loss of data that results from such activity.</p>
+        </section>
+
+        <section class="legal-section" id="indemnification">
+          <h2>7. Indemnification</h2>
+          <p>You agree to defend, indemnify, and hold harmless Contoura Labs and its operators, affiliates, and licensors from and against any claims, liabilities, damages, judgments, awards, losses, costs, expenses, or fees (including reasonable attorneys' fees) arising out of or relating to:</p>
+          <ul>
+            <li>Your breach of these Terms or your violation of any law or the rights of a third party.</li>
+            <li>Your misuse of the Services.</li>
+            <li>Any content you submit to the Services through forms or input fields, including the contact form.</li>
+          </ul>
+          <p>We reserve the right, at our own expense, to assume the exclusive defense and control of any matter otherwise subject to indemnification by you, in which case you will cooperate with us in asserting any available defenses. You may not settle any matter without our prior written consent.</p>
+          <p>This indemnification obligation will survive the termination of your use of the Services.</p>
+        </section>
+
+        <section class="legal-section" id="termination">
+          <h2>8. Termination</h2>
+          <p>We may terminate or suspend your access to the Services immediately, without prior notice or liability, for any reason, including if you breach these Terms.</p>
+          <p>All provisions of these Terms which by their nature should survive termination shall survive termination, including, without limitation, ownership provisions, warranty disclaimers, indemnity, and limitations of liability.</p>
+          <p>You may stop using the Services at any time. If you wish to request deletion of any personal information you have provided to us (such as through the contact form), please email us at the address in the Contact section below.</p>
+          <p>Because we do not require accounts, "termination" of your use simply means stopping use of the website. We may also block specific IP addresses or devices that violate these Terms or pose a security risk.</p>
+        </section>
+
+        <section class="legal-section" id="law">
+          <h2>9. Governing Law</h2>
+          <p>These Terms shall be governed by and construed in accordance with the laws of the United States, without regard to its conflict of law provisions.</p>
+          <p>Any disputes arising under or in connection with these Terms shall be subject to the exclusive jurisdiction of the competent courts located in the United States, and you consent to the exercise of such jurisdiction.</p>
+          <p>If any provision of these Terms is held to be invalid or unenforceable by a court of competent jurisdiction, the remaining provisions will remain in full force and effect, and the invalid provision will be modified to the minimum extent necessary to make it enforceable while preserving the parties' intent.</p>
+          <p>For users outside the United States, you may still use the Services, but you agree that any disputes will be resolved as set forth above. We do not represent that the Services are appropriate or available in all jurisdictions.</p>
+        </section>
+
+        <section class="legal-section" id="changes">
+          <h2>10. Changes to Terms</h2>
+          <p>We reserve the right to modify or revise these Terms at any time. When we do, we will update the "Last updated" date at the top of this page. We may also provide additional notice of significant changes through the website.</p>
+          <p>Your continued use of the Services following the posting of any changes to these Terms constitutes acceptance of those changes. You are responsible for reviewing these Terms periodically to stay informed of any updates.</p>
+          <p>If we make material changes that materially affect your rights or obligations, we will use commercially reasonable efforts to provide more prominent notice, such as a banner on the website.</p>
+          <p>The most current version of these Terms will always be available on this page. We recommend bookmarking it for easy reference.</p>
+        </section>
+
+        <section class="legal-section" id="contact">
+          <h2>11. Contact</h2>
+          <p>If you have any questions, concerns, or notices regarding these Terms, please contact us. We're happy to clarify any provision or discuss how these Terms apply to your specific use case.</p>
+
+          <div class="legal-contact">
+            <p style="margin-bottom: 0.5rem;"><strong>📧 Email:</strong> <a href="mailto:contouralabs@gmail.com">contouralabs@gmail.com</a></p>
+            <p style="margin-bottom: 0.5rem;"><strong>💬 Contact Form:</strong> <a href="../faq-contact.html">FAQ &amp; Contact page</a></p>
+            <p style="margin-bottom: 0;"><strong>⏱️ Response Time:</strong> Within 24 hours (Mon–Fri)</p>
+          </div>
+        </section>
+
+      </article>
+    </div>
+  </main>
+
+  <script src="../assets/js/common.js"></script>
+</body>
+</html>

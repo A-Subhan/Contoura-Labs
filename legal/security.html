@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="google-adsense-account" content="ca-pub-1264117586848709">
+  <title>Security — Contoura Labs</title>
+  <meta name="description" content="Contoura Labs Security — how we protect your data through browser-based processing, no data storage, third-party security practices, vulnerability reporting, and security best practices.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 73 28 A 32 32 0 0 0 27 28' stroke='%23FF6B35' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 24 32 A 32 32 0 0 0 24 68' stroke='%23E8384F' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 27 72 A 32 32 0 0 0 73 72' stroke='%2300B8A9' stroke-width='9' fill='none' stroke-linecap='round'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: {
+        colors: {
+          brand: { orange: '#FF6B35', red: '#E8384F', teal: '#00B8A9' },
+          surface: { light: '#F8F9FA', dark: '#0A0A0A', card: '#1A1A1A', alt: '#111111' }
+        },
+        fontFamily: { sans: ['Inter', 'sans-serif'] }
+      }}
+    }
+  </script>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <style>
+    .legal-doc { max-width: 48rem; margin: 0 auto; padding: 2rem 1.5rem 4rem; position: relative; z-index: 1; }
+    .legal-back { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.5rem 1rem; border-radius: 999px; background: rgba(255,107,53,0.08); color: var(--brand-orange); font-size: 0.8rem; font-weight: 600; text-decoration: none; transition: all 0.25s ease; margin-bottom: 2rem; }
+    .legal-back:hover { background: rgba(255,107,53,0.18); transform: translateX(-2px); }
+    .legal-title { font-size: 2.25rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.5rem; line-height: 1.1; }
+    .legal-meta { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0.85rem; border-radius: 999px; background: rgba(0,184,169,0.1); color: var(--brand-teal); font-size: 0.78rem; font-weight: 600; margin-bottom: 2rem; }
+    .legal-intro { font-size: 1.05rem; line-height: 1.7; color: #4b5563; padding: 1.5rem; background: rgba(0,184,169,0.06); border-left: 3px solid var(--brand-teal); border-radius: 0 0.5rem 0.5rem 0; margin-bottom: 2.5rem; }
+    .dark .legal-intro { color: #9ca3af; }
+    .legal-section { margin-bottom: 2.5rem; scroll-margin-top: 6rem; }
+    .legal-section h2 { font-size: 1.4rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.6rem; }
+    .legal-section h2::before { content: ''; width: 4px; height: 1.4rem; background: linear-gradient(135deg, var(--brand-orange), var(--brand-red), var(--brand-teal)); border-radius: 2px; flex-shrink: 0; }
+    .legal-section h3 { font-size: 1.05rem; font-weight: 600; margin: 1.25rem 0 0.5rem; color: var(--brand-orange); }
+    .legal-section p { font-size: 0.95rem; line-height: 1.75; color: #4b5563; margin-bottom: 0.85rem; }
+    .dark .legal-section p { color: #9ca3af; }
+    .legal-section ul { margin: 0.5rem 0 1rem 1.5rem; list-style: disc; }
+    .legal-section ul li { font-size: 0.95rem; line-height: 1.7; color: #4b5563; margin-bottom: 0.4rem; }
+    .dark .legal-section ul li { color: #9ca3af; }
+    .legal-section a { color: var(--brand-orange); text-decoration: underline; text-underline-offset: 2px; }
+    .legal-toc { background: #f9fafb; border: 1px solid #f3f4f6; border-radius: 0.85rem; padding: 1.5rem 1.75rem; margin-bottom: 2.5rem; }
+    .dark .legal-toc { background: #1A1A1A; border-color: rgba(255,255,255,0.06); }
+    .legal-toc h3 { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #9ca3af; margin-bottom: 0.85rem; }
+    .legal-toc ol { list-style: decimal; margin-left: 1.25rem; }
+    .legal-toc ol li { margin-bottom: 0.4rem; font-size: 0.875rem; }
+    .legal-toc ol li a { color: #4b5563; text-decoration: none; transition: color 0.2s ease; }
+    .dark .legal-toc ol li a { color: #d1d5db; }
+    .legal-toc ol li a:hover { color: var(--brand-orange); }
+    .legal-contact { margin-top: 2rem; padding: 1.5rem; background: linear-gradient(135deg, rgba(255,107,53,0.06), rgba(0,184,169,0.06)); border: 1px solid rgba(255,107,53,0.15); border-radius: 0.85rem; }
+
+    /* Highlighted feature cards */
+    .security-features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      margin: 1.5rem 0 2rem;
+    }
+    .security-feature {
+      padding: 1.25rem;
+      border-radius: 0.85rem;
+      background: #f9fafb;
+      border: 1px solid #f3f4f6;
+      transition: all 0.25s ease;
+    }
+    .dark .security-feature { background: #1A1A1A; border-color: rgba(255,255,255,0.06); }
+    .security-feature:hover { border-color: rgba(0,184,169,0.4); transform: translateY(-3px); box-shadow: 0 10px 24px rgba(0,184,169,0.08); }
+    .security-feature-icon {
+      width: 38px; height: 38px;
+      border-radius: 0.55rem;
+      background: linear-gradient(135deg, rgba(0,184,169,0.18), rgba(255,107,53,0.12));
+      display: flex; align-items: center; justify-content: center;
+      color: var(--brand-teal);
+      margin-bottom: 0.75rem;
+    }
+    .security-feature h4 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.35rem; }
+    .security-feature p { font-size: 0.825rem; color: #6b7280; line-height: 1.5; margin: 0; }
+    .dark .security-feature p { color: #9ca3af; }
+  </style>
+</head>
+<body class="font-sans bg-white text-gray-900 dark:bg-surface-dark dark:text-gray-100 antialiased">
+
+  <div id="navbar-mount"></div>
+
+  <main class="tool-page">
+    <div class="tool-container">
+      <article class="legal-doc">
+
+        <a href="../index.html" class="legal-back">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+          Back to Home
+        </a>
+
+        <h1 class="legal-title">Security</h1>
+        <span class="legal-meta">
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+          Last updated: July 2025
+        </span>
+
+        <div class="legal-intro">
+          <strong>Your data never leaves your device.</strong> That's the core of our security model. Every tool on Contoura Labs runs entirely in your browser — no files are uploaded to our servers, ever. This page explains our security architecture in detail.
+        </div>
+
+        <!-- Quick feature cards -->
+        <div class="security-features">
+          <div class="security-feature">
+            <div class="security-feature-icon">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+            </div>
+            <h4>100% Client-Side</h4>
+            <p>All processing happens in your browser using JavaScript. No server round-trips.</p>
+          </div>
+          <div class="security-feature">
+            <div class="security-feature-icon">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
+            </div>
+            <h4>Zero File Storage</h4>
+            <p>We have no server-side database of user files. Nothing to leak, nothing to breach.</p>
+          </div>
+          <div class="security-feature">
+            <div class="security-feature-icon">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            </div>
+            <h4>HTTPS Everywhere</h4>
+            <p>The entire site is served over encrypted TLS connections.</p>
+          </div>
+          <div class="security-feature">
+            <div class="security-feature-icon">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            </div>
+            <h4>Open Libraries</h4>
+            <p>We use well-known, audited open-source libraries (pdf-lib, JSZip, etc.).</p>
+          </div>
+        </div>
+
+        <div class="legal-toc">
+          <h3>Table of Contents</h3>
+          <ol>
+            <li><a href="#approach">Our Approach to Security</a></li>
+            <li><a href="#data-protection">Data Protection</a></li>
+            <li><a href="#browser-processing">Browser-Based Processing</a></li>
+            <li><a href="#no-storage">No Data Storage</a></li>
+            <li><a href="#third-party">Third-Party Security</a></li>
+            <li><a href="#reporting">Reporting Vulnerabilities</a></li>
+            <li><a href="#best-practices">Security Best Practices</a></li>
+            <li><a href="#contact">Contact</a></li>
+          </ol>
+        </div>
+
+        <section class="legal-section" id="approach">
+          <h2>1. Our Approach to Security</h2>
+          <p>At Contoura Labs, we believe the most secure data is data that's never collected in the first place. That's why our entire architecture is built around a simple principle: <strong>the browser is the server.</strong></p>
+          <p>Traditional web applications work by uploading your files to a server, processing them there, and sending the result back. This creates a significant attack surface — your data is transmitted over the network, stored on someone else's server, and potentially accessible to that server's operators, employees, or anyone who breaches the server.</p>
+          <p>Our tools flip this model on its head. When you use, say, our PDF merger, your PDF files are read into your browser's memory, merged using JavaScript that runs on your own device, and the merged file is offered back to you as a download. At no point does the file content touch our servers.</p>
+          <p>This "client-side first" approach means our security posture is fundamentally different from (and stronger than) traditional server-side tools — for the simple reason that we don't have anything to protect, because we don't have anything to lose.</p>
+        </section>
+
+        <section class="legal-section" id="data-protection">
+          <h2>2. Data Protection</h2>
+          <p>While we don't store your files, we do collect a minimal amount of operational data (analytics, contact-form submissions, hosting logs). Here's how we protect what little we do handle:</p>
+
+          <h3>2.1 Encryption in Transit</h3>
+          <p>All communication between your browser and our website is encrypted using TLS (Transport Layer Security). This means that any data you submit — such as a contact-form message — cannot be intercepted or read by third parties while in transit.</p>
+          <p>We enforce HTTPS site-wide using HSTS (HTTP Strict Transport Security), which instructs your browser to always use the encrypted connection, even if you type "http://" by mistake.</p>
+
+          <h3>2.2 Encryption at Rest</h3>
+          <p>The limited data we do store (such as forwarded contact-form emails) is stored in our email provider's infrastructure, which uses industry-standard encryption at rest. We do not operate our own database.</p>
+
+          <h3>2.3 Access Control</h3>
+          <p>Access to backend systems (such as analytics dashboards and email) is restricted to a small number of authorized individuals on a need-to-know basis. We use strong, unique passwords and multi-factor authentication for all administrative accounts.</p>
+
+          <h3>2.4 Minimal Data Collection</h3>
+          <p>Our analytics provider processes anonymized or pseudonymized data and does not track individual users across other websites. We never collect sensitive personal data such as government IDs, financial information, or health information.</p>
+        </section>
+
+        <section class="legal-section" id="browser-processing">
+          <h2>3. Browser-Based Processing</h2>
+          <p>Every tool on Contoura Labs operates entirely within your web browser. This includes:</p>
+          <ul>
+            <li><strong>PDF tools:</strong> Merging, splitting, compressing, and converting PDFs — all handled by JavaScript libraries (pdf-lib, pdfjs-dist, JSZip) running on your device.</li>
+            <li><strong>Image tools:</strong> Compression, format conversion, background removal — all processed locally using canvas APIs and WebAssembly.</li>
+            <li><strong>Generators:</strong> QR codes, passwords, color palettes, meta tags — generated using cryptographic-random APIs and standard math, all in-browser.</li>
+            <li><strong>Calculators &amp; converters:</strong> All math is performed locally. The only exception is the currency converter, which fetches live exchange rates (no personal data is sent).</li>
+          </ul>
+          <p>This approach has three major security advantages:</p>
+          <ul>
+            <li><strong>No transmission risk:</strong> Your files never travel over the network, so they cannot be intercepted by man-in-the-middle attackers or compromised ISPs.</li>
+            <li><strong>No storage risk:</strong> Your files are never written to any server disk, so they cannot be stolen through a server breach, misconfigured backup, or insider threat.</li>
+            <li><strong>No metadata leakage:</strong> We don't even know what tools you're using or what kinds of files you're processing — your browser handles everything privately.</li>
+          </ul>
+          <p>For the technically curious: you can verify this yourself by opening your browser's developer tools (F12), going to the "Network" tab, and using any of our tools. You'll see that no file content is transmitted.</p>
+        </section>
+
+        <section class="legal-section" id="no-storage">
+          <h2>4. No Data Storage</h2>
+          <p>Because all processing is client-side, we have no server-side database of user files. This means:</p>
+          <ul>
+            <li>There is no central database of user files for an attacker to breach.</li>
+            <li>There is no risk of insider access to your files by our team or hosting providers.</li>
+            <li>There is no risk of files being retained after you close the tab — your browser's memory is cleared when the tab closes.</li>
+            <li>There is no risk of files being inadvertently exposed through misconfigured backups or logging systems.</li>
+          </ul>
+          <p>The only information we may store about your visit is anonymized analytics data (page viewed, approximate region, browser type) and any information you choose to provide through the contact form.</p>
+          <p>This architectural choice is the single biggest security feature of Contoura Labs. Even if our entire server infrastructure were compromised, no user file content could be exfiltrated — because none of it was ever there.</p>
+        </section>
+
+        <section class="legal-section" id="third-party">
+          <h2>5. Third-Party Security</h2>
+          <p>While our tools process files locally, we do rely on a small number of third-party services for non-file operations. Here's how we evaluate and use them:</p>
+
+          <h3>5.1 CDN-Hosted Libraries</h3>
+          <p>We load JavaScript libraries from reputable public CDNs (jsDelivr, unpkg, cdnjs). These libraries are widely used and well-audited. The CDNs themselves use HTTPS and serve files with integrity hashes where supported.</p>
+          <p>If you'd like to verify the integrity of a specific library, you can compare its hash against the published hash in the library's repository. We use Subresource Integrity (SRI) attributes where the CDN provides them.</p>
+
+          <h3>5.2 EmailJS (Contact Form)</h3>
+          <p>When you submit our contact form, your message is delivered through EmailJS, a service that routes form submissions to our email inbox without exposing our email credentials in the browser. EmailJS uses TLS for all transmissions and does not store message content beyond what's needed for delivery.</p>
+
+          <h3>5.3 Google AdSense</h3>
+          <p>We participate in Google AdSense to display ads. Google's ad scripts run in your browser and may set cookies for ad personalization and frequency capping. We do not control Google's security practices, but Google publishes its own security and privacy documentation at <a href="https://safety.google" target="_blank" rel="noopener">safety.google</a>.</p>
+          <p>You can opt out of personalized ads at any time through <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener">Google Ads Settings</a>.</p>
+
+          <h3>5.4 Web Hosting &amp; CDN</h3>
+          <p>The website itself is served through a CDN that provides DDoS protection, TLS termination, and edge caching. The CDN provider logs basic request metadata (IP address, timestamp, user agent) for security and operational purposes, in accordance with their own privacy policy.</p>
+        </section>
+
+        <section class="legal-section" id="reporting">
+          <h2>6. Reporting Vulnerabilities</h2>
+          <p>We take security reports seriously and appreciate the efforts of security researchers who help us keep our users safe. If you believe you've found a security vulnerability in any of our tools, our website, or our infrastructure, please report it to us responsibly.</p>
+
+          <h3>6.1 How to Report</h3>
+          <p>Email us at <a href="mailto:contouralabs@gmail.com">contouralabs@gmail.com</a> with the subject line "Security Report." Please include:</p>
+          <ul>
+            <li>A clear description of the vulnerability and its potential impact.</li>
+            <li>Steps to reproduce the issue (or a proof-of-concept).</li>
+            <li>The specific URL, tool, or component affected.</li>
+            <li>Your browser and operating system version, if relevant.</li>
+          </ul>
+
+          <h3>6.2 What We Ask</h3>
+          <ul>
+            <li>Please give us reasonable time to investigate and remediate before disclosing the issue publicly.</li>
+            <li>Please do not access, modify, or delete data that does not belong to you.</li>
+            <li>Please do not perform denial-of-service attacks or use automated scanners that generate significant load.</li>
+            <li>Please do not target users of our services — only test against your own accounts or data.</li>
+          </ul>
+
+          <h3>6.3 Our Commitment</h3>
+          <p>We will acknowledge receipt of your report within 48 hours and provide an initial assessment within 5 business days. We will keep you informed of our progress and credit you in any public disclosure (if you wish).</p>
+          <p>We do not currently offer a monetary bug bounty program, but we are happy to acknowledge responsible disclosure and may send a small token of appreciation for confirmed, high-impact vulnerabilities.</p>
+        </section>
+
+        <section class="legal-section" id="best-practices">
+          <h2>7. Security Best Practices</h2>
+          <p>While we've designed our tools to be as secure as possible by architecture, there are steps you can take to further protect yourself when using any web application — ours included:</p>
+
+          <h3>7.1 Keep Your Browser Updated</h3>
+          <p>Browser vendors regularly release security patches. Keeping your browser up to date ensures you benefit from the latest protections against known vulnerabilities. Most modern browsers auto-update, but it's worth checking periodically.</p>
+
+          <h3>7.2 Use a Modern Browser</h3>
+          <p>Our tools work best on recent versions of Chrome, Firefox, Safari, or Edge. Older browsers may have unpatched vulnerabilities or may not support the modern JavaScript features our tools rely on.</p>
+
+          <h3>7.3 Be Cautious on Public Wi-Fi</h3>
+          <p>Although our site uses HTTPS (which encrypts your traffic), public Wi-Fi networks can still pose risks. If you're processing sensitive files, consider using a trusted network or a VPN.</p>
+
+          <h3>7.4 Clear Your Browser Data</h3>
+          <p>If you've used our tools on a shared or public computer, you may want to clear the browser's cache, cookies, and localStorage when you're done. This will remove your theme preferences and any tool settings stored on that device.</p>
+
+          <h3>7.5 Verify the URL</h3>
+          <p>Always make sure you're visiting <code>contouralabs.com</code> and not a phishing lookalike. Check for the green padlock icon in your browser's address bar, which indicates a valid TLS certificate.</p>
+
+          <h3>7.6 Use Strong Passwords</h3>
+          <p>Our <a href="../tools/password-generator.html">password generator</a> can create strong, random passwords for any of your accounts. Use a unique password for every account, and consider a password manager to store them securely.</p>
+        </section>
+
+        <section class="legal-section" id="contact">
+          <h2>8. Contact</h2>
+          <p>If you have any questions about our security practices, want to report a vulnerability, or simply want to learn more about how we protect your data, please reach out.</p>
+
+          <div class="legal-contact">
+            <p style="margin-bottom: 0.5rem;"><strong>📧 Email:</strong> <a href="mailto:contouralabs@gmail.com">contouralabs@gmail.com</a></p>
+            <p style="margin-bottom: 0.5rem;"><strong>💬 Contact Form:</strong> <a href="../faq-contact.html">FAQ &amp; Contact page</a></p>
+            <p style="margin-bottom: 0;"><strong>🔒 Security Reports:</strong> Use the subject "Security Report" for vulnerability disclosures.</p>
+          </div>
+        </section>
+
+      </article>
+    </div>
+  </main>
+
+  <script src="../assets/js/common.js"></script>
+</body>
+</html>

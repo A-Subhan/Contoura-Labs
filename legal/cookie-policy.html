@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="google-adsense-account" content="ca-pub-1264117586848709">
+  <title>Cookie Policy — Contoura Labs</title>
+  <meta name="description" content="Contoura Labs Cookie Policy — what cookies are, the types we use (essential, analytics, advertising), third-party cookies, and how to manage or disable cookies in your browser.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 73 28 A 32 32 0 0 0 27 28' stroke='%23FF6B35' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 24 32 A 32 32 0 0 0 24 68' stroke='%23E8384F' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 27 72 A 32 32 0 0 0 73 72' stroke='%2300B8A9' stroke-width='9' fill='none' stroke-linecap='round'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: {
+        colors: {
+          brand: { orange: '#FF6B35', red: '#E8384F', teal: '#00B8A9' },
+          surface: { light: '#F8F9FA', dark: '#0A0A0A', card: '#1A1A1A', alt: '#111111' }
+        },
+        fontFamily: { sans: ['Inter', 'sans-serif'] }
+      }}
+    }
+  </script>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <style>
+    .legal-doc { max-width: 48rem; margin: 0 auto; padding: 2rem 1.5rem 4rem; position: relative; z-index: 1; }
+    .legal-back { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.5rem 1rem; border-radius: 999px; background: rgba(255,107,53,0.08); color: var(--brand-orange); font-size: 0.8rem; font-weight: 600; text-decoration: none; transition: all 0.25s ease; margin-bottom: 2rem; }
+    .legal-back:hover { background: rgba(255,107,53,0.18); transform: translateX(-2px); }
+    .legal-title { font-size: 2.25rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.5rem; line-height: 1.1; }
+    .legal-meta { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0.85rem; border-radius: 999px; background: rgba(0,184,169,0.1); color: var(--brand-teal); font-size: 0.78rem; font-weight: 600; margin-bottom: 2rem; }
+    .legal-intro { font-size: 1.05rem; line-height: 1.7; color: #4b5563; padding: 1.5rem; background: rgba(255,107,53,0.04); border-left: 3px solid var(--brand-orange); border-radius: 0 0.5rem 0.5rem 0; margin-bottom: 2.5rem; }
+    .dark .legal-intro { color: #9ca3af; }
+    .legal-section { margin-bottom: 2.5rem; scroll-margin-top: 6rem; }
+    .legal-section h2 { font-size: 1.4rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.6rem; }
+    .legal-section h2::before { content: ''; width: 4px; height: 1.4rem; background: linear-gradient(135deg, var(--brand-orange), var(--brand-red), var(--brand-teal)); border-radius: 2px; flex-shrink: 0; }
+    .legal-section h3 { font-size: 1.05rem; font-weight: 600; margin: 1.25rem 0 0.5rem; color: var(--brand-orange); }
+    .legal-section p { font-size: 0.95rem; line-height: 1.75; color: #4b5563; margin-bottom: 0.85rem; }
+    .dark .legal-section p { color: #9ca3af; }
+    .legal-section ul { margin: 0.5rem 0 1rem 1.5rem; list-style: disc; }
+    .legal-section ul li { font-size: 0.95rem; line-height: 1.7; color: #4b5563; margin-bottom: 0.4rem; }
+    .dark .legal-section ul li { color: #9ca3af; }
+    .legal-section a { color: var(--brand-orange); text-decoration: underline; text-underline-offset: 2px; }
+    .legal-toc { background: #f9fafb; border: 1px solid #f3f4f6; border-radius: 0.85rem; padding: 1.5rem 1.75rem; margin-bottom: 2.5rem; }
+    .dark .legal-toc { background: #1A1A1A; border-color: rgba(255,255,255,0.06); }
+    .legal-toc h3 { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #9ca3af; margin-bottom: 0.85rem; }
+    .legal-toc ol { list-style: decimal; margin-left: 1.25rem; }
+    .legal-toc ol li { margin-bottom: 0.4rem; font-size: 0.875rem; }
+    .legal-toc ol li a { color: #4b5563; text-decoration: none; transition: color 0.2s ease; }
+    .dark .legal-toc ol li a { color: #d1d5db; }
+    .legal-toc ol li a:hover { color: var(--brand-orange); }
+    .legal-contact { margin-top: 2rem; padding: 1.5rem; background: linear-gradient(135deg, rgba(255,107,53,0.06), rgba(0,184,169,0.06)); border: 1px solid rgba(255,107,53,0.15); border-radius: 0.85rem; }
+
+    /* Cookie table */
+    .cookie-table-wrap { overflow-x: auto; margin: 1rem 0 1.5rem; border: 1px solid #f3f4f6; border-radius: 0.85rem; }
+    .dark .cookie-table-wrap { border-color: rgba(255,255,255,0.06); }
+    .cookie-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+      min-width: 600px;
+    }
+    .cookie-table thead { background: linear-gradient(135deg, rgba(255,107,53,0.06), rgba(232,56,79,0.04), rgba(0,184,169,0.06)); }
+    .dark .cookie-table thead { background: rgba(255,255,255,0.03); }
+    .cookie-table th {
+      text-align: left;
+      padding: 0.9rem 1rem;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #374151;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .dark .cookie-table th { color: #d1d5db; border-color: rgba(255,255,255,0.06); }
+    .cookie-table td {
+      padding: 0.85rem 1rem;
+      color: #4b5563;
+      border-bottom: 1px solid #f3f4f6;
+      vertical-align: top;
+    }
+    .dark .cookie-table td { color: #9ca3af; border-color: rgba(255,255,255,0.06); }
+    .cookie-table tr:last-child td { border-bottom: none; }
+    .cookie-table td strong { color: var(--brand-orange); }
+    .cookie-badge {
+      display: inline-block;
+      padding: 0.15rem 0.55rem;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .cookie-badge.essential { background: rgba(0,184,169,0.15); color: var(--brand-teal); }
+    .cookie-badge.analytics { background: rgba(255,107,53,0.15); color: var(--brand-orange); }
+    .cookie-badge.advertising { background: rgba(232,56,79,0.15); color: var(--brand-red); }
+  </style>
+</head>
+<body class="font-sans bg-white text-gray-900 dark:bg-surface-dark dark:text-gray-100 antialiased">
+
+  <div id="navbar-mount"></div>
+
+  <main class="tool-page">
+    <div class="tool-container">
+      <article class="legal-doc">
+
+        <a href="../index.html" class="legal-back">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+          Back to Home
+        </a>
+
+        <h1 class="legal-title">Cookie Policy</h1>
+        <span class="legal-meta">
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          Last updated: July 2025
+        </span>
+
+        <div class="legal-intro">
+          This Cookie Policy explains what cookies and similar technologies are, how Contoura Labs uses them, the types of cookies we set, and the choices you have. This policy should be read alongside our <a href="privacy-policy.html">Privacy Policy</a>, which explains how we handle personal information more broadly.
+        </div>
+
+        <div class="legal-toc">
+          <h3>Table of Contents</h3>
+          <ol>
+            <li><a href="#what-are-cookies">What Are Cookies?</a></li>
+            <li><a href="#how-we-use">How We Use Cookies</a></li>
+            <li><a href="#types">Types of Cookies We Use</a></li>
+            <li><a href="#third-party">Third-Party Cookies</a></li>
+            <li><a href="#managing">Managing Cookies</a></li>
+            <li><a href="#changes">Changes to This Policy</a></li>
+            <li><a href="#contact">Contact</a></li>
+          </ol>
+        </div>
+
+        <section class="legal-section" id="what-are-cookies">
+          <h2>1. What Are Cookies?</h2>
+          <p>Cookies are small text files that websites place on your device when you visit them. They allow the website to recognize your browser across sessions, remember your preferences, and gather anonymous usage statistics. Cookies are widely used across the web and are not inherently harmful — they are simply a mechanism for storing small amounts of data on your device.</p>
+          <p>Cookies typically contain a name, a value, an expiration date, and the domain they belong to. They can be either "session cookies" (deleted when you close your browser) or "persistent cookies" (remain on your device until they expire or you delete them).</p>
+          <p>In addition to cookies, websites may use other browser-storage technologies such as <strong>localStorage</strong> and <strong>sessionStorage</strong>. These work similarly to cookies but can store larger amounts of data. Contoura Labs uses localStorage to remember your dark-mode preference and any tool-specific settings (e.g., previously entered values in calculators).</p>
+          <p>For simplicity, in this policy we use the term "cookies" to refer to all of these technologies collectively.</p>
+        </section>
+
+        <section class="legal-section" id="how-we-use">
+          <h2>2. How We Use Cookies</h2>
+          <p>We use cookies and similar technologies for a small number of specific purposes:</p>
+          <ul>
+            <li><strong>Essential functionality:</strong> Remembering your theme (dark/light) preference, preserving tool settings during your session, and keeping the contact form secure.</li>
+            <li><strong>Analytics:</strong> Counting visits, understanding which tools are most popular, and diagnosing errors — all in aggregate, anonymously.</li>
+            <li><strong>Advertising:</strong> Allowing our advertising partner (Google AdSense) to display and measure ads, and to prevent the same ad from being shown to you too frequently.</li>
+          </ul>
+          <p>We do <strong>not</strong> use cookies to track your activity across other websites for the purpose of building a behavioral profile, beyond what is required by our advertising partner to serve relevant ads. You can opt out of personalized advertising at any time (see the Managing Cookies section below).</p>
+          <p>We do <strong>not</strong> use cookies to store any information about the files you process with our tools. All file processing happens in your browser's memory and is discarded when you close the tab.</p>
+        </section>
+
+        <section class="legal-section" id="types">
+          <h2>3. Types of Cookies We Use</h2>
+          <p>The table below lists the categories of cookies used on Contoura Labs, their purpose, and whether they are essential for the website to function.</p>
+
+          <div class="cookie-table-wrap">
+            <table class="cookie-table">
+              <thead>
+                <tr>
+                  <th>Cookie Category</th>
+                  <th>Purpose</th>
+                  <th>Type</th>
+                  <th>Duration</th>
+                  <th>Essential?</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Theme Preference</strong></td>
+                  <td>Remembers whether you've selected dark or light mode.</td>
+                  <td><span class="cookie-badge essential">Essential</span></td>
+                  <td>Persistent (localStorage)</td>
+                  <td>Yes</td>
+                </tr>
+                <tr>
+                  <td><strong>Tool Settings</strong></td>
+                  <td>Remembers your last-used options in specific tools (e.g., page size for PDF generators).</td>
+                  <td><span class="cookie-badge essential">Essential</span></td>
+                  <td>Persistent (localStorage)</td>
+                  <td>Yes</td>
+                </tr>
+                <tr>
+                  <td><strong>Session Token</strong></td>
+                  <td>Protects the contact form from automated abuse (bot submissions).</td>
+                  <td><span class="cookie-badge essential">Essential</span></td>
+                  <td>Session</td>
+                  <td>Yes</td>
+                </tr>
+                <tr>
+                  <td><strong>Analytics</strong></td>
+                  <td>Records anonymous visit data (page views, referrer, country) for aggregate reporting.</td>
+                  <td><span class="cookie-badge analytics">Analytics</span></td>
+                  <td>Up to 12 months</td>
+                  <td>No</td>
+                </tr>
+                <tr>
+                  <td><strong>Google AdSense (__gads, IDE)</strong></td>
+                  <td>Serves and measures ads; personalizes ad delivery based on visit history.</td>
+                  <td><span class="cookie-badge advertising">Advertising</span></td>
+                  <td>Up to 13 months</td>
+                  <td>No</td>
+                </tr>
+                <tr>
+                  <td><strong>Ad Frequency</strong></td>
+                  <td>Limits how often the same ad is shown to a user (frequency capping).</td>
+                  <td><span class="cookie-badge advertising">Advertising</span></td>
+                  <td>Up to 30 days</td>
+                  <td>No</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p>Essential cookies are required for the website to function correctly and cannot be disabled in our system. They are usually set in response to actions you take, such as setting your theme preference or submitting the contact form.</p>
+          <p>Analytics and advertising cookies are optional. You can disable them through your browser settings or through the opt-out links provided in section 5 below.</p>
+        </section>
+
+        <section class="legal-section" id="third-party">
+          <h2>4. Third-Party Cookies</h2>
+          <p>In addition to our own cookies, we allow certain third-party services to set cookies through our website. These third parties use cookies to provide their services to us and to you.</p>
+
+          <h3>4.1 Google AdSense</h3>
+          <p>Google AdSense is our advertising partner. When you visit a page that displays ads, Google may set or read cookies in your browser to serve ads based on your visit to our site and other sites on the internet. Google's use of advertising cookies enables it and its partners to serve ads to you based on your visit to our site and/or other sites on the internet.</p>
+          <p>You may opt out of personalized advertising by visiting <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener">Google Ads Settings</a>. You can also opt out of third-party vendors' use of cookies for personalized advertising by visiting <a href="https://www.aboutads.info" target="_blank" rel="noopener">aboutads.info</a>.</p>
+
+          <h3>4.2 Analytics Provider</h3>
+          <p>Our analytics provider may set a cookie to distinguish unique visitors. This cookie does not contain personally identifiable information and is used solely to compute aggregate metrics.</p>
+
+          <h3>4.3 CDN-Hosted Libraries</h3>
+          <p>We load JavaScript libraries (such as pdf-lib, JSZip, and Tailwind CSS) from public CDNs like jsDelivr and unpkg. These CDNs may set their own cookies to track usage patterns and improve performance. We do not control these cookies; please review the CDN's privacy policy for more information.</p>
+
+          <h3>4.4 EmailJS</h3>
+          <p>When you submit our contact form, your message is transmitted through EmailJS. EmailJS does not typically set cookies, but their service may log request metadata for operational purposes.</p>
+        </section>
+
+        <section class="legal-section" id="managing">
+          <h2>5. Managing Cookies</h2>
+          <p>You have several options for managing or deleting cookies. Most modern browsers allow you to:</p>
+          <ul>
+            <li><strong>View all cookies</strong> stored on your device.</li>
+            <li><strong>Delete individual or all cookies</strong> from a particular website.</li>
+            <li><strong>Block cookies</strong> from specific websites or all websites.</li>
+            <li><strong>Set preferences</strong> for first-party vs. third-party cookies.</li>
+            <li><strong>Enable "Do Not Track"</strong> signals (though not all websites respond to these).</li>
+          </ul>
+
+          <h3>5.1 Browser-Specific Instructions</h3>
+          <p>Here are links to cookie-management instructions for popular browsers:</p>
+          <ul>
+            <li><a href="https://support.google.com/chrome/answer/95647" target="_blank" rel="noopener">Google Chrome</a></li>
+            <li><a href="https://support.mozilla.org/en-US/kb/cookies-information-websites-store-on-your-computer" target="_blank" rel="noopener">Mozilla Firefox</a></li>
+            <li><a href="https://support.apple.com/guide/safari/manage-cookies-and-website-data-sfri11471/mac" target="_blank" rel="noopener">Apple Safari</a></li>
+            <li><a href="https://support.microsoft.com/en-us/microsoft-edge/delete-cookies-in-microsoft-edge-63947406-40ac-c3b8-57b9-2a946a29ae09" target="_blank" rel="noopener">Microsoft Edge</a></li>
+          </ul>
+
+          <h3>5.2 Opting Out of Personalized Ads</h3>
+          <p>If you'd prefer not to see personalized ads, you can opt out using the following industry opt-out tools:</p>
+          <ul>
+            <li><a href="https://www.google.com/settings/ads" target="_blank" rel="noopener">Google Ads Settings</a> — opt out of Google's personalized ads.</li>
+            <li><a href="https://www.aboutads.info/choices/" target="_blank" rel="noopener">Digital Advertising Alliance opt-out</a> — opt out of participating ad networks.</li>
+            <li><a href="https://www.youronlinechoices.com/" target="_blank" rel="noopener">Your Online Choices (EU)</a> — opt out for European users.</li>
+          </ul>
+
+          <h3>5.3 Impact of Disabling Cookies</h3>
+          <p>If you disable all cookies, the basic functionality of our tools will continue to work (since they don't rely on cookies for processing), but you may experience the following limitations:</p>
+          <ul>
+            <li>Your theme preference will not be remembered between visits.</li>
+            <li>Tool-specific settings (e.g., last-used page size) will not persist.</li>
+            <li>The contact form may require additional verification steps to prevent spam.</li>
+            <li>You may see less relevant advertising.</li>
+          </ul>
+          <p>Essential cookies cannot be disabled; if you do not want these set, you should not use the website.</p>
+        </section>
+
+        <section class="legal-section" id="changes">
+          <h2>6. Changes to This Policy</h2>
+          <p>We may update this Cookie Policy from time to time to reflect changes in the cookies we use, the purposes for which we use them, or changes in applicable law. When we make material changes, we will revise the "Last updated" date at the top of this page.</p>
+          <p>We encourage you to review this policy periodically to stay informed about our use of cookies. Continued use of the website after any changes constitutes your consent to the updated policy.</p>
+          <p>If we add new categories of cookies or significantly change how we use existing ones, we will provide more prominent notice through the website.</p>
+        </section>
+
+        <section class="legal-section" id="contact">
+          <h2>7. Contact</h2>
+          <p>If you have any questions about this Cookie Policy or our use of cookies, please contact us. We're happy to clarify any aspect of this policy or assist with cookie-related concerns.</p>
+
+          <div class="legal-contact">
+            <p style="margin-bottom: 0.5rem;"><strong>📧 Email:</strong> <a href="mailto:contouralabs@gmail.com">contouralabs@gmail.com</a></p>
+            <p style="margin-bottom: 0.5rem;"><strong>💬 Contact Form:</strong> <a href="../faq-contact.html">FAQ &amp; Contact page</a></p>
+            <p style="margin-bottom: 0;"><strong>⏱️ Response Time:</strong> Within 24 hours (Mon–Fri)</p>
+          </div>
+        </section>
+
+      </article>
+    </div>
+  </main>
+
+  <script src="../assets/js/common.js"></script>
+</body>
+</html>

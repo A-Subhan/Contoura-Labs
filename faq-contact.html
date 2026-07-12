@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="google-adsense-account" content="ca-pub-1264117586848709">
+  <title>FAQ &amp; Contact — Contoura Labs</title>
+  <meta name="description" content="Find answers to common questions about Contoura Labs tools, services, privacy, and pricing. Need more help? Send us a message — we reply within 24 hours.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 73 28 A 32 32 0 0 0 27 28' stroke='%23FF6B35' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 24 32 A 32 32 0 0 0 24 68' stroke='%23E8384F' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M 27 72 A 32 32 0 0 0 73 72' stroke='%2300B8A9' stroke-width='9' fill='none' stroke-linecap='round'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: {
+        colors: {
+          brand: { orange: '#FF6B35', red: '#E8384F', teal: '#00B8A9' },
+          surface: { light: '#F8F9FA', dark: '#0A0A0A', card: '#1A1A1A', alt: '#111111' }
+        },
+        fontFamily: { sans: ['Inter', 'sans-serif'] }
+      }}
+    }
+  </script>
+  <link rel="stylesheet" href="assets/css/common.css">
+  <style>
+    /* FAQ accordion */
+    .faq-item {
+      background: #fff;
+      border: 1px solid #f3f4f6;
+      border-radius: 0.85rem;
+      margin-bottom: 0.75rem;
+      overflow: hidden;
+      transition: border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+    .dark .faq-item { background: #1A1A1A; border-color: rgba(255,255,255,0.06); }
+    .faq-item:hover { border-color: rgba(255,107,53,0.35); }
+    .faq-item[open] { border-color: rgba(255,107,53,0.45); box-shadow: 0 8px 20px rgba(255,107,53,0.08); }
+    .faq-summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 1.1rem 1.4rem;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.95rem;
+      list-style: none;
+      user-select: none;
+    }
+    .faq-summary::-webkit-details-marker { display: none; }
+    .faq-icon {
+      width: 26px; height: 26px;
+      flex-shrink: 0;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(255,107,53,0.15), rgba(232,56,79,0.10), rgba(0,184,169,0.15));
+      display: flex; align-items: center; justify-content: center;
+      color: var(--brand-orange);
+      transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
+    }
+    .faq-item[open] .faq-icon { transform: rotate(45deg); }
+    .faq-answer {
+      padding: 0 1.4rem 1.25rem;
+      color: #6b7280;
+      font-size: 0.9rem;
+      line-height: 1.65;
+    }
+    .dark .faq-answer { color: #9ca3af; }
+    .faq-answer p + p { margin-top: 0.6rem; }
+    .faq-answer a { color: var(--brand-orange); text-decoration: underline; text-underline-offset: 2px; }
+    .faq-category {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--brand-teal);
+      margin-bottom: 0.25rem;
+    }
+    /* Contact section */
+    .contact-section {
+      max-width: 80rem;
+      margin: 0 auto;
+      padding: 4rem 1.5rem;
+    }
+    .contact-grid {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 2rem;
+      align-items: start;
+    }
+    @media (max-width: 900px) { .contact-grid { grid-template-columns: 1fr; } }
+    .contact-sidebar {
+      background: linear-gradient(135deg, rgba(255,107,53,0.06), rgba(232,56,79,0.04), rgba(0,184,169,0.06));
+      border: 1px solid rgba(255,107,53,0.15);
+      border-radius: 1.25rem;
+      padding: 2rem;
+    }
+    .contact-info-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.85rem;
+      margin-bottom: 1.4rem;
+    }
+    .contact-info-item:last-child { margin-bottom: 0; }
+    .contact-info-icon {
+      width: 40px; height: 40px;
+      flex-shrink: 0;
+      border-radius: 0.65rem;
+      background: #fff;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--brand-orange);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+    .dark .contact-info-icon { background: #1A1A1A; box-shadow: none; }
+    .contact-info-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #9ca3af; margin-bottom: 0.2rem; }
+    .contact-info-value { font-size: 0.9rem; font-weight: 500; color: #374151; word-break: break-word; }
+    .dark .contact-info-value { color: #d1d5db; }
+    .contact-info-value a { color: var(--brand-orange); text-decoration: none; }
+    .contact-info-value a:hover { text-decoration: underline; }
+    .social-row { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+    .social-link {
+      width: 36px; height: 36px;
+      border-radius: 0.55rem;
+      background: #fff;
+      display: flex; align-items: center; justify-content: center;
+      color: #6b7280;
+      transition: all 0.25s ease;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.05);
+    }
+    .dark .social-link { background: #1A1A1A; box-shadow: none; color: #9ca3af; }
+    .social-link:hover { color: #fff; background: linear-gradient(135deg, #FF6B35, #E8384F); transform: translateY(-2px); }
+    .contact-form-card {
+      background: #fff;
+      border: 1px solid #f3f4f6;
+      border-radius: 1.25rem;
+      padding: 2.25rem;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.04);
+    }
+    .dark .contact-form-card { background: #1A1A1A; border-color: rgba(255,255,255,0.06); box-shadow: none; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
+    .faq-wrap { max-width: 48rem; margin: 0 auto; }
+  </style>
+</head>
+<body class="font-sans bg-white text-gray-900 dark:bg-surface-dark dark:text-gray-100 antialiased">
+
+  <!-- Background animation: animated gradient waves -->
+  <div class="bg-waves">
+    <div class="bg-wave"></div>
+    <div class="bg-wave"></div>
+    <div class="bg-wave"></div>
+  </div>
+
+  <!-- NAVBAR (auto-injected) -->
+  <div id="navbar-mount"></div>
+
+  <main class="tool-page">
+    <div class="tool-container">
+
+      <!-- HERO -->
+      <div class="tool-header" style="margin-bottom: 3rem;">
+        <span class="badge mb-4"><span class="pulse-dot"></span>We're here to help</span>
+        <h1 class="reveal visible" style="font-size: 2.5rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.75rem;">FAQ &amp; <span class="gradient-text">Contact</span></h1>
+        <p class="tool-subtitle reveal reveal-delay-1 visible" style="font-size: 1rem; max-width: 40rem;">Find quick answers to common questions below. Can't find what you're looking for? Send us a message and we'll get back to you within 24 hours.</p>
+      </div>
+
+      <!-- FAQ SECTION -->
+      <section style="margin-bottom: 4rem;">
+        <h2 class="reveal" style="font-size: 1.6rem; font-weight: 700; margin-bottom: 0.5rem; text-align: center;">Frequently Asked Questions</h2>
+        <p class="reveal reveal-delay-1 dark:text-gray-400" style="text-align: center; color: #6b7280; margin-bottom: 2.5rem;">Click a question to expand the answer.</p>
+
+        <div class="faq-wrap">
+
+          <details class="faq-item reveal">
+            <summary class="faq-summary">
+              <div>
+                <div class="faq-category">General</div>
+                Are the tools really free?
+              </div>
+              <span class="faq-icon"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg></span>
+            </summary>
+            <div class="faq-answer">
+              <p>Yes — every tool on Contoura Labs is 100% free to use, with no hidden fees, no trial periods, and no credit card required. We don't have a "premium" tier or upsell. The tools are funded by occasional, non-intrusive ads.</p>
+              <p>There are also no usage limits. Convert as many PDFs, generate as many QR codes, or play as many games as you like.</p>
+            </div>
+          </details>
+
+          <details class="faq-item reveal">
+            <summary class="faq-summary">
+              <div>
+                <div class="faq-category">Account</div>
+                Do I need to create an account?
+              </div>
+              <span class="faq-icon"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg></span>
+            </summary>
+            <div class="faq-answer">
+              <p>No account is required for any of our tools or games. Just visit the page and start using it. We don't ask for your name, email, or any personal information to use the tools.</p>
+              <p>If you contact us through the form below, we'll only use your email to reply to your message.</p>
+            </div>
+          </details>
+
+          <details class="faq-item reveal">
+            <summary class="faq-summary">
+              <div>
+                <div class="faq-category">Privacy</div>
+                Is my data safe when using the tools?
+              </div>
+              <span class="faq-icon"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg></span>
+            </summary>
+            <div class="faq-answer">
+              <p>Absolutely. All processing happens locally in your browser. Files you upload (PDFs, images, documents) never leave your device — they are not uploaded to any server.</p>
+              <p>This means your data is as safe as your own device. You can even use the tools offline once the page has loaded. Read more in our <a href="legal/security.html">Security page</a> and <a href="legal/privacy-policy.html">Privacy Policy</a>.</p>
+            </div>
+          </details>
+
+          <details class="faq-item reveal">
+            <summary class="faq-summary">
+              <div>
+                <div class="faq-category">Usage</div>
+                Can I use these tools offline?
+              </div>
+              <span class="faq-icon"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg></span>
+            </summary>
+            <div class="faq-answer">
+              <p>Most tools work offline once the page is loaded, because all processing happens in your browser. However, you'll need an internet connection for the initial page load (to fetch Tailwind CSS, fonts, and any tool-specific libraries from a CDN).</p>
+              <p>A few tools that rely on external APIs — like the currency converter or speed test — require a live internet connection to function.</p>
+            </div>
+          </details>
+
+          <details class="faq-item reveal">
+            <summary class="faq-summary">
+              <div>
+                <div class="faq-category">Feedback</div>
+                How do I report a bug or suggest a feature?
+              </div>
+              <span class="faq-icon"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg></span>
+            </summary>
+            <div class="faq-answer">
+              <p>We love hearing from users. Use the contact form below to send us bug reports, feature requests, or general feedback. Please include as much detail as possible:</p>
+              <p>• Which tool you were using<br>• What you expected to happen<br>• What actually happened<br>• Your browser and operating system</p>
+              <p>We read every message and prioritize fixes based on impact.</p>
+            </div>
+          </details>
+
+          <details class="faq-item reveal">
+            <summary class="faq-summary">
+              <div>
+                <div class="faq-category">Services</div>
+                Do you offer custom web development services?
+              </div>
+              <span class="faq-icon"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg></span>
+            </summary>
+            <div class="faq-answer">
+              <p>Yes! Contoura Labs is also a small web development studio. We take on selective client work including landing pages, web apps, e-commerce sites, and custom browser-based tools.</p>
+              <p>Send us a brief via the contact form below with your project scope, timeline, and budget range. We'll get back to you within 24 hours to discuss whether we're a good fit.</p>
+            </div>
+          </details>
+
+          <details class="faq-item reveal">
+            <summary class="faq-summary">
+              <div>
+                <div class="faq-category">Technical</div>
+                What technologies do you use?
+              </div>
+              <span class="faq-icon"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg></span>
+            </summary>
+            <div class="faq-answer">
+              <p>Our tools are built with vanilla JavaScript, HTML5, and CSS3. We use Tailwind CSS for styling and a handful of CDN-hosted libraries for specific tasks (pdf-lib, JSZip, QRCode.js, mammoth, browser-image-compression, etc.).</p>
+              <p>For client projects we typically use Next.js, TypeScript, Tailwind CSS, and Prisma, depending on requirements.</p>
+            </div>
+          </details>
+
+          <details class="faq-item reveal">
+            <summary class="faq-summary">
+              <div>
+                <div class="faq-category">Services</div>
+                How long does a typical project take?
+              </div>
+              <span class="faq-icon"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg></span>
+            </summary>
+            <div class="faq-answer">
+              <p>It depends on scope. A landing page usually takes 1–2 weeks. A typical marketing site or small web app takes 3–6 weeks. Larger applications with backend, authentication, and integrations can run 2–4 months.</p>
+              <p>We'll give you a realistic timeline after the discovery call — and we stick to it.</p>
+            </div>
+          </details>
+
+          <details class="faq-item reveal">
+            <summary class="faq-summary">
+              <div>
+                <div class="faq-category">Services</div>
+                Do you provide ongoing maintenance?
+              </div>
+              <span class="faq-icon"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg></span>
+            </summary>
+            <div class="faq-answer">
+              <p>Yes. We offer monthly maintenance retainers for sites and apps we've built. This covers security updates, dependency upgrades, small content changes, performance monitoring, and priority bug fixes.</p>
+              <p>If you have a site built by someone else, we may still be able to help — reach out and we'll take a look.</p>
+            </div>
+          </details>
+
+          <details class="faq-item reveal">
+            <summary class="faq-summary">
+              <div>
+                <div class="faq-category">Services</div>
+                What is your refund policy?
+              </div>
+              <span class="faq-icon"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg></span>
+            </summary>
+            <div class="faq-answer">
+              <p>Since our tools are free, there's nothing to refund. For custom client work: if we haven't started yet, you can cancel for a full refund. Once work has begun, we bill for hours completed up to the cancellation date and refund the rest.</p>
+              <p>For monthly retainers, you can cancel anytime before the next billing cycle.</p>
+            </div>
+          </details>
+
+          <details class="faq-item reveal">
+            <summary class="faq-summary">
+              <div>
+                <div class="faq-category">General</div>
+                Can I request a new tool?
+              </div>
+              <span class="faq-icon"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg></span>
+            </summary>
+            <div class="faq-answer">
+              <p>Yes, please do! Many of our tools started as user requests. If you have an idea for a useful, free, browser-based tool, send it our way using the contact form below.</p>
+              <p>We can't promise to build every suggestion, but we read every request and add popular ones to our roadmap.</p>
+            </div>
+          </details>
+
+          <details class="faq-item reveal">
+            <summary class="faq-summary">
+              <div>
+                <div class="faq-category">Support</div>
+                How do I contact support?
+              </div>
+              <span class="faq-icon"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg></span>
+            </summary>
+            <div class="faq-answer">
+              <p>The fastest way is to use the contact form on this page. You can also email us directly at <a href="mailto:contouralabs@gmail.com">contouralabs@gmail.com</a>.</p>
+              <p>We respond to all messages within 24 hours, usually much faster during business hours (Mon–Fri, 9 AM–6 PM).</p>
+            </div>
+          </details>
+
+        </div>
+      </section>
+
+      <!-- CONTACT SECTION -->
+      <section class="contact-section" id="contact">
+        <div class="tool-header reveal" style="margin-bottom: 2.5rem;">
+          <h2 style="font-size: 1.75rem; font-weight: 700; margin-bottom: 0.5rem;">Get in Touch</h2>
+          <p class="tool-subtitle">Have a question, project, or just want to say hi? Drop us a message.</p>
+        </div>
+
+        <div class="contact-grid">
+          <!-- Sidebar -->
+          <div class="contact-sidebar reveal reveal-delay-1">
+            <div class="contact-info-item">
+              <div class="contact-info-icon">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+              </div>
+              <div>
+                <div class="contact-info-label">Email</div>
+                <div class="contact-info-value"><a href="mailto:contouralabs@gmail.com">contouralabs@gmail.com</a></div>
+              </div>
+            </div>
+
+            <div class="contact-info-item">
+              <div class="contact-info-icon">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              </div>
+              <div>
+                <div class="contact-info-label">Response Time</div>
+                <div class="contact-info-value">Within 24 hours</div>
+              </div>
+            </div>
+
+            <div class="contact-info-item">
+              <div class="contact-info-icon">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              </div>
+              <div>
+                <div class="contact-info-label">Working Hours</div>
+                <div class="contact-info-value">Mon – Fri · 9 AM – 6 PM</div>
+              </div>
+            </div>
+
+            <div class="contact-info-item">
+              <div class="contact-info-icon">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+              </div>
+              <div>
+                <div class="contact-info-label">Follow Us</div>
+                <div class="social-row">
+                  <a href="https://www.instagram.com/contouralabs/" target="_blank" rel="noopener" class="social-link" aria-label="Instagram">
+                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                  </a>
+                  <a href="https://www.facebook.com/profile.php?id=61581292773749" target="_blank" rel="noopener" class="social-link" aria-label="Facebook">
+                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                  </a>
+                  <a href="mailto:contouralabs@gmail.com" class="social-link" aria-label="Email">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Form -->
+          <div class="contact-form-card reveal reveal-delay-2">
+            <form id="contact-form">
+              <div class="form-row mb-4">
+                <div>
+                  <label for="name" class="field-label">Your Name <span style="color: var(--brand-red);">*</span></label>
+                  <input type="text" id="name" name="name" required placeholder="John Doe">
+                </div>
+                <div>
+                  <label for="email" class="field-label">Email Address <span style="color: var(--brand-red);">*</span></label>
+                  <input type="email" id="email" name="email" required placeholder="john@example.com">
+                </div>
+              </div>
+              <div class="mb-4">
+                <label for="subject" class="field-label">Subject <span style="color: var(--brand-red);">*</span></label>
+                <select id="subject" name="subject" required>
+                  <option value="">Choose a topic…</option>
+                  <option value="General Question">General Question</option>
+                  <option value="Bug Report">Bug Report</option>
+                  <option value="Feature Request">Feature Request</option>
+                  <option value="Custom Web Development">Custom Web Development</option>
+                  <option value="Partnership">Partnership / Collaboration</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div class="mb-6">
+                <label for="message" class="field-label">Your Message <span style="color: var(--brand-red);">*</span></label>
+                <textarea id="message" name="message" rows="6" required placeholder="Tell us about your project, question, or feedback…" style="min-height: 140px;"></textarea>
+              </div>
+              <button type="submit" class="btn-primary w-full" style="padding: 0.9rem 1.5rem;">
+                <span>Send Message</span>
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>
+              </button>
+              <p style="text-align: center; font-size: 0.75rem; color: #9ca3af; margin-top: 1rem;">By submitting, you agree to our <a href="legal/privacy-policy.html" style="color: var(--brand-orange); text-decoration: underline;">Privacy Policy</a>.</p>
+            </form>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- EmailJS -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+  <script>
+    (function(){ emailjs.init("8FIZegGOO5ktJqe5M"); })();
+  </script>
+
+  <script src="assets/js/common.js"></script>
+  <script>
+    // Contact form wiring (EmailJS)
+    document.addEventListener('DOMContentLoaded', () => {
+      const form = document.getElementById('contact-form');
+      if (!form) return;
+
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = document.getElementById('name').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const subject = document.getElementById('subject').value;
+        const message = document.getElementById('message').value.trim();
+
+        if (!name || !email || !subject || !message) {
+          window.CL && window.CL.toast('Please fill in all fields.', false);
+          return;
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          window.CL && window.CL.toast('Please enter a valid email address.', false);
+          return;
+        }
+
+        const btn = form.querySelector('button[type="submit"]');
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<svg class="animate-spin" width="16" height="16" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span>Sending…</span>';
+        btn.disabled = true;
+
+        emailjs.send("service_zqund9k", "template_s2d1klj", {
+          from_name: name,
+          from_email: email,
+          subject: subject,
+          message: "[Subject: " + subject + "]\n\n" + message
+        })
+        .then(() => {
+          btn.innerHTML = originalHTML;
+          btn.disabled = false;
+          form.reset();
+          window.CL && window.CL.toast('Message sent! We\'ll reply within 24 hours.', true);
+        })
+        .catch((error) => {
+          btn.innerHTML = originalHTML;
+          btn.disabled = false;
+          window.CL && window.CL.toast('Something went wrong. Please email us directly.', false);
+          console.error('EmailJS error:', error);
+        });
+      });
+    });
+  </script>
+</body>
+</html>
